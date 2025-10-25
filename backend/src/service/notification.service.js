@@ -1,15 +1,15 @@
-import Notice from "../models/notice.model.js";
+import notification from "../models/notification.model.js";
 
 export const createNotice = async (userId, type, message, extra = {}) => {
   try {
-    await Notice.create({
+    await Notification.create({
       user: userId,
       type,
       message,
       ...extra, // ví dụ: taskId, workspaceId, deadline...
     });
   } catch (err) {
-    console.error("Error creating notice:", err.message);
+    console.error("Error creating notification:", err.message);
   }
 };
 

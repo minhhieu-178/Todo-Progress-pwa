@@ -5,8 +5,8 @@ import cors from "cors";
 
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
-import workspaceRoutes from "./routes/workspace.route.js";
-import taskRoutes from "./routes/task.route.js";
+import boardRoutes from "./routes/board.route.js";
+import cardRoutes from "./routes/card.route.js";
 
 dotenv.config();
 
@@ -23,8 +23,8 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
-app.use("/api/workspaces", workspaceRoutes);
-app.use("/api/tasks", taskRoutes);
+app.use("/api/boards", boardRoutes);
+app.use("/api/cards", cardRoutes);
 
 connectDB();
 

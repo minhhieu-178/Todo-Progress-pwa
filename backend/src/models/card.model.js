@@ -1,19 +1,25 @@
 import mongoose from 'mongoose';
-import CardSchema from './Card.js'; 
 
 const { Schema, model } = mongoose;
 
-const ListSchema = new Schema({
+const CardSchema = new Schema({
   title: {
     type: String,
     required: true,
     trim: true
   },
+  description: {
+    type: String,
+    default: " "
+  },
+  dueDate: {
+    type: Date
+  },
   position: {
     type: Number,
     default: 1
   },
-  cards: [CardSchema], 
+  comments: [CommentSchema], 
   createdAt: {
     type: Date,
     default: Date.now
@@ -24,11 +30,11 @@ const ListSchema = new Schema({
   }
 });
 
-ListSchema.pre('save', function(next) {
+CardSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
 
-const List = model('List', ListSchema);
+const Card = model('Card', CardSchema);
 
-export default List;
+export default Card;

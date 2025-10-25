@@ -5,7 +5,7 @@ import {
   logout,
   updateProfile,
   checkAuth,
-  getUserWorkspaces,
+  getUserBoards, // đổi tên function cho phù hợp
   getUserNotifications,
   markNotificationRead,
   deleteUserProfile,
@@ -30,7 +30,7 @@ router.delete("/delete-profile", protectRoute, deleteUserProfile);
 router.get("/check", protectRoute, checkAuth);
 
 // User data
-router.get("/workspaces", protectRoute, getUserWorkspaces);
+router.get("/boards", protectRoute, getUserBoards); // đổi endpoint từ /workspaces → /boards
 
 router.get("/notifications", protectRoute, getUserNotifications);
 

@@ -2,23 +2,24 @@ import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
 
-const UserSchema = new Schema({
-  name: {   
+const BoardSchema = new Schema({
+  title: {
     type: String,
     required: true,
     trim: true
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,   
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
+  ownerId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
     required: true
   },
+  members: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    }
+  ],
+  lists: [ListSchema], 
   createdAt: {
     type: Date,
     default: Date.now
@@ -29,11 +30,11 @@ const UserSchema = new Schema({
   }
 });
 
-UserSchema.pre('save', function(next) {
+BoardSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
 
-const User = model('User', UserSchema);
+const Board = model('Board', BoardSchema);
 
-export default User;
+export default Board;
