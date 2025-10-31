@@ -19,7 +19,12 @@ const CardSchema = new Schema({
     type: Number,
     default: 1
   },
-  comments: [CommentSchema], 
+  members: [
+    {
+      type: Schema.Types.ObjectId, // Đảm bảo dùng Schema.Types.ObjectId
+      ref: "User"
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now

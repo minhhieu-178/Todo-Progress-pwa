@@ -19,6 +19,15 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  pushSubscriptions: [
+    {
+      endpoint: String,
+      keys: { 
+        p256dh: String,
+        auth: String,
+      },
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now
