@@ -1,8 +1,10 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// Chúng ta sẽ tạo các trang này ở bước tiếp theo
-// import LoginPage from './pages/LoginPage';
+// 1. Import trang Login
+import LoginPage from './pages/LoginPage';
+
+// (Các import khác sẽ thêm sau)
 // import RegisterPage from './pages/RegisterPage';
 // import DashboardPage from './pages/DashboardPage';
 // import BoardPage from './pages/BoardPage';
@@ -12,15 +14,10 @@ function App() {
   return (
     <div className="w-screen h-screen bg-gray-100">
       <Routes>
-        {/* Các Route công khai */}
-        <Route path="/login" element={<div>Trang Login (sẽ làm)</div>} />
-        <Route path="/register" element={<div>Trang Register (sẽ làm)</div>} />
-
-        {/* Các Route được bảo vệ (sẽ làm) */}
-        {/* <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> */}
-        {/* <Route path="/board/:id" element={<ProtectedRoute><BoardPage /></ProtectedRoute>} /> */}
+        {/* 2. Cập nhật route /login */}
+        <Route path="/login" element={<LoginPage />} />
         
-        {/* Route mặc định (tạm thời) */}
+        <Route path="/register" element={<div>Trang Register (sẽ làm)</div>} />
         <Route path="/" element={<div>Trang chủ (sẽ là Dashboard)</div>} />
       </Routes>
     </div>
