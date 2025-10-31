@@ -1,35 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+// Chúng ta sẽ tạo các trang này ở bước tiếp theo
+// import LoginPage from './pages/LoginPage';
+// import RegisterPage from './pages/RegisterPage';
+// import DashboardPage from './pages/DashboardPage';
+// import BoardPage from './pages/BoardPage';
+// import ProtectedRoute from './router/ProtectedRoute';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="w-screen h-screen bg-gray-100">
+      <Routes>
+        {/* Các Route công khai */}
+        <Route path="/login" element={<div>Trang Login (sẽ làm)</div>} />
+        <Route path="/register" element={<div>Trang Register (sẽ làm)</div>} />
+
+        {/* Các Route được bảo vệ (sẽ làm) */}
+        {/* <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> */}
+        {/* <Route path="/board/:id" element={<ProtectedRoute><BoardPage /></ProtectedRoute>} /> */}
+        
+        {/* Route mặc định (tạm thời) */}
+        <Route path="/" element={<div>Trang chủ (sẽ là Dashboard)</div>} />
+      </Routes>
+    </div>
+  );
 }
 
-export default App
+export default App;
