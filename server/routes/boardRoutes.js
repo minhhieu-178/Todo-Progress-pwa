@@ -1,5 +1,12 @@
 import express from 'express';
-import { createBoard, getMyBoards } from '../controllers/boardController.js';
+import {
+  createBoard,
+  getMyBoards,
+  getBoardById,
+  updateBoard,
+  deleteBoard,
+  createList,
+  updateList, } from '../controllers/boardController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -13,4 +20,13 @@ router.route('/')
   .post(protect, createBoard)  // Tạo Bảng mới
   .get(protect, getMyBoards); // Lấy Bảng của tôi
 
-export default router;
+router.route('/:id')
+  .get(protect, getBoardById)
+  .put(protect, updateBoard)
+  .delete(protect, deleteBoard);
+
+
+router.post('/:boardId/lists', protect, createList);
+router.put('/:boardId/lists/:listId', protect, updateList);
+
+  export default router;

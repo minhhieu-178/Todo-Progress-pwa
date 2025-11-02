@@ -5,7 +5,7 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    mongoose.set('strictQuery', true); // Tắt cảnh báo strictQuery
+    mongoose.set('strictQuery', true); 
     const conn = await mongoose.connect(process.env.MONGO_URI, {
       useUnifiedTopology: true,
       useNewUrlParser: true,
@@ -14,7 +14,7 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
-    process.exit(1); // Thoát tiến trình nếu không kết nối được
+    process.exit(1); 
   }
 };
 
