@@ -47,10 +47,7 @@ export const getMyBoards = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
-<<<<<<< Updated upstream
-=======
 };
-
 
 export const updateBoard = async (req, res) => {
   try {
@@ -195,5 +192,4 @@ export const updateList = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
->>>>>>> Stashed changes
 };
