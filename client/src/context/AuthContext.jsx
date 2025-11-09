@@ -36,7 +36,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 5. Hàm Logout
+  // 5. Hàm Register (đăng ký tài khoản mới)
+  const register = async (email, password) => {
+    try {
+      // Gọi API đăng ký (đã tạo ở backend)
+      const { data } = await api.post('/auth/register', { email, password });
+
+      // Sau khi đăng ký thành công, tự động đăng nhập
+      setUser(data);
+      localStorage.setItem('userInfo', JSON.stringify(data));
+
+      return true; // Thành công
+    } catch (error) {
+      console.error('Lỗi đăng ký:', error.response?.data?.message || error.message);
+      return false; // Thất bại
+    }
+  };
+
+  // 6. Hàm Logout
   const logout = () => {
     // Xóa state
     setUser(null);
@@ -44,15 +61,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('userInfo');
   };
 
-  // 6. Cung cấp state và hàm cho các component con
+  // 7. Cung cấp state và hàm cho các component con
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// 7. Tạo hook tùy chỉnh (useAuth) để dễ dàng sử dụng
+// 8. Tạo hook tùy chỉnh (useAuth) để dễ dàng sử dụng
 export const useAuth = () => {
   return useContext(AuthContext);
 };
