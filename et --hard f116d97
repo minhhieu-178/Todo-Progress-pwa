@@ -1,0 +1,15 @@
+* [33mc4887cb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mduchieu[m[33m)[m Implement board member management (add/remove), update authMiddleware.js
+* [33mf116d97[m[33m ([m[1;31morigin/duchieu[m[33m)[m implement Comment model, controller, routes and integrate into server
+* [33m8eb88d8[m add Card controller and routes (create, update, delete, move)
+* [33m7186f4a[m Sync code with HieuNguyen branch
+*   [33m28c44e7[m Sync code with hieughetcode branch
+[32m|[m[33m\[m  
+[32m|[m * [33m953d910[m[33m ([m[1;31morigin/hieughetcode[m[33m)[m Setting skeleton + signupClusterMongo + register/login/boards GET/POST
+[32m|[m * [33m7f07d40[m Tạo trang Login
+[32m|[m * [33mfe61020[m Tải công cụ + tạo khung sườn
+* [33m|[m [33mdbcb5e7[m update database
+[33m|[m[33m/[m  
+* [33m7e4f494[m[33m ([m[1;32mmain[m[33m)[m Merge pull request #2 from minhhieu-178/main (#3)
+* [33m870aa8b[m Restructure project: move backend to server, frontend to client
+* [33me8ff321[m[33m ([m[1;31morigin/database[m[33m)[m Initial Vite setup
+* [33m5c5c712[m Initial commit
