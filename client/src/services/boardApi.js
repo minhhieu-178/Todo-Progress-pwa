@@ -18,3 +18,12 @@ export const createBoard = async (title) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+export const getBoardById = async (boardId) => {
+  try {
+    const { data } = await api.get(`/boards/${boardId}`);
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
