@@ -74,7 +74,7 @@ function DashboardPage() {
             value={newBoardTitle}
             onChange={(e) => setNewBoardTitle(e.target.value)}
             placeholder="Tạo Bảng mới..."
-            className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
           <button
             type="submit"
