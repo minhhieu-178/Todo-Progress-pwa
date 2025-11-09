@@ -5,7 +5,6 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import boardRoutes from './routes/boardRoutes.js';
 import cardRoutes from './routes/cardRoutes.js';
-import commentRoutes from './routes/commentRoutes.js'; 
 // Khởi tạo và cấu hình
 dotenv.config();
 const app = express();
@@ -23,7 +22,6 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes); 
 app.use('/api/boards', boardRoutes);
 app.use('/api', cardRoutes);
-app.use('/api/comments', commentRoutes);
 
 
 // Khởi chạy Server

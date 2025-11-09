@@ -5,9 +5,10 @@ import api from "../services/api";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth(); // dùng hàm login từ AuthContext để set user sau khi đăng ký
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -31,15 +32,17 @@ const RegisterPage = () => {
 
     try {
       setLoading(true);
+
       const res = await api.post("/auth/register", {
+        fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
       });
 
       // Nhận token + user từ server
-      const { token, user } = res.data;
-      login(user, token); // lưu thông tin vào AuthContext
-      navigate("/"); // chuyển về trang chính (dashboard)
+      const { token, _id, fullName, email } = res.data;
+      login({ _id, fullName, email }, token); // lưu thông tin vào AuthContext
+      navigate("/"); // chuyển về trang chính
     } catch (err) {
       setError(err.response?.data?.message || "Đăng ký thất bại!");
     } finally {
@@ -59,6 +62,19 @@ const RegisterPage = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 mb-1">Họ và tên</label>
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Nhập họ và tên..."
+              value={formData.fullName}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
+            />
+          </div>
+
           <div>
             <label className="block text-gray-700 mb-1">Email</label>
             <input
