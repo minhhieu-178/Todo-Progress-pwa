@@ -1,12 +1,11 @@
 import Board from '../models/Board.js';
-import User from '../models/User.js';
 
 // @desc    Tạo Bảng (Board) mới
 // @route   POST /api/boards
 // @access  Protected
 export const createBoard = async (req, res) => {
   const { title } = req.body;
-
+  
   if (!title) {
     return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
   }
@@ -41,8 +40,8 @@ export const getMyBoards = async (req, res) => {
     // Tìm tất cả Bảng mà mảng 'members' CÓ CHỨA ID của user hiện tại
     // Đây chính là truy vấn Multikey Index
     const boards = await Board.find({ members: req.user._id })
-      .sort({ createdAt: -1 }); // Sắp xếp mới nhất lên đầu
-
+                              .sort({ createdAt: -1 }); // Sắp xếp mới nhất lên đầu
+                              
     res.json(boards);
   } catch (error) {
     console.error(error);
@@ -190,88 +189,6 @@ export const updateList = async (req, res) => {
 
     await board.save();
     res.json(list);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
-  }
-};
-
-
-
-export const addMemberToBoard = async (req, res) => {
-  try {
-    const { boardId } = req.params;
-    const { email } = req.body;
-
-    const board = await Board.findById(boardId);
-
-    if (!board) {
-      return res.status(404).json({ message: 'Không tìm thấy Bảng này' });
-    }
-
-    const userToAdd = await User.findOne({ email });
-
-    if (!userToAdd) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng với email này' });
-    }
-
-    if (board.ownerId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Chỉ chủ sở hữu mới được thêm thành viên' });
-    }
-
-    const isAlreadyMember = board.members.some(
-      (memberId) => memberId.toString() === userToAdd._id.toString()
-    );
-
-    if (isAlreadyMember) {
-      return res.status(400).json({ message: 'Người dùng này đã là thành viên' });
-    }
-
-    board.members.push(userToAdd._id);
-    await board.save();
-
-    res.json(board.members);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
-  }
-};
-
-// @desc    Xóa thành viên khỏi Bảng
-// @route   DELETE /api/boards/:boardId/members/:userId
-// @access  Protected (Chỉ Owner)
-export const removeMemberFromBoard = async (req, res) => {
-  try {
-    const { boardId, userId: memberIdToRemove } = req.params;
-    const currentUserId = req.user._id;
-
-    const board = await Board.findById(boardId);
-
-    if (!board) {
-      return res.status(404).json({ message: 'Không tìm thấy Bảng này' });
-    }
-
-    if (board.ownerId.toString() !== currentUserId.toString()) {
-      return res.status(403).json({ message: 'Chỉ chủ sở hữu mới có quyền xóa thành viên' });
-    }
-
-    if (memberIdToRemove.toString() === currentUserId.toString()) {
-      return res.status(400).json({ message: 'Chủ sở hữu không thể tự xóa chính mình' });
-    }
-
-    const isMember = board.members.some(
-      (memberId) => memberId.toString() === memberIdToRemove.toString()
-    );
-
-    if (!isMember) {
-      return res.status(404).json({ message: 'Người dùng này không phải là thành viên của Bảng' });
-    }
-
-    // 5. Xóa thành viên
-    board.members.pull(memberIdToRemove);
-    await board.save();
-
-    res.json(board.members); // Trả về mảng members mới
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
