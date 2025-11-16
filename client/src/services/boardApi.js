@@ -27,3 +27,21 @@ export const getBoardById = async (boardId) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+export const updateBoard = async (boardId, updateData) => {
+    try {
+        const { data } = await api.put(`/boards/${boardId}`, updateData);
+        return data;
+    } catch (error) {
+        throw error.response?.data?.message || error.message;
+    }
+};
+
+export const deleteBoard = async (boardId) => {
+    try {
+        const { data } = await api.delete(`/boards/${boardId}`);
+        return data;
+    } catch (error) {
+        throw error.response?.data?.message || error.message;
+    }
+};
