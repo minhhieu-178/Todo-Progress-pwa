@@ -1,21 +1,23 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+
+import MainLayout from './components/layout/MainLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import BoardPage from './pages/BoardPage';
-import ProtectedRoute from './router/ProtectedRoute';
 
 function App() {
   return (
-    <div className="w-screen h-screen bg-gray-100">
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/board/:id" element={<ProtectedRoute><BoardPage /></ProtectedRoute>} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> 
-      </Routes>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route path="/" element={<MainLayout><DashboardPage /></MainLayout>} />
+      <Route path="/board/:id" element={<MainLayout><BoardPage /></MainLayout>} />
+      <Route path="/analytics" element={<MainLayout><div>Analytics Page</div></MainLayout>} />
+      <Route path="/settings" element={<MainLayout><div>Settings Page</div></MainLayout>} />
+    </Routes>
   );
 }
 
