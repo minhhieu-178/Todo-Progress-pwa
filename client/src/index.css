@@ -1,1 +1,4 @@
 @import "tailwindcss";
+@theme {
+  --color-pro-blue: #3B82F6;
+}
