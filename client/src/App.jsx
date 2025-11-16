@@ -14,8 +14,7 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
 
       <Route path="/" element={<MainLayout><DashboardPage /></MainLayout>} />
-      <Route path="/board/:id" element={<MainLayout><BoardPage /></MainLayout>} />
-      <Route path="/analytics" element={<MainLayout><div>Analytics Page</div></MainLayout>} />
+      <Route path="/board/:boardId" element={<MainLayout><BoardPage /></MainLayout>} />      <Route path="/analytics" element={<MainLayout><div>Analytics Page</div></MainLayout>} />
       <Route path="/settings" element={<MainLayout><div>Settings Page</div></MainLayout>} />
     </Routes>
   );

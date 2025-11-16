@@ -1,4 +1,4 @@
-import api from './api'; 
+import api from './api';
 
 
 export const getMyBoards = async () => {
@@ -29,19 +29,37 @@ export const getBoardById = async (boardId) => {
 };
 
 export const updateBoard = async (boardId, updateData) => {
-    try {
-        const { data } = await api.put(`/boards/${boardId}`, updateData);
-        return data;
-    } catch (error) {
-        throw error.response?.data?.message || error.message;
-    }
+  try {
+    const { data } = await api.put(`/boards/${boardId}`, updateData);
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
 };
 
 export const deleteBoard = async (boardId) => {
-    try {
-        const { data } = await api.delete(`/boards/${boardId}`);
-        return data;
-    } catch (error) {
-        throw error.response?.data?.message || error.message;
-    }
+  try {
+    const { data } = await api.delete(`/boards/${boardId}`);
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const createList = async (boardId, title) => {
+  try {
+    const { data } = await api.post(`/boards/${boardId}/lists`, { title });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const createCard = async (boardId, listId, title) => {
+  try {
+    const { data } = await api.post(`/boards/${boardId}/lists/${listId}/cards`, { title });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
 };
