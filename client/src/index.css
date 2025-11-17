@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@theme {
+    --color-pro-blue: #3B82F6 ;
+    --color-pro-pink: #EC4899 ;
+    --color-pro-orange: #F97316 ;
+    --color-pro-green: #22C55E ;
+    --color-pro-cyan: #06B6D4 ;
+    --color-pro-gray: #6B7280 ;
+  }
