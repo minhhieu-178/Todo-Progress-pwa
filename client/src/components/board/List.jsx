@@ -37,7 +37,7 @@ function List({ list, boardId, onCardCreated, onCardClick }) {
                 key={card._id}
                 card={card}
                 index={index}
-                onClick={() => onCardClick(card, list.id)}
+                onClick={() => onCardClick(card, list._id)}
               />
             ))}
             {provided.placeholder}

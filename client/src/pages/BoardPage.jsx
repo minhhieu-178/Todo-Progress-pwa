@@ -74,13 +74,29 @@ function BoardPage() {
     }
 
     if (type === 'CARD') {
-      const sourceList = board.lists.find(l => l._id === source.droppableId);
-      const destList = board.lists.find(l => l._id === destination.droppableId);
+      const newLists = [...board.lists]; 
+      const sourceListIndex = newLists.findIndex(l => l._id === source.droppableId);
+      const destListIndex = newLists.findIndex(l => l._id === destination.droppableId);
+
+      const sourceList = { ...newLists[sourceListIndex] };
+      sourceList.cards = [...sourceList.cards]; // Copy mảng cards
       
+      const destList = sourceListIndex === destListIndex 
+        ? sourceList 
+        : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
+
+      // 2. Thực hiện di chuyển trong dữ liệu nháp
       const [movedCard] = sourceList.cards.splice(source.index, 1);
       destList.cards.splice(destination.index, 0, movedCard);
 
-      setBoard({ ...board }); 
+      // 3. Cập nhật lại mảng newLists
+      newLists[sourceListIndex] = sourceList;
+      if (sourceListIndex !== destListIndex) {
+        newLists[destListIndex] = destList;
+      }
+
+      // 4. Cập nhật State UI ngay lập tức (Optimistic Update)
+      setBoard({ ...board, lists: newLists });
       
       try {
         await moveCard(draggableId, {
@@ -89,13 +105,11 @@ function BoardPage() {
           destListId: destination.droppableId,
           newPosition: destination.index,
         });
-        fetchBoard(); 
       } catch (error) {
         console.error('Lỗi khi di chuyển Card:', error);
-        fetchBoard();
+        fetchBoard(); // Rollback nếu lỗi
       }
     }
-    
   };
 
   const handleCardCreated = (listId, newCard) => {

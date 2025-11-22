@@ -9,6 +9,8 @@ function Card({ card, index, onClick }) {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+
+          onClick={onClick}
           className={`p-3 mb-2 bg-white dark:bg-gray-700 rounded-md shadow-sm ${
             snapshot.isDragging ? 'shadow-lg' : ''
           } transition-colors cursor-pointer hover:ring-2 hover:ring-pro-blue/50`}
