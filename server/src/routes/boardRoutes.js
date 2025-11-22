@@ -8,7 +8,7 @@ import {
   createList,
   updateList,
   addMember,
-  removeMember // <--- Import thêm
+  removeMember
 } from '../controllers/boardController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
