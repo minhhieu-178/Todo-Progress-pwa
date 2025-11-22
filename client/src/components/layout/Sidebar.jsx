@@ -8,6 +8,7 @@ const navItems = [
     { name: 'Board', icon: ClipboardList, path: '/board/demo' }, 
     { name: 'Analytics', icon: BarChart3, path: '/analytics' },
     { name: 'Settings', icon: Settings, path: '/settings' },
+    {name: 'Deadlines', icon: IdleDeadline, path: '/deadline'}
 ];
 
 function Sidebar() {

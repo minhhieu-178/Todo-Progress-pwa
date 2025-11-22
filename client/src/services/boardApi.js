@@ -1,6 +1,5 @@
 import api from './api'; 
 
-
 export const getMyBoards = async () => {
   try {
     const { data } = await api.get('/boards');
@@ -45,3 +44,4 @@ export const deleteBoard = async (boardId) => {
         throw error.response?.data?.message || error.message;
     }
 };
+
