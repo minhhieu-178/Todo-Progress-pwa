@@ -72,7 +72,7 @@ function LoginPage() {
           <div>
             <div className="flex justify-between items-baseline mb-1">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-              <a href="#" className="text-sm font-medium text-pro-blue hover:underline">Forgot password?</a>
+              <Link to="/forgot-password" className="text-sm font-medium text-pro-blue hover:underline">Forgot password?</Link>
             </div>
             <input 
               type="password" 

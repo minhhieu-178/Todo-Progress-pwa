@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList } from 'lucide-react'; 
 
@@ -8,7 +8,6 @@ const navItems = [
     { name: 'Board', icon: ClipboardList, path: '/board/demo' }, 
     { name: 'Analytics', icon: BarChart3, path: '/analytics' },
     { name: 'Settings', icon: Settings, path: '/settings' },
-    {name: 'Deadlines', icon: IdleDeadline, path: '/deadline'}
 ];
 
 function Sidebar() {
@@ -41,18 +40,17 @@ function Sidebar() {
             </nav>
 
             <div className="p-6 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                        <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                            {user?.fullName?.charAt(0).toUpperCase()} 
-                        </div>
-                        <div className="ml-2">
-                            <p className="text-sm font-semibold text-gray-900">{user?.fullName}</p>
-                        </div>
+                <Link to="/profile" className="flex items-center gap-3 mb-4 hover:bg-gray-100 p-2 -mx-2 rounded-lg transition-colors cursor-pointer group">
+                    <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm group-hover:ring-2 group-hover:ring-indigo-300 transition-all">
+                        {user?.fullName?.charAt(0).toUpperCase()} 
                     </div>
-                </div>
+                    <div className="overflow-hidden">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                </Link>
                 
-                <button onClick={logout} className="flex items-center text-red-600 hover:text-red-700 transition-colors">
+                <button onClick={logout} className="flex items-center text-red-600 hover:text-red-700 transition-colors w-full px-2">
                     <LogOut className="w-5 h-5 mr-2" />
                     Log out
                 </button>
