@@ -1,13 +1,13 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/authController.js';
+import { registerUser, loginUser, updateUserProfile, forgotPassword } from '../controllers/authController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// @route   POST /api/auth/register
-// @desc    Đăng ký người dùng mới
 router.post('/register', registerUser);
-
-// @route   POST /api/auth/login
 router.post('/login', loginUser);
+
+router.put('/profile', protect , updateUserProfile);
+router.post('/forgot-password', forgotPassword);
 
 export default router;

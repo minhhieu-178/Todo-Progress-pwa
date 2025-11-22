@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Search, Clock, Bell } from 'lucide-react'; 
-import { useAuth } from '../../context/AuthContext'; 
+import { useAuth } from '../../context/AuthContext';
+import { Link } from 'react-router-dom'; // Đảm bảo đã import Link
 
 function PageHeader({ title, showSearch = true }) {
     const { user } = useAuth();
@@ -33,9 +33,12 @@ function PageHeader({ title, showSearch = true }) {
                         This week
                     </div>
 
-                    <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white shadow">
-                        {user?.fullName?.charAt(0).toUpperCase()}
-                    </div>
+                    {/* SỬA Ở ĐÂY: Bọc Avatar trong Link trỏ tới /profile */}
+                    <Link to="/profile">
+                        <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white shadow hover:ring-indigo-300 transition-all">
+                            {user?.fullName?.charAt(0).toUpperCase()}
+                        </div>
+                    </Link>
                 </div>
             </div>
         </header>
