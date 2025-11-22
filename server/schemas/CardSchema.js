@@ -26,6 +26,11 @@ const CardSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    isCompleted: {
+      type: Boolean,
+      default: false
+    },
+    lables: [{type: String}], //Nhãn chủ đề của thẻ
   },
   { timestamps: true } // Tự động thêm createdAt/updatedAt cho Card
 );

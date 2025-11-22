@@ -5,7 +5,7 @@ import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList } from 'luc
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-    { name: 'Board', icon: ClipboardList, path: '/board/demo' }, 
+    { name: 'Board', icon: ClipboardList, path: '/boards' }, 
     { name: 'Analytics', icon: BarChart3, path: '/analytics' },
     { name: 'Settings', icon: Settings, path: '/settings' },
 ];
@@ -13,18 +13,14 @@ const navItems = [
 function Sidebar() {
     const { user, logout } = useAuth();
     
-    // Cập nhật class cho link: thêm dark:text-gray-300 và dark:hover:bg-gray-700
     const linkClasses = "flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 rounded-lg group transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-700";
-    // Cập nhật class active: thêm dark:bg-gray-700
     const activeClasses = "bg-indigo-50 dark:bg-gray-700 text-indigo-700 dark:text-indigo-400 font-semibold"; 
     
     return (
-        // THÊM: dark:bg-gray-800 dark:border-gray-700
         <div className="flex flex-col h-screen w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-colors duration-200">
         
             <div className="p-6">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">Pro Manage</h1>
-                {/* Input search tối màu */}
                 <input className="mt-4 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400" placeholder="Search" />
             </div>
 

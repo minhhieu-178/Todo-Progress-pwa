@@ -3,7 +3,7 @@ import { Droppable } from '@hello-pangea/dnd';
 import Card from './Card';
 import { createCard } from '../../services/cardApi';
 
-function List({ list, boardId, onCardCreated }) {
+function List({ list, boardId, onCardCreated, onCardClick }) {
   const [newCardTitle, setNewCardTitle] = useState('');
 
   const handleCreateCard = async (e) => {
@@ -20,9 +20,7 @@ function List({ list, boardId, onCardCreated }) {
   };
 
   return (
-    // Thêm dark:bg-gray-800
     <div className="flex-shrink-0 w-72 p-2 mx-2 bg-gray-100 dark:bg-gray-800 rounded-md transition-colors">
-      {/* Tiêu đề List */}
       <h3 className="px-2 py-1 text-sm font-semibold text-gray-700 dark:text-gray-200">
         {list.title}
       </h3>
@@ -35,7 +33,12 @@ function List({ list, boardId, onCardCreated }) {
             className="min-h-[50px] pt-2"
           >
             {list.cards.map((card, index) => (
-              <Card key={card._id} card={card} index={index} />
+              <Card
+                key={card._id}
+                card={card}
+                index={index}
+                onClick={() => onCardClick(card, list.id)}
+              />
             ))}
             {provided.placeholder}
           </div>

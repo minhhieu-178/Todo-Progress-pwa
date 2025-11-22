@@ -38,9 +38,7 @@ function UserProfilePage() {
     <div className="flex flex-col h-full">
       <PageHeader title="Thông Tin Người Dùng" showSearch={false} />
 
-      {/* Nền chính: dark:bg-gray-900 */}
       <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-        {/* Card: dark:bg-gray-800 dark:border-gray-700 */}
         <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
           
           <div className="flex flex-col items-center mb-8">

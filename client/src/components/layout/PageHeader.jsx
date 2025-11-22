@@ -7,9 +7,7 @@ function PageHeader({ title, showSearch = true }) {
     const { user } = useAuth();
 
     return (
-        // THÊM: dark:bg-gray-800 dark:border-gray-700
         <header className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
-            {/* Tiêu đề đổi màu */}
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{title}</h1>
             
             <div className="flex items-center space-x-6">
@@ -17,7 +15,6 @@ function PageHeader({ title, showSearch = true }) {
                 {showSearch && (
                     <div className="relative hidden sm:block"> 
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        {/* Input search đổi màu */}
                         <input
                             type="text"
                             placeholder="Search"

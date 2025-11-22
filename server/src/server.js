@@ -4,6 +4,7 @@ import cors from 'cors';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import boardRoutes from './routes/boardRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
 
 // Khởi tạo và cấu hình
 dotenv.config();
@@ -21,8 +22,9 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes); // Sử dụng authRoutes cho /api/auth
 app.use('/api/boards', boardRoutes);
+app.use('/api', cardRoutes);
+app.use('/api/comments', commentRoutes);
 
-// (Chúng ta sẽ thêm các middleware xử lý lỗi sau)
 
 // Khởi chạy Server
 const PORT = process.env.PORT || 5001;

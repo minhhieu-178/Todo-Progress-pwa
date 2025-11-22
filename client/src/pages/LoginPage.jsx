@@ -36,10 +36,8 @@ function LoginPage() {
   };
 
   return (
-    // Thêm dark:bg-gray-900
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       
-      {/* Thẻ Card: dark:bg-gray-800 dark:border-gray-700 */}
       <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         
         <div className="flex items-center justify-center gap-3 mb-4">
@@ -62,7 +60,6 @@ function LoginPage() {
               placeholder="you@example.com"
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              // Input: dark:bg-gray-700 dark:border-gray-600 dark:text-white
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />

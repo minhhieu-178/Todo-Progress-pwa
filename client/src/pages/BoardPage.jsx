@@ -5,6 +5,7 @@ import { getBoardById } from '../services/boardApi';
 import { createList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
+import CardDetailModal from '../components/board/CardDetailModal';
 
 function BoardPage() {
   const { id: boardId } = useParams();
@@ -12,6 +13,32 @@ function BoardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newListTitle, setNewListTitle] = useState('');
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedListId, setSelectedListId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Hàm mở modal (truyền xuống Card)
+  const handleCardClick = (card, listId) => {
+    setSelectedCard(card);
+    setSelectedListId(listId);
+    setIsModalOpen(true);
+  };
+  // Hàm cập nhật lại UI sau khi sửa Card trong modal
+  const handleUpdateCardInBoard = (listId, updatedCard) => {
+    const newBoard = { ...board };
+    const list = newBoard.lists.find(l => l._id === listId);
+    const cardIndex = list.cards.findIndex(c => c._id === updatedCard._id);
+    if (cardIndex !== -1) {
+        list.cards[cardIndex] = updatedCard;
+        setBoard(newBoard);
+    }
+  };
+  // Hàm xóa Card khỏi UI
+  const handleDeleteCardInBoard = (listId, cardId) => {
+    const newBoard = { ...board };
+    const list = newBoard.lists.find(l => l._id === listId);
+    list.cards = list.cards.filter(c => c._id !== cardId);
+    setBoard(newBoard);
+  };
 
   const fetchBoard = async () => {
     try {
@@ -116,6 +143,7 @@ function BoardPage() {
                   list={list}
                   boardId={board._id}
                   onCardCreated={handleCardCreated}
+                  onCardClick={handleCardClick}
                 />
               ))}
               {provided.placeholder}
@@ -136,6 +164,18 @@ function BoardPage() {
           )}
         </Droppable>
       </DragDropContext>
+
+      {selectedCard && (
+        <CardDetailModal 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            card={selectedCard}
+            listId={selectedListId}
+            boardId={board._id}
+            onUpdateCard={handleUpdateCardInBoard}
+            onDeleteCard={handleDeleteCardInBoard}
+        />
+      )}
     </div>
   );
 }

@@ -58,10 +58,8 @@ function DashboardPage() {
     <div className="flex flex-col h-full">
       <PageHeader title="Dashboard" showSearch={true} />
       
-      {/* Nền trang chính: Thêm dark:bg-gray-900 */}
       <div className="p-8 flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         
-        {/* Thống kê */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {dummyStats.map((stat) => (
                 <div key={stat.title} className={`p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 ${stat.bg}`}>
@@ -73,7 +71,6 @@ function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            {/* Danh sách Boards */}
             <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                 <h2 className="font-semibold text-gray-800 dark:text-white mb-4">Các Bảng Công Việc Của Bạn</h2>
                 
@@ -120,7 +117,6 @@ function DashboardPage() {
                 )}
             </div>
 
-            {/* Deadlines */}
             <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                 <h2 className="font-semibold text-gray-800 dark:text-white mb-4">Upcoming Deadlines</h2>
                 <ul className="space-y-4">

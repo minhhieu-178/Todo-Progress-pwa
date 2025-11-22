@@ -33,7 +33,6 @@ function SettingPage() {
       <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-3xl mx-auto space-y-6">
           
-          {/* --- CARD 1: GIAO DIỆN (Dark Mode) --- */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
@@ -62,7 +61,6 @@ function SettingPage() {
             </div>
           </div>
 
-          {/* --- CARD 2: DANGER ZONE (Xóa tài khoản) --- */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-red-200 dark:border-red-900/30">
             <h3 className="text-lg font-semibold text-red-600 mb-2">Vùng nguy hiểm</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
