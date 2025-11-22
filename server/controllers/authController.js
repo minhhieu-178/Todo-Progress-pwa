@@ -1,3 +1,4 @@
+import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -92,19 +93,54 @@ export const updateUserProfile = async (req, res) => {
     res.status(404).json({ message: 'User not found' });
   }
 }; 
-
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'Email không tồn tại trong hệ thống' });
     }
-    // Logic gửi mail giả lập
-    console.log(`Yêu cầu reset pass cho: ${email}`);
-    res.json({ message: 'Đã gửi link khôi phục mật khẩu' });
+
+    const tempPassword = Math.random().toString(36).slice(-8); 
+
+    // Cập nhật mật khẩu mới cho User và Lưu lại
+    // Middleware 'pre save' trong User.js sẽ tự động mã hóa (hash) mật khẩu này
+    user.password = tempPassword;
+    await user.save();
+
+    // Cấu hình gửi mail (Transporter)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Task Management" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Mật khẩu mới của bạn',
+      html: `
+        <h3>Xin chào ${user.fullName},</h3>
+        <p>Chúng tôi đã nhận được yêu cầu khôi phục tài khoản.</p>
+        <p>Đây là mật khẩu mới của bạn:</p>
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; font-size: 20px; font-weight: bold; color: #3B82F6; text-align: center; margin: 20px 0;">
+          ${tempPassword}
+        </div>
+        <p>Vui lòng đăng nhập bằng mật khẩu này và đổi lại mật khẩu mới ngay lập tức để bảo mật.</p>
+      `,
+    };
+
+    // Gửi
+    await transporter.sendMail(mailOptions);
+
+    console.log(`Đã gửi mật khẩu mới tới: ${email}`);
+    res.json({ message: 'Đã gửi mật khẩu mới về email. Vui lòng kiểm tra!' });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    console.error('Lỗi gửi mail:', error);
+    res.status(500).json({ message: 'Không thể gửi email. Vui lòng thử lại sau.' });
   }
 };

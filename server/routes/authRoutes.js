@@ -8,6 +8,6 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 router.put('/profile', protect , updateUserProfile);
-router.post('/forgot-pasword', forgotPassword);
+router.post('/forgot-password', forgotPassword);
 
 export default router;
