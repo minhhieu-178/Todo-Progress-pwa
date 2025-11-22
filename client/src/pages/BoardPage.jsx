@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { getBoardById, addMemberToBoard } from '../services/boardApi'; // Thêm addMemberToBoard
+import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
+import MembersModal from '../components/board/MembersModal'; // Import Modal Mới
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, X } from 'lucide-react'; // Thêm icon
+import { Users } from 'lucide-react'; // Đổi icon sang Users
 
 function BoardPage() {
   const { user } = useAuth();
@@ -23,11 +24,10 @@ function BoardPage() {
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // State cho Invite Member
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [showInviteInput, setShowInviteInput] = useState(false);
+  // State cho Modal Thành viên
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
-  // --- LOGIC MODAL ---
+  // --- LOGIC MODAL CARD ---
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
     setSelectedListId(listId);
@@ -51,18 +51,25 @@ function BoardPage() {
     setBoard(newBoard);
   };
 
-  // --- LOGIC INVITE ---
-  const handleInvite = async (e) => {
-    e.preventDefault();
-    if (!inviteEmail) return;
+  // --- LOGIC QUẢN LÝ THÀNH VIÊN (Được gọi từ MembersModal) ---
+  const handleInvite = async (email) => {
     try {
-      const updatedBoard = await addMemberToBoard(board._id, inviteEmail);
+      const updatedBoard = await addMemberToBoard(board._id, email);
       setBoard(updatedBoard);
-      setInviteEmail('');
-      setShowInviteInput(false);
       alert('Đã thêm thành viên thành công!');
     } catch (err) {
       alert(err);
+    }
+  };
+
+  const handleRemoveMember = async (memberId, memberName) => {
+    if (window.confirm(`Bạn có chắc muốn xóa thành viên "${memberName}" khỏi bảng này?`)) {
+      try {
+        const updatedBoard = await removeMemberFromBoard(board._id, memberId);
+        setBoard(updatedBoard);
+      } catch (err) {
+        alert(err);
+      }
     }
   };
 
@@ -71,7 +78,6 @@ function BoardPage() {
     try {
       setLoading(true);
       const data = await getBoardById(boardId);
-      // Sắp xếp list và card theo position
       data.lists.sort((a, b) => a.position - b.position);
       data.lists.forEach((list) => {
         list.cards.sort((a, b) => a.position - b.position);
@@ -118,7 +124,7 @@ function BoardPage() {
           newPosition: destination.index,
         });
       } catch (error) {
-        console.error('Lỗi di chuyển:', error);
+        console.error('Lỗi di chuyển thẻ:', error);
         fetchBoard();
       }
     }
@@ -143,17 +149,19 @@ function BoardPage() {
     }
   };
 
-  if (loading) return <div className="p-4 dark:text-white">Đang tải Bảng...</div>;
-  if (error) return <div className="p-4 text-red-500">Lỗi: {error}</div>;
-  if (!board) return <div className="p-4 dark:text-white">Không tìm thấy Bảng.</div>;
+  if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu Bảng...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
+  if (!board) return <div className="p-8 text-center dark:text-white">Không tìm thấy Bảng.</div>;
 
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       
-      {/* --- HEADER MỚI (CÓ INVITE) --- */}
-      <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700">
+      {/* HEADER */}
+      <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+        
+        {/* Bên trái */}
         <div>
           <Link to="/boards" className="text-sm text-gray-500 hover:underline mb-1 block">
              &larr; Danh sách bảng
@@ -164,58 +172,46 @@ function BoardPage() {
           </div>
         </div>
 
+        {/* Bên phải: Nút quản lý thành viên */}
         <div className="flex items-center gap-4">
-            {/* Avatar thành viên */}
-            <div className="flex -space-x-2 overflow-hidden">
-                {board.members?.map((member) => (
-                    <div key={member._id} className="relative group cursor-pointer" title={member.email}>
-                        <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-                            {member.fullName?.charAt(0).toUpperCase()}
-                        </div>
+            
+            {/* Avatar Stack (Preview) - Bấm vào để mở Modal */}
+            <div 
+              className="flex -space-x-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setIsMembersModalOpen(true)}
+              title="Quản lý thành viên"
+            >
+                {board.members?.slice(0, 5).map((member) => (
+                    <div key={member._id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                        {member.fullName?.charAt(0).toUpperCase()}
                     </div>
                 ))}
+                {board.members?.length > 5 && (
+                   <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-200 text-xs font-bold">
+                      +{board.members.length - 5}
+                   </div>
+                )}
             </div>
 
-            {/* Nút Invite */}
-            {isOwner && (
-                <div className="relative">
-                    {!showInviteInput ? (
-                        <button 
-                            onClick={() => setShowInviteInput(true)}
-                            className="flex items-center gap-2 px-3 py-2 bg-pro-blue text-white rounded-md hover:bg-blue-600 text-sm transition-colors"
-                        >
-                            <UserPlus className="w-4 h-4" />
-                            <span>Invite</span>
-                        </button>
-                    ) : (
-                        <form onSubmit={handleInvite} className="flex items-center gap-2">
-                            <input 
-                                type="email" 
-                                value={inviteEmail}
-                                onChange={(e) => setInviteEmail(e.target.value)}
-                                placeholder="Email..."
-                                className="px-2 py-1.5 text-sm border rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-pro-blue outline-none w-48"
-                                autoFocus
-                            />
-                            <button type="submit" className="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700">Thêm</button>
-                            <button type="button" onClick={() => setShowInviteInput(false)} className="text-gray-500 hover:text-red-500">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </form>
-                    )}
-                </div>
-            )}
+            {/* Nút Members */}
+            <button 
+                onClick={() => setIsMembersModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors font-medium"
+            >
+                <Users className="w-4 h-4" />
+                <span>Thành viên</span>
+            </button>
         </div>
       </header>
 
-      {/* --- BOARD CONTENT --- */}
+      {/* CONTENT */}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
           {(provided) => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900"
+              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900 transition-colors"
             >
               {board.lists.map((list, index) => (
                 <List
@@ -229,7 +225,7 @@ function BoardPage() {
               {provided.placeholder}
 
               <div className="flex-shrink-0 w-72 p-2">
-                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700">
+                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700 transition-colors">
                   <input
                     type="text"
                     value={newListTitle}
@@ -244,7 +240,7 @@ function BoardPage() {
         </Droppable>
       </DragDropContext>
 
-      {/* --- MODAL --- */}
+      {/* MODALS */}
       {selectedCard && (
         <CardDetailModal 
             isOpen={isModalOpen}
@@ -256,6 +252,18 @@ function BoardPage() {
             onDeleteCard={handleDeleteCardInBoard}
         />
       )}
+
+      {/* MODAL THÀNH VIÊN MỚI */}
+      <MembersModal 
+        isOpen={isMembersModalOpen}
+        onClose={() => setIsMembersModalOpen(false)}
+        members={board.members}
+        ownerId={board.ownerId}
+        currentUser={user}
+        onInvite={handleInvite}
+        onRemove={handleRemoveMember}
+      />
+
     </div>
   );
 }

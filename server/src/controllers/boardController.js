@@ -174,3 +174,38 @@ export const addMember = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Xóa thành viên khỏi Bảng
+export const removeMember = async (req, res) => {
+  const { id, userId } = req.params; 
+
+  try {
+    const board = await Board.findById(id);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
+
+    // Chỉ chủ sở hữu mới được xóa người khác
+    if (board.ownerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Bạn không phải chủ Bảng này' });
+    }
+
+    // Không cho phép chủ sở hữu tự xóa mình
+    if (userId === board.ownerId.toString()) {
+      return res.status(400).json({ message: 'Chủ sở hữu không thể bị xóa khỏi danh sách thành viên' });
+    }
+
+    // Lọc bỏ userId khỏi mảng members
+    board.members = board.members.filter(memberId => memberId.toString() !== userId);
+    
+    await board.save();
+
+    // Trả về dữ liệu mới nhất
+    const updatedBoard = await Board.findById(id)
+      .populate('members', 'fullName email')
+      .populate('ownerId', 'fullName email');
+
+    res.json(updatedBoard);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};

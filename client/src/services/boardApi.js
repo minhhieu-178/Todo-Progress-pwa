@@ -53,3 +53,13 @@ export const addMemberToBoard = async (boardId, email) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+// --- THÊM HÀM NÀY ---
+export const removeMemberFromBoard = async (boardId, userId) => {
+  try {
+    const { data } = await api.delete(`/boards/${boardId}/members/${userId}`);
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
