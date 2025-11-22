@@ -1,19 +1,10 @@
 import mongoose from 'mongoose';
-import CardSchema from './CardSchema.js'; // Import schema Card
+import CardSchema from './CardSchema.js';
 
-// LƯU Ý: Đây là Schema, KHÔNG PHẢI Model
 const ListSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    position: {
-      type: Number,
-      required: true,
-    },
-    // Nhúng mảng các Card
+    title: { type: String, required: true, trim: true },
+    position: { type: Number, required: true },
     cards: [CardSchema],
   },
   { timestamps: true }

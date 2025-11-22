@@ -1,25 +1,11 @@
 import mongoose from 'mongoose';
-import ListSchema from '../schemas/ListSchema.js'; // Import schema List
+import ListSchema from '../schemas/ListSchema.js';
 
 const BoardSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    ownerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    members: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-    // Nhúng mảng các List
+    title: { type: String, required: true, trim: true },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     lists: [ListSchema],
   },
   { timestamps: true }

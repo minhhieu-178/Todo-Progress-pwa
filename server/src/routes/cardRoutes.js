@@ -3,8 +3,7 @@ import { createCard, updateCard, deleteCard, moveCard } from '../controllers/car
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-
-router.use(protect); 
+router.use(protect);
 
 router.post('/boards/:boardId/lists/:listId/cards', createCard);
 router.put('/boards/:boardId/lists/:listId/cards/:cardId', updateCard);
