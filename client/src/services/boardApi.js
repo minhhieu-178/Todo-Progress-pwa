@@ -45,3 +45,11 @@ export const deleteBoard = async (boardId) => {
     }
 };
 
+export const addMemberToBoard = async (boardId, email) => {
+  try {
+    const { data } = await api.put(`/boards/${boardId}/members`, { email });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};

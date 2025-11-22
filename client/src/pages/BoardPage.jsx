@@ -1,28 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { getBoardById } from '../services/boardApi';
+import { getBoardById, addMemberToBoard } from '../services/boardApi'; // Thêm addMemberToBoard
 import { createList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
+import { useAuth } from '../context/AuthContext';
+import { UserPlus, X } from 'lucide-react'; // Thêm icon
 
 function BoardPage() {
+  const { user } = useAuth();
   const { id: boardId } = useParams();
+  
   const [board, setBoard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newListTitle, setNewListTitle] = useState('');
+  
+  // State cho Modal Card
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // Hàm mở modal (truyền xuống Card)
+
+  // State cho Invite Member
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [showInviteInput, setShowInviteInput] = useState(false);
+
+  // --- LOGIC MODAL ---
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
     setSelectedListId(listId);
     setIsModalOpen(true);
   };
-  // Hàm cập nhật lại UI sau khi sửa Card trong modal
+
   const handleUpdateCardInBoard = (listId, updatedCard) => {
     const newBoard = { ...board };
     const list = newBoard.lists.find(l => l._id === listId);
@@ -32,7 +43,7 @@ function BoardPage() {
         setBoard(newBoard);
     }
   };
-  // Hàm xóa Card khỏi UI
+
   const handleDeleteCardInBoard = (listId, cardId) => {
     const newBoard = { ...board };
     const list = newBoard.lists.find(l => l._id === listId);
@@ -40,11 +51,27 @@ function BoardPage() {
     setBoard(newBoard);
   };
 
+  // --- LOGIC INVITE ---
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    try {
+      const updatedBoard = await addMemberToBoard(board._id, inviteEmail);
+      setBoard(updatedBoard);
+      setInviteEmail('');
+      setShowInviteInput(false);
+      alert('Đã thêm thành viên thành công!');
+    } catch (err) {
+      alert(err);
+    }
+  };
+
+  // --- DATA FETCHING ---
   const fetchBoard = async () => {
     try {
       setLoading(true);
       const data = await getBoardById(boardId);
-
+      // Sắp xếp list và card theo position
       data.lists.sort((a, b) => a.position - b.position);
       data.lists.forEach((list) => {
         list.cards.sort((a, b) => a.position - b.position);
@@ -61,41 +88,26 @@ function BoardPage() {
     fetchBoard();
   }, [boardId]);
 
+  // --- DRAG & DROP ---
   const onDragEnd = async (result) => {
     const { source, destination, draggableId, type } = result;
-
     if (!destination) return;
-
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
-      return;
-    }
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     if (type === 'CARD') {
       const newLists = [...board.lists]; 
       const sourceListIndex = newLists.findIndex(l => l._id === source.droppableId);
       const destListIndex = newLists.findIndex(l => l._id === destination.droppableId);
 
-      const sourceList = { ...newLists[sourceListIndex] };
-      sourceList.cards = [...sourceList.cards]; // Copy mảng cards
-      
-      const destList = sourceListIndex === destListIndex 
-        ? sourceList 
-        : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
+      const sourceList = { ...newLists[sourceListIndex], cards: [...newLists[sourceListIndex].cards] };
+      const destList = sourceListIndex === destListIndex ? sourceList : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
 
-      // 2. Thực hiện di chuyển trong dữ liệu nháp
       const [movedCard] = sourceList.cards.splice(source.index, 1);
       destList.cards.splice(destination.index, 0, movedCard);
 
-      // 3. Cập nhật lại mảng newLists
       newLists[sourceListIndex] = sourceList;
-      if (sourceListIndex !== destListIndex) {
-        newLists[destListIndex] = destList;
-      }
+      if (sourceListIndex !== destListIndex) newLists[destListIndex] = destList;
 
-      // 4. Cập nhật State UI ngay lập tức (Optimistic Update)
       setBoard({ ...board, lists: newLists });
       
       try {
@@ -106,8 +118,8 @@ function BoardPage() {
           newPosition: destination.index,
         });
       } catch (error) {
-        console.error('Lỗi khi di chuyển Card:', error);
-        fetchBoard(); // Rollback nếu lỗi
+        console.error('Lỗi di chuyển:', error);
+        fetchBoard();
       }
     }
   };
@@ -135,14 +147,68 @@ function BoardPage() {
   if (error) return <div className="p-4 text-red-500">Lỗi: {error}</div>;
   if (!board) return <div className="p-4 dark:text-white">Không tìm thấy Bảng.</div>;
 
+  const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
+
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
-      {/* Header: Xanh mặc định, Xám đậm khi Dark Mode */}
-      <header className="p-4 bg-blue-600 dark:bg-gray-800 text-white shadow-md transition-colors duration-200">
-        <Link to="/" className="text-sm hover:underline opacity-90">&larr; Về Dashboard</Link>
-        <h1 className="text-2xl font-bold mt-1">{board.title}</h1>
+      
+      {/* --- HEADER MỚI (CÓ INVITE) --- */}
+      <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700">
+        <div>
+          <Link to="/boards" className="text-sm text-gray-500 hover:underline mb-1 block">
+             &larr; Danh sách bảng
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{board.title}</h1>
+            {isOwner && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">Owner</span>}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+            {/* Avatar thành viên */}
+            <div className="flex -space-x-2 overflow-hidden">
+                {board.members?.map((member) => (
+                    <div key={member._id} className="relative group cursor-pointer" title={member.email}>
+                        <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                            {member.fullName?.charAt(0).toUpperCase()}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Nút Invite */}
+            {isOwner && (
+                <div className="relative">
+                    {!showInviteInput ? (
+                        <button 
+                            onClick={() => setShowInviteInput(true)}
+                            className="flex items-center gap-2 px-3 py-2 bg-pro-blue text-white rounded-md hover:bg-blue-600 text-sm transition-colors"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            <span>Invite</span>
+                        </button>
+                    ) : (
+                        <form onSubmit={handleInvite} className="flex items-center gap-2">
+                            <input 
+                                type="email" 
+                                value={inviteEmail}
+                                onChange={(e) => setInviteEmail(e.target.value)}
+                                placeholder="Email..."
+                                className="px-2 py-1.5 text-sm border rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-pro-blue outline-none w-48"
+                                autoFocus
+                            />
+                            <button type="submit" className="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700">Thêm</button>
+                            <button type="button" onClick={() => setShowInviteInput(false)} className="text-gray-500 hover:text-red-500">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </form>
+                    )}
+                </div>
+            )}
+        </div>
       </header>
 
+      {/* --- BOARD CONTENT --- */}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
           {(provided) => (
@@ -162,15 +228,14 @@ function BoardPage() {
               ))}
               {provided.placeholder}
 
-              {/* Ô tạo List mới */}
               <div className="flex-shrink-0 w-72 p-2">
-                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700 transition-colors">
+                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700">
                   <input
                     type="text"
                     value={newListTitle}
                     onChange={(e) => setNewListTitle(e.target.value)}
                     placeholder="+ Thêm danh sách mới"
-                    className="w-full px-2 py-1 text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1 text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </form>
               </div>
@@ -179,6 +244,7 @@ function BoardPage() {
         </Droppable>
       </DragDropContext>
 
+      {/* --- MODAL --- */}
       {selectedCard && (
         <CardDetailModal 
             isOpen={isModalOpen}
