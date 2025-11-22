@@ -12,7 +12,7 @@ function List({ list, boardId, onCardCreated }) {
 
     try {
       const newCard = await createCard(newCardTitle, boardId, list._id);
-      onCardCreated(list._id, newCard); // Báo cho BoardPage biết Card mới đã được tạo
+      onCardCreated(list._id, newCard);
       setNewCardTitle('');
     } catch (error) {
       console.error(error);
@@ -20,13 +20,13 @@ function List({ list, boardId, onCardCreated }) {
   };
 
   return (
-    <div className="flex-shrink-0 w-72 p-2 mx-2 bg-gray-100 rounded-md">
+    // Thêm dark:bg-gray-800
+    <div className="flex-shrink-0 w-72 p-2 mx-2 bg-gray-100 dark:bg-gray-800 rounded-md transition-colors">
       {/* Tiêu đề List */}
-      <h3 className="px-2 py-1 text-sm font-semibold text-gray-700">
+      <h3 className="px-2 py-1 text-sm font-semibold text-gray-700 dark:text-gray-200">
         {list.title}
       </h3>
 
-      {/* Khu vực thả Card (Droppable) */}
       <Droppable droppableId={list._id} type="CARD">
         {(provided) => (
           <div
@@ -34,7 +34,6 @@ function List({ list, boardId, onCardCreated }) {
             {...provided.droppableProps}
             className="min-h-[50px] pt-2"
           >
-            {/* Render các Card */}
             {list.cards.map((card, index) => (
               <Card key={card._id} card={card} index={index} />
             ))}
@@ -43,14 +42,13 @@ function List({ list, boardId, onCardCreated }) {
         )}
       </Droppable>
 
-      {/* Form tạo Card mới */}
       <form onSubmit={handleCreateCard} className="mt-2">
         <input
           type="text"
           value={newCardTitle}
           onChange={(e) => setNewCardTitle(e.target.value)}
           placeholder="+ Thêm thẻ mới"
-          className="w-full px-2 py-1 text-sm border-gray-300 rounded-md shadow-sm"
+          className="w-full px-2 py-1 text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400"
         />
       </form>
     </div>
