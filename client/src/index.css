@@ -1,10 +1,23 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --color-pro-blue: #3B82F6 ;
-    --color-pro-pink: #EC4899 ;
-    --color-pro-orange: #F97316 ;
-    --color-pro-green: #22C55E ;
-    --color-pro-cyan: #06B6D4 ;
-    --color-pro-gray: #6B7280 ;
+    --color-pro-blue: #3B82F6;
+    --color-pro-pink: #EC4899;
+    --color-pro-orange: #F97316;
+    --color-pro-green: #22C55E;
+    --color-pro-cyan: #06B6D4;
+    --color-pro-gray: #6B7280;
+}
+
+@layer base {
+  html.dark body {
+    background-color: #111827; 
+    color: #f9fafb;            
   }
+  body {
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+  }
+}
