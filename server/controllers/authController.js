@@ -11,8 +11,6 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Đăng ký người dùng mới
-// @route   POST /api/auth/register
 export const registerUser = async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -47,8 +45,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// @desc    Đăng nhập và lấy token
-// @route   POST /api/auth/login
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -142,5 +138,23 @@ export const forgotPassword = async (req, res) => {
   } catch (error) {
     console.error('Lỗi gửi mail:', error);
     res.status(500).json({ message: 'Không thể gửi email. Vui lòng thử lại sau.' });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      await user.deleteOne();
+      // Nên xóa cả Boards, Cards liên quan đến user này
+      // để tránh dữ liệu rác (Cascading Delete).
+      res.json({ message: 'Tài khoản đã được xóa thành công' });
+    } else {
+      res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };

@@ -36,3 +36,12 @@ export const forgotPassword = async (email) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+export const deleteAccount = async () => {
+  try {
+    const { data } = await api.delete('/auth/profile');
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};

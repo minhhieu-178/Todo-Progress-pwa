@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import BoardPage from './pages/BoardPage';
 import UserProfilePage from './pages/UserProfilePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import SettingPage from './pages/SettingPage';
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
       <Route path="/board/:id" element={<MainLayout><BoardPage /></MainLayout>} />
       <Route path="/analytics" element={<MainLayout><div>Analytics Page</div></MainLayout>} />
 
-      <Route path="/settings" element={<MainLayout><div>Settings Page</div></MainLayout>} />
+     <Route path="/settings" element={<MainLayout><SettingPage /></MainLayout>} />
       <Route path="/profile" element={<MainLayout><UserProfilePage /></MainLayout>} />
     </Routes>
   );
