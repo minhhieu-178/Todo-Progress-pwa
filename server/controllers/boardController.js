@@ -1,8 +1,5 @@
 import Board from '../models/Board.js';
 
-// @desc    Tạo Bảng (Board) mới
-// @route   POST /api/boards
-// @access  Protected
 export const createBoard = async (req, res) => {
   const { title } = req.body;
   
@@ -11,7 +8,6 @@ export const createBoard = async (req, res) => {
   }
 
   try {
-    // Tạo các danh sách mặc định khi tạo Bảng mới
     const defaultLists = [
       { title: 'Việc cần làm', position: 0 },
       { title: 'Đang làm', position: 1 },
