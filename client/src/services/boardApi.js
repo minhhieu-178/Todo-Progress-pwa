@@ -1,6 +1,5 @@
 import api from './api'; 
 
-
 export const getMyBoards = async () => {
   try {
     const { data } = await api.get('/boards');
@@ -44,4 +43,23 @@ export const deleteBoard = async (boardId) => {
     } catch (error) {
         throw error.response?.data?.message || error.message;
     }
+};
+
+export const addMemberToBoard = async (boardId, email) => {
+  try {
+    const { data } = await api.put(`/boards/${boardId}/members`, { email });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+// --- THÊM HÀM NÀY ---
+export const removeMemberFromBoard = async (boardId, userId) => {
+  try {
+    const { data } = await api.delete(`/boards/${boardId}/members/${userId}`);
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
 };

@@ -17,4 +17,34 @@ export const loginUser = async (email, password) => {
   } catch (error) {
     throw error.response?.data?.message || error.message;
   }
+<<<<<<< HEAD
+=======
+};
+
+export const updateProfile = async (fullName) => {
+  try {
+    const { data } = await api.put('/auth/profile', { fullName });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const forgotPassword = async (email) => {
+  try {
+    const { data } = await api.post('/auth/forgot-password', { email });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const deleteAccount = async () => {
+  try {
+    const { data } = await api.delete('/auth/profile');
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+>>>>>>> origin/main
 };

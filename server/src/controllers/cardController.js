@@ -121,60 +121,42 @@ export const deleteCard = async (req, res) => {
 
 
 
-
-// @desc    Di chuyển một Card (thay đổi List hoặc vị trí trong List)
-// @route   PUT /api/cards/:cardId/move
-// @access  Protected
 export const moveCard = async (req, res) => {
   const { cardId } = req.params;
   const { boardId, sourceListId, destListId, newPosition } = req.body;
 
   try {
-    // 1. Tìm Board
     const board = await Board.findById(boardId);
-    if (!board) {
-      return res.status(404).json({ message: 'Không tìm thấy Bảng' });
-    }
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
 
-    // 2. Kiểm tra user có phải là thành viên không
-    const isMember = board.members.some(
-      (memberId) => memberId.toString() === req.user._id.toString()
-    );
-    if (!isMember) {
-      return res.status(403).json({ message: 'Bạn không có quyền di chuyển Thẻ trong Bảng này' });
-    }
-
-    // 3. Tìm List nguồn và List đích
+    // 1. Tìm List nguồn và List đích
     const sourceList = board.lists.id(sourceListId);
     const destList = board.lists.id(destListId);
-    if (!sourceList || !destList) {
-      return res.status(404).json({ message: 'Không tìm thấy List nguồn hoặc đích' });
-    }
+    if (!sourceList || !destList) return res.status(404).json({ message: 'Lỗi dữ liệu List' });
 
-    // 4. Lấy Card cần di chuyển
+    // 2. Tìm Card trong List nguồn
     const cardToMove = sourceList.cards.id(cardId);
-    if (!cardToMove) {
-      return res.status(404).json({ message: 'Không tìm thấy Thẻ trong List nguồn' });
-    }
+    if (!cardToMove) return res.status(404).json({ message: 'Không tìm thấy Thẻ' });
 
-    // 5. Xóa Card khỏi List nguồn
+    // 3. CLONE dữ liệu thẻ sang dạng Object thường (QUAN TRỌNG)
+    const cardData = cardToMove.toObject(); 
+
+    // 4. Xóa thẻ ở nguồn
     sourceList.cards.pull(cardId);
 
-    // 6. Thêm Card vào List đích (theo vị trí mới)
-    // newPosition có thể là vị trí được truyền từ frontend
-    const cardObject = cardToMove.toObject(); // Chuyển thành object thuần túy
-    destList.cards.splice(newPosition ?? destList.cards.length, 0, cardObject);
+    // 5. Chèn thẻ vào đích
+    const insertIndex = (newPosition !== undefined && newPosition !== null) 
+                        ? newPosition 
+                        : destList.cards.length;
+    
+    destList.cards.splice(insertIndex, 0, cardData);
 
-    // 7. Cập nhật lại position cho tất cả Card trong cả hai List
-    sourceList.cards.forEach((c, index) => (c.position = index));
-    destList.cards.forEach((c, index) => (c.position = index));
-
-    // 8. Lưu thay đổi
+    // 6. Lưu
     await board.save();
 
-    res.status(200).json({ message: 'Di chuyển Thẻ thành công' });
+    res.status(200).json({ message: 'Di chuyển thành công' });
   } catch (error) {
-    console.error(error);
+    console.error("Move Card Error:", error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
