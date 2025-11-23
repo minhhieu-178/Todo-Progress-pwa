@@ -7,6 +7,7 @@ import {
   deleteBoard,
   createList,
   updateList,
+  deleteList,
   addMember,
   removeMember
 } from '../controllers/boardController.js';
@@ -25,6 +26,7 @@ router.route('/:id')
 
 router.post('/:boardId/lists', protect, createList);
 router.put('/:boardId/lists/:listId', protect, updateList);
+router.delete('/:boardId/lists/:listId', protect, deleteList);
 
 router.put('/:id/members', protect, addMember);
 // --- Thêm route Xóa thành viên ---
