@@ -262,7 +262,7 @@ if (
                                 }}
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                             />
-                        </label>
+                        </div>
                         {dueDate && <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 text-center">{new Date(dueDate).toLocaleDateString('vi-VN')}</div>}
                     </div>
 
