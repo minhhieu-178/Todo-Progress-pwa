@@ -17,3 +17,12 @@ export const updateList = async (boardId, listId, updateData) => {
         throw error.response?.data?.message || error.message;
     }
 };
+
+export const deleteList = async (boardId, listId) => {
+  try {
+    const { data } = await api.delete(`/boards/${boardId}/lists/${listId}`);
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-import { createList } from '../services/listApi';
+import { createList, deleteList } from '../services/listApi'; 
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
@@ -149,6 +149,28 @@ function BoardPage() {
     }
   };
 
+  const handleUpdateList = (updatedList) => {
+  const newLists = board.lists.map((list) => 
+    list._id === updatedList._id ? updatedList : list
+  );
+  setBoard({ ...board, lists: newLists });
+};
+
+  const handleDeleteList = async (listId) => {
+  if (window.confirm("Bạn có chắc chắn muốn xóa danh sách này? Mọi thẻ bên trong sẽ bị mất!")) {
+    try {
+      await deleteList(boardId, listId);
+
+      const newLists = board.lists.filter(list => list._id !== listId);
+      setBoard({ ...board, lists: newLists });
+
+    } catch (err) {
+      alert("Lỗi xóa danh sách: " + err.toString());
+      fetchBoard();
+    }
+  }
+};
+
   if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu Bảng...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
   if (!board) return <div className="p-8 text-center dark:text-white">Không tìm thấy Bảng.</div>;
@@ -220,6 +242,8 @@ function BoardPage() {
                   boardId={board._id}
                   onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
+                  onDeleteList={handleDeleteList}
+                  onUpdateList={handleUpdateList}
                 />
               ))}
               {provided.placeholder}
