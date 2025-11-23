@@ -53,7 +53,8 @@ export const createCard = async (req, res) => {
  */
 export const updateCard = async (req, res) => {
   const { boardId, listId, cardId } = req.params;
-  const { title, members } = req.body;
+  // --- SỬA: Lấy thêm description, dueDate, isCompleted từ body ---
+  const { title, description, dueDate, members, isCompleted } = req.body;
 
   try {
     const board = await Board.findById(boardId);
@@ -71,10 +72,16 @@ export const updateCard = async (req, res) => {
     const card = list.cards.id(cardId);
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
 
-    if (title) card.title = title;
-    if (members) card.members = members;
+    // --- SỬA: Cập nhật các trường mới ---
+    if (title !== undefined) card.title = title;
+    if (description !== undefined) card.description = description; // Lưu mô tả
+    if (dueDate !== undefined) card.dueDate = dueDate;             // Lưu deadline
+    if (isCompleted !== undefined) card.isCompleted = isCompleted; // Lưu trạng thái hoàn thành
+    if (members !== undefined) card.members = members;
 
     await board.save();
+    
+    // Trả về card đã update
     res.status(200).json(card);
   } catch (error) {
     console.error(error);
