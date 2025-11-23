@@ -1,6 +1,6 @@
-
 import api from './api';
 
+// API tạo thẻ mới
 export const createCard = async (title, boardId, listId) => {
   try {
     const { data } = await api.post(`/boards/${boardId}/lists/${listId}/cards`, { title });
@@ -10,6 +10,7 @@ export const createCard = async (title, boardId, listId) => {
   }
 };
 
+// API cập nhật thẻ
 export const updateCard = async (boardId, listId, cardId, updateData) => {
   try {
     const { data } = await api.put(`/boards/${boardId}/lists/${listId}/cards/${cardId}`, updateData);
@@ -19,6 +20,7 @@ export const updateCard = async (boardId, listId, cardId, updateData) => {
   }
 };
 
+// API xóa thẻ
 export const deleteCard = async (boardId, listId, cardId) => {
   try {
     const { data } = await api.delete(`/boards/${boardId}/lists/${listId}/cards/${cardId}`);
@@ -28,9 +30,13 @@ export const deleteCard = async (boardId, listId, cardId) => {
   }
 };
 
+// --- SỬA LỖI Ở ĐÂY ---
+// Cập nhật đúng đường dẫn API để khớp với Backend
 export const moveCard = async (cardId, moveData) => {
   try {
-    const { data } = await api.put(`/cards/${cardId}/move`, moveData);
+    // Lấy boardId từ moveData để điền vào URL
+    const { boardId } = moveData; 
+    const { data } = await api.put(`/boards/${boardId}/cards/${cardId}/move`, moveData);
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;
