@@ -9,9 +9,9 @@ export const createBoard = async (req, res) => {
   }
   try {
     const defaultLists = [
-      { title: 'Việc cần làm', position: 0 },
-      { title: 'Đang làm', position: 1 },
-      { title: 'Đã xong', position: 2 },
+      { title: 'Việc cần làm', position: 0, isDefault: true }, 
+      { title: 'Đang làm', position: 1, isDefault: true },     
+      { title: 'Đã xong', position: 2, isDefault: true },      
     ];
     const board = await Board.create({
       title,
@@ -141,6 +141,32 @@ export const updateList = async (req, res) => {
     res.json(list);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Xóa List khỏi Bảng
+export const deleteList = async (req, res) => {
+  try {
+    const { boardId, listId } = req.params;
+
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
+
+    const isMember = board.members.some(m => m.toString() === req.user._id.toString());
+    if (!isMember) return res.status(403).json({ message: 'Không có quyền xóa List' });
+
+    const listIndex = board.lists.findIndex(l => l._id.toString() === listId);
+    if (listIndex === -1) {
+        return res.status(404).json({ message: 'Không tìm thấy List' });
+    }
+    
+    board.lists.splice(listIndex, 1); 
+    await board.save();
+
+    res.json({ message: 'Đã xóa List thành công' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
 
