@@ -254,22 +254,16 @@ if (
                                 ref={dateInputRef} 
                                 type="date" 
                                 value={dueDate}
-                                onChange={handleDateChange} 
-                                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer -z-10"
+                                onChange={(e) => {
+                                    setDueDate(e.target.value);
+                                    // Cần gọi save ngay ở đây vì onBlur input date đôi khi không chuẩn
+                                                                      //test update main
+                                    setTimeout(handleSaveCard, 100); 
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
                             />
-                            {dueDate && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDateChange({ target: { value: '' } });
-                                    }}
-                                    className="p-1 hover:bg-white/50 rounded-full text-current opacity-60 hover:opacity-100 z-20"
-                                    title="Delete deadline"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                        </div>
+                        </label>
+                        {dueDate && <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 text-center">{new Date(dueDate).toLocaleDateString('vi-VN')}</div>}
                     </div>
 
                     <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mt-6 mb-2">Thao tác</div>
