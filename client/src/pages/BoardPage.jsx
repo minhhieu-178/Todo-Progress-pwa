@@ -34,15 +34,21 @@ function BoardPage() {
     setIsModalOpen(true);
   };
 
-  const handleUpdateCardInBoard = (listId, updatedCard) => {
+const handleUpdateCardInBoard = (listId, updatedCard) => {
     const newBoard = { ...board };
     const list = newBoard.lists.find(l => l._id === listId);
     const cardIndex = list.cards.findIndex(c => c._id === updatedCard._id);
+    
     if (cardIndex !== -1) {
-        list.cards[cardIndex] = updatedCard;
+        list.cards[cardIndex] = updatedCard; 
         setBoard(newBoard);
+        
+        if (selectedCard && selectedCard._id === updatedCard._id) {
+            setSelectedCard(updatedCard);
+        }
+        // ---------------------
     }
-  };
+};
 
   const handleDeleteCardInBoard = (listId, cardId) => {
     const newBoard = { ...board };
@@ -51,7 +57,6 @@ function BoardPage() {
     setBoard(newBoard);
   };
 
-  // --- LOGIC QUẢN LÝ THÀNH VIÊN (Được gọi từ MembersModal) ---
   const handleInvite = async (email) => {
     try {
       const updatedBoard = await addMemberToBoard(board._id, email);

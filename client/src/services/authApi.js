@@ -17,8 +17,6 @@ export const loginUser = async (email, password) => {
   } catch (error) {
     throw error.response?.data?.message || error.message;
   }
-<<<<<<< HEAD
-=======
 };
 
 export const updateProfile = async (fullName) => {
@@ -46,5 +44,4 @@ export const deleteAccount = async () => {
   } catch (error) {
     throw error.response?.data?.message || error.message;
   }
->>>>>>> origin/main
 };
