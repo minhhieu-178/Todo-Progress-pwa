@@ -1,9 +1,8 @@
 import api from './api';
 
-
-export const registerUser = async (fullName, email, password) => {
+export const registerUser = async (fullName, email, password, age, phone, address) => {
   try {
-    const { data } = await api.post('/auth/register', { fullName, email, password });
+    const { data } = await api.post('/auth/register', { fullName, email, password, age, phone, address});
     return data; 
   } catch (error) {
     throw error.response?.data?.message || error.message;
@@ -19,9 +18,9 @@ export const loginUser = async (email, password) => {
   }
 };
 
-export const updateProfile = async (fullName) => {
+export const updateProfile = async (userData) => {
   try {
-    const { data } = await api.put('/auth/profile', { fullName });
+    const { data } = await api.put('/auth/profile', userData );
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;
@@ -37,9 +36,29 @@ export const forgotPassword = async (email) => {
   }
 };
 
-export const deleteAccount = async () => {
+export const deleteAccount = async (password) => {
   try {
-    const { data } = await api.delete('/auth/profile');
+    const { data } = await api.delete('/auth/profile', { 
+      data: { password } 
+    });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const requestChangePassword = async (currentPassword) => {
+  try {
+    const { data } = await api.post('/auth/change-password-request', { currentPassword });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const confirmChangePassword = async (otp, newPassword) => {
+  try {
+    const { data } = await api.post('/auth/change-password-confirm', { otp, newPassword });
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;
