@@ -18,9 +18,11 @@ export const loginUser = async (email, password) => {
   }
 };
 
+// --- ĐÃ SỬA URL ---
 export const updateProfile = async (userData) => {
   try {
-    const { data } = await api.put('/auth/profile', userData );
+    // Đổi từ /auth/profile -> /users/profile
+    const { data } = await api.put('/users/profile', userData );
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;
@@ -36,9 +38,11 @@ export const forgotPassword = async (email) => {
   }
 };
 
+// --- ĐÃ SỬA URL ---
 export const deleteAccount = async (password) => {
   try {
-    const { data } = await api.delete('/auth/profile', { 
+    // Đổi từ /auth/profile -> /users/profile
+    const { data } = await api.delete('/users/profile', { 
       data: { password } 
     });
     return data;
