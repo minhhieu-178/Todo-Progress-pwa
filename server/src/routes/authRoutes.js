@@ -1,24 +1,20 @@
 import express from 'express';
 import { 
   registerUser, 
-  loginUser, 
-  updateUserProfile, 
+  loginUser,
   forgotPassword, 
-  deleteUser 
+  requestChangePassword,
+  confirmChangePassword
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// --- Public Routes (Ai cũng truy cập được) ---
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-
-// QUAN TRỌNG: Route này KHÔNG ĐƯỢC có 'protect'
 router.post('/forgot-password', forgotPassword); 
 
-// --- Protected Routes (Phải đăng nhập mới dùng được) ---
-router.put('/profile', protect, updateUserProfile);
-router.delete('/profile', protect, deleteUser);
+router.post('/change-password-request', protect, requestChangePassword);
+router.post('/change-password-confirm', protect, confirmChangePassword);
 
 export default router;
