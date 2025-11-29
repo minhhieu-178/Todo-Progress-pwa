@@ -1,5 +1,7 @@
 import Board from '../models/Board.js';
 import mongoose from 'mongoose';
+import User from '../models/User.js';
+import NotificationService from '../services/notificationService.js';
 
 /**
  * @desc   Tạo 1 Card mới trong List
@@ -44,16 +46,115 @@ export const createCard = async (req, res) => {
   }
 };
 
+export const removeMemberFromCard = async (req, res) => {
+  const { boardId, listId, cardId } = req.params;
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: "Thiếu userId" });
+  }
+  try {
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
+
+    const isMember = board.members.some(
+      (m) => m.toString() === req.user._id.toString()
+    );
+    if (!isMember)
+      return res.status(403).json({ message: "Bạn không có quyền cập nhật Card trong Bảng này" });
+
+    const list = board.lists.id(listId);
+    if (!list) return res.status(404).json({ message: "Không tìm thấy List" });
+
+    const card = list.cards.id(cardId);
+    if (!card) return res.status(404).json({ message: "Không tìm thấy Card" });
+
+    const inCard = card.members.some(
+      (m) => m.toString() === userId.toString()
+    );
+    if (!inCard) {
+      return res.status(400).json({ message: "User không nằm trong Card" });
+    }
+    card.members = card.members.filter(
+      (m) => m.toString() !== userId.toString()
+    );
+    await board.save();
+
+    await NotificationService.create({
+      recipientId: userId,
+      senderId: req.user._id,
+      type: "REMOVE_MEMBER_FROM_CARD",
+      title: "Bạn bị xóa khỏi thẻ",
+      message: `Bạn đã bị xóa khỏi Thẻ "${card.title}" trong Bảng "${board.title}"`,
+      targetUrl: `/boards/${board._id}`,
+    });
+
+    res.status(200).json({ message: "Xóa thành viên thành công", card });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Lỗi máy chủ" });
+  }
+};
+
+export const addMemberToCard = async (req, res) => {
+  const { boardId, listId, cardId } = req.params;
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'Thiếu userId' });
+  }
+  try {
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
+
+    const isMember = board.members.some(
+      (m) => m.toString() === req.user._id.toString()
+    );
+    if (!isMember)
+      return res.status(403).json({ message: 'Bạn không có quyền cập nhật Card trong Bảng này' });
+
+    const list = board.lists.id(listId);
+    if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
+
+    const card = list.cards.id(cardId);
+    if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User không tồn tại' });
+
+    const alreadyInCard = card.members.some(
+      (m) => m.toString() === userId.toString()
+    );
+    if (alreadyInCard) {
+      return res.status(400).json({ message: 'User đã có trong Card' });
+    }
+
+    card.members.push(userId);
+    await board.save();
 
 
-/**
- * @desc   Cập nhật Card (title, members, v.v)
- * @route  PUT /api/boards/:boardId/lists/:listId/cards/:cardId
- * @access Protected
- */
+    await NotificationService.create({
+      recipientId: user._id,                 
+      senderId: req.user._id,               
+      type: "ADDED_TO_CARD",
+      title: "Bạn được thêm vào thẻ",
+      message: `${req.user.name} đã thêm bạn vào thẻ "${card.title}" trong bảng "${board.title}"`,
+      targetUrl: `/boards/${boardId}/lists/${listId}/cards/${cardId}`
+    });
+
+    return res.status(200).json({
+      message: "Thêm thành viên thành công",
+      card
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+
 export const updateCard = async (req, res) => {
   const { boardId, listId, cardId } = req.params;
-  // --- SỬA: Lấy thêm description, dueDate, isCompleted từ body ---
   const { title, description, dueDate, members, isCompleted } = req.body;
 
   try {
@@ -72,7 +173,6 @@ export const updateCard = async (req, res) => {
     const card = list.cards.id(cardId);
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
 
-    // --- SỬA: Cập nhật các trường mới ---
     if (title !== undefined) card.title = title;
     if (description !== undefined) card.description = description; // Lưu mô tả
     if (dueDate !== undefined) card.dueDate = dueDate;             // Lưu deadline
@@ -88,8 +188,6 @@ export const updateCard = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
-
-
 
 /**
  * @desc   Xóa Card khỏi List

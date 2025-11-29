@@ -5,15 +5,12 @@ import nodemailer from 'nodemailer'; // Import để gửi mail
 
 dotenv.config();
 
-// Hàm tạo Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
 };
 
-// @desc    Đăng ký
-// @route   POST /api/auth/register
 export const registerUser = async (req, res) => {
   const { fullName, email, password } = req.body;
   try {
