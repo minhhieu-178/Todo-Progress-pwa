@@ -5,12 +5,11 @@ import {
   getBoardById,
   updateBoard,
   deleteBoard,
-  createList,
-  updateList,
-  deleteList,
   addMember,
   removeMember
 } from '../controllers/boardController.js';
+// --- Import mới từ listController ---
+import { createList, updateList, deleteList } from '../controllers/listController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -24,12 +23,12 @@ router.route('/:id')
   .put(protect, updateBoard)
   .delete(protect, deleteBoard);
 
+router.put('/:id/members', protect, addMember);
+router.delete('/:id/members/:userId', protect, removeMember);
+
+// --- Route cho List (trỏ vào listController) ---
 router.post('/:boardId/lists', protect, createList);
 router.put('/:boardId/lists/:listId', protect, updateList);
-router.delete('/:boardId/lists/:listId', protect, deleteList);
-
-router.put('/:id/members', protect, addMember);
-// --- Thêm route Xóa thành viên ---
-router.delete('/:id/members/:userId', protect, removeMember); 
+router.delete('/:boardId/lists/:listId', protect, deleteList); // Thêm tính năng xóa list
 
 export default router;
