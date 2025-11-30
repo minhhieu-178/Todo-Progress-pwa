@@ -1,5 +1,6 @@
 import Board from '../models/Board.js';
 import mongoose from 'mongoose';
+import { createLog } from '../services/logService.js';
 import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js';
 
