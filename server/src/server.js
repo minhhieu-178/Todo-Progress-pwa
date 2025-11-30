@@ -8,6 +8,7 @@ import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -24,6 +25,7 @@ app.use('/api', cardRoutes); // Lưu ý route này ko có prefix /cards vì tron
 app.use('/api/comments', commentRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/users', userRoutes)
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));
