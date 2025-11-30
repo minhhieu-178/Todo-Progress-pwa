@@ -3,9 +3,12 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js'; // <--- Import User Routes
 import boardRoutes from './routes/boardRoutes.js';
 import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
+import logRoutes from './routes/logRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
 dotenv.config();
@@ -18,9 +21,12 @@ app.use(cors());
 app.get('/', (req, res) => res.send('API đang chạy...'));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes); // <--- Đăng ký /api/users
 app.use('/api/boards', boardRoutes);
-app.use('/api', cardRoutes); // Lưu ý route này ko có prefix /cards vì trong file route đã định nghĩa dài
+app.use('/api', cardRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/logs', logRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5001;

@@ -6,17 +6,32 @@ import { updateProfile } from '../services/authApi';
 function UserProfilePage() {
   const { user, updateUser } = useAuth(); 
   
-  const [fullName, setFullName] = useState('');
+  // State cho form
+  const [formData, setFormData] = useState({
+    fullName: '',
+    age: '',
+    phone: '',
+    address: ''
+  });
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     if (user) {
-      setFullName(user.fullName || '');
+      setFormData({
+        fullName: user.fullName || '',
+        age: user.age || '',
+        phone: user.phone || '',
+        address: user.address || ''
+      });
       setEmail(user.email || '');
     }
   }, [user]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +39,8 @@ function UserProfilePage() {
     setMessage({ type: '', text: '' });
 
     try {
-      const updatedData = await updateProfile(fullName);
+      // Gọi API updateProfile với object data
+      const updatedData = await updateProfile(formData);
       updateUser(updatedData); 
       setMessage({ type: 'success', text: 'Cập nhật thông tin thành công!' });
     } catch (err) {
@@ -36,6 +52,7 @@ function UserProfilePage() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header của trang */}
       <PageHeader title="Thông Tin Người Dùng" showSearch={false} />
 
       <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -56,18 +73,21 @@ function UserProfilePage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Họ tên */}
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Họ và tên</label>
               <input 
                 type="text" 
                 id="fullName" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={formData.fullName}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               />
             </div>
 
+            {/* Email (Read-only) */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email (Không thể thay đổi)</label>
               <input 
@@ -76,6 +96,42 @@ function UserProfilePage() {
                 value={email}
                 className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                 disabled
+              />
+            </div>
+
+            {/* Tuổi & Số điện thoại */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tuổi</label>
+                    <input 
+                        type="number" 
+                        id="age" 
+                        value={formData.age}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Số điện thoại</label>
+                    <input 
+                        type="text" 
+                        id="phone" 
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                </div>
+            </div>
+
+            {/* Địa chỉ */}
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ</label>
+              <input 
+                type="text" 
+                id="address" 
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
 
