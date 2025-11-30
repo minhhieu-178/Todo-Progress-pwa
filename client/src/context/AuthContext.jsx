@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api'; //
+import api from '../services/api';
 import { registerUser } from '../services/authApi'; 
 
 const AuthContext = createContext();
@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (fullName, email, password) => {
+  const register = async (fullName, email, password, age, phone, address) => {
     try {
-      await registerUser(fullName, email, password); 
+      await registerUser(fullName, email, password, age, phone, address); 
       return true; 
     } catch (error) {
       throw error.response?.data?.message || error.message; 

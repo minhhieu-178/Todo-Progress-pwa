@@ -11,6 +11,9 @@ const RegisterPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    age: "",
+    phone: "",
+    address: ""
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +40,7 @@ const RegisterPage = () => {
 
     try {
       setLoading(true);
-      await register(formData.fullName, formData.email, formData.password); 
+      await register(formData.fullName, formData.email, formData.password, formData.age, formData.phone, formData.address); 
       setSuccess("Tạo tài khoản thành công! Đang chuyển đến trang đăng nhập...");
       setTimeout(() => {
         navigate("/login"); 
@@ -82,6 +85,46 @@ const RegisterPage = () => {
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+                <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tuổi</label>
+                <input 
+                  type="number" 
+                  id="age" 
+                  name="age" 
+                  placeholder="25"
+                  value={formData.age}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+             </div>
+             <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Số điện thoại</label>
+                <input 
+                  type="text" 
+                  id="phone" 
+                  name="phone" 
+                  placeholder="0987..."
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+             </div>
+          </div>
+
+          <div>
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ</label>
+            <input 
+              type="text" 
+              id="address" 
+              name="address" 
+              placeholder="Hà Nội, Việt Nam"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
 
