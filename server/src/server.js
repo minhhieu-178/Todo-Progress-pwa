@@ -8,6 +8,7 @@ import boardRoutes from './routes/boardRoutes.js';
 import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
+import logRoutes from './routes/logRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -24,6 +25,7 @@ app.use('/api/boards', boardRoutes);
 app.use('/api', cardRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/logs', logRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));
