@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-import { createList } from '../services/listApi';
+import { createList, deleteList } from '../services/listApi'; 
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
@@ -34,15 +34,21 @@ function BoardPage() {
     setIsModalOpen(true);
   };
 
-  const handleUpdateCardInBoard = (listId, updatedCard) => {
+const handleUpdateCardInBoard = (listId, updatedCard) => {
     const newBoard = { ...board };
     const list = newBoard.lists.find(l => l._id === listId);
     const cardIndex = list.cards.findIndex(c => c._id === updatedCard._id);
+    
     if (cardIndex !== -1) {
-        list.cards[cardIndex] = updatedCard;
+        list.cards[cardIndex] = updatedCard; 
         setBoard(newBoard);
+        
+        if (selectedCard && selectedCard._id === updatedCard._id) {
+            setSelectedCard(updatedCard);
+        }
+        // ---------------------
     }
-  };
+};
 
   const handleDeleteCardInBoard = (listId, cardId) => {
     const newBoard = { ...board };
@@ -51,7 +57,6 @@ function BoardPage() {
     setBoard(newBoard);
   };
 
-  // --- LOGIC QUẢN LÝ THÀNH VIÊN (Được gọi từ MembersModal) ---
   const handleInvite = async (email) => {
     try {
       const updatedBoard = await addMemberToBoard(board._id, email);
@@ -149,6 +154,28 @@ function BoardPage() {
     }
   };
 
+  const handleUpdateList = (updatedList) => {
+  const newLists = board.lists.map((list) => 
+    list._id === updatedList._id ? updatedList : list
+  );
+  setBoard({ ...board, lists: newLists });
+};
+
+  const handleDeleteList = async (listId) => {
+  if (window.confirm("Bạn có chắc chắn muốn xóa danh sách này? Mọi thẻ bên trong sẽ bị mất!")) {
+    try {
+      await deleteList(boardId, listId);
+
+      const newLists = board.lists.filter(list => list._id !== listId);
+      setBoard({ ...board, lists: newLists });
+
+    } catch (err) {
+      alert("Lỗi xóa danh sách: " + err.toString());
+      fetchBoard();
+    }
+  }
+};
+
   if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu Bảng...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
   if (!board) return <div className="p-8 text-center dark:text-white">Không tìm thấy Bảng.</div>;
@@ -220,6 +247,8 @@ function BoardPage() {
                   boardId={board._id}
                   onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
+                  onDeleteList={handleDeleteList}
+                  onUpdateList={handleUpdateList}
                 />
               ))}
               {provided.placeholder}
