@@ -14,9 +14,10 @@ const NotificationSchema = new mongoose.Schema(
     },
     type: { 
       type: String,
-      enum: ['COMMENT', 'ASSIGN', 'DEADLINE'],
+      enum: ['COMMENT', 'ASSIGN', 'DEADLINE','ADDED_TO_BOARD','DELETED_FROM_BOARD'],
       required: true,
     },
+    targetUrl: { type: String },
     title: { type: String, required: true },
     message: { type: String },
     read: { type: Boolean, default: false },
