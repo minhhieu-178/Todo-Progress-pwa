@@ -1,5 +1,6 @@
 import Board from '../models/Board.js';
 import User from '../models/User.js';
+import NotificationService from '../services/notificationService.js'
 
 // @desc    Tạo Bảng (Board) mới
 export const createBoard = async (req, res) => {
@@ -191,7 +192,18 @@ export const addMember = async (req, res) => {
 
     board.members.push(userYz._id);
     await board.save();
-
+    try {
+      await NotificationService.create({
+        recipientId: userYz._id,
+        senderId: board.ownerId,
+        type: "ADDED_TO_BOARD",
+        title: "Được thêm vào nhóm",
+        message: `Bạn đã được thêm vào Bảng ${board.title}`,
+        targetUrl: `/boards/${id}`,
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
     const updatedBoard = await Board.findById(id)
       .populate('members', 'fullName email')
       .populate('ownerId', 'fullName email');
@@ -230,6 +242,18 @@ export const removeMember = async (req, res) => {
       .populate('ownerId', 'fullName email');
 
     res.json(updatedBoard);
+    try {
+      await NotificationService.create({
+        recipientId: userId,
+        senderId: board.ownerId,
+        type: "DELETED_FROM_BOARD",
+        title: "Bị xóa khỏi bảng",
+        message: `Bạn đã bị xóa khỏi Bảng ${board.title}`,
+        targetUrl: `/boards/${id}`,
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
