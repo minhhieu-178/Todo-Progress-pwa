@@ -92,13 +92,16 @@ const RegisterPage = () => {
              <div>
                 <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tuổi</label>
                 <input 
-                  type="number" 
-                  id="age" 
-                  name="age" 
-                  placeholder="25"
-                  value={formData.age}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                type="text" 
+                id="age" 
+                name="age" 
+                placeholder="25"
+                value={formData.age}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  setFormData({ ...formData, age: value });
+                }}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
              </div>
              <div>
