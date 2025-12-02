@@ -5,9 +5,6 @@ import {
   getBoardById,
   updateBoard,
   deleteBoard,
-  createList,
-  updateList,
-  deleteList,
   addMember,
   removeMember
 } from '../controllers/boardController.js';
