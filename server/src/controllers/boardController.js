@@ -80,53 +80,6 @@ export const deleteBoard = async (req, res) => {
   }
 };
 
-// @desc    Tạo List mới
-export const createList = async (req, res) => {
-  try {
-    const { boardId } = req.params;
-    const { title, position } = req.body;
-    if (!title) return res.status(400).json({ message: 'Thiếu tiêu đề List' });
-
-    const board = await Board.findById(boardId);
-    if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
-
-    const isMember = board.members.some(m => m.toString() === req.user._id.toString());
-    if (!isMember) return res.status(403).json({ message: 'Không phải thành viên' });
-
-    const newPosition = position ?? board.lists.length;
-    const newList = { title: title.trim(), position: newPosition, cards: [] };
-
-    board.lists.push(newList);
-    await board.save();
-    res.status(201).json(board.lists[board.lists.length - 1]);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Cập nhật List
-export const updateList = async (req, res) => {
-  try {
-    const { boardId, listId } = req.params;
-    const { title, position, cards } = req.body;
-    const board = await Board.findById(boardId);
-    if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
-
-    const list = board.lists.id(listId);
-    if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
-
-    if (title) list.title = title.trim();
-    if (position !== undefined) list.position = position;
-    if (cards) list.cards = cards;
-
-    await board.save();
-    res.json(list);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Thêm thành viên (Invite)
 export const addMember = async (req, res) => {
   const { email } = req.body;
   const { id } = req.params;
