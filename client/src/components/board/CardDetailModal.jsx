@@ -224,7 +224,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, onUpdateCard,
                                     // Cần gọi save ngay ở đây vì onBlur input date đôi khi không chuẩn
                                     setTimeout(handleSaveCard, 100); 
                                 }}
-                                className="absolute inset-0 opacity-50 cursor-pointer"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
                             />
                         </label>
                         {dueDate && <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 text-center">{new Date(dueDate).toLocaleDateString('vi-VN')}</div>}

@@ -1,31 +1,40 @@
-import Card from '../models/Card.js';
-import Notification from '../models/Notification.js';
+import Board from '../models/Board.js';
+import NotificationService from '../services/notificationService.js';
 
-export const checkDeadlines = async (userId = null) => {
+export const checkDeadlines = async () => {
   const now = new Date();
-  const soon = new Date(now.getTime() + 60 * 60 * 1000); 
+  const nowVN = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  const soonVN = new Date(nowVN.getTime() + 60 * 60 * 1000);
 
-  const query = {
-    isCompleted: false,
-    dueDate: { $lte: soon, $gte: now }
-  };
-  if (userId) query.members = userId;
-
-  const cards = await Card.find(query).select('title dueDate members');
+  // chỉ lấy những field cần thiết
+  const boards = await Board.find({}, 'lists.cards.title lists.cards.dueDate lists.cards.members lists.cards.isCompleted');
 
   const notifications = [];
-  for (const card of cards) {
-    for (const memberId of card.members) {
-      // nếu check riêng cho user, chỉ tạo 1 notification
-      if (userId && memberId.toString() !== userId) continue;
 
-      const notif = await Notification.create({
-        user: memberId,
-        type: 'DEADLINE_SOON',
-        message: `Card "${card.title}" sắp hết hạn!`,
-        card: card._id
-      });
-      notifications.push(notif);
+  for (const board of boards) {
+    for (const list of board.lists) {
+      for (const card of list.cards) {
+        if (card.isCompleted) continue; 
+        if (!card.dueDate || card.dueDate < nowVN || card.dueDate > soonVN) continue;
+
+        for (const memberId of card.members) {
+          const notif = await NotificationService.create({
+            recipientId: memberId,
+            senderId: "692b01acf7b1ebc930ad697e",
+            type: 'DEADLINE',
+            title: 'Nhắc nhở deadline',
+            message: `Thẻ "${card.title}" sắp hết hạn!`,
+            targetUrl: `/boards/${board._id}/lists/${list._id}/cards/${card._id}`,
+            metadata: {
+              boardId: board._id,
+              listId: list._id,
+              cardId: card._id,
+              dueDate: card.dueDate,
+            },
+          });
+          notifications.push(notif);
+        }
+      }
     }
   }
 
