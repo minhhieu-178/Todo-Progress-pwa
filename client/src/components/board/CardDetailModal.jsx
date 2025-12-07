@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment,useRef } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X, Clock, AlignLeft, MessageSquare, Trash2, CheckSquare } from 'lucide-react';
 import { updateCard, deleteCard } from '../../services/cardApi';
@@ -19,8 +19,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, onUpdateCard,
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
 
-  // State cho Date
-  const dateInputRef = useRef(null);
+  // Update state khi card thay đổi (mở modal card khác)
   useEffect(() => {
     if (card) {
       setTitle(card.title);
@@ -29,7 +28,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, onUpdateCard,
       setIsCompleted(card.isCompleted || false);
       loadComments();
     }
-  }, [card._id]); 
+  }, [card]);
 
   const loadComments = async () => {
     if (!card) return;
@@ -41,41 +40,19 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, onUpdateCard,
     }
   };
 
+  // Tự động lưu khi blur ô Title hoặc Description
   const handleSaveCard = async () => {
     if (!title.trim()) return;
-
-const currentDueDate = card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : '';
-if (
-    title === card.title && 
-    description === (card.description || '') && 
-    dueDate === currentDueDate &&
-    isCompleted === card.isCompleted
-) {
-    return;
-}
-
-    console.log("Đang lưu Card:", { title, description, dueDate }); // Debug log
+    // Chỉ gọi API nếu có thay đổi
+    if (title === card.title && description === (card.description || '') && dueDate === (card.dueDate ? card.dueDate.split('T')[0] : '') && isCompleted === card.isCompleted) return;
 
     try {
       const updatedCard = await updateCard(boardId, listId, card._id, { 
         title, description, dueDate, isCompleted 
       });
-      onUpdateCard(listId, updatedCard); 
+      onUpdateCard(listId, updatedCard); // Cập nhật lại UI bên ngoài Board
     } catch (error) {
       console.error("Lỗi lưu card:", error);
-    }
-  };
-
-  const handleDateChange = async (e) => {
-    const newDate = e.target.value;
-    setDueDate(newDate); 
-    try {
-        const updatedCard = await updateCard(boardId, listId, card._id, { 
-            title, description, dueDate: newDate, isCompleted 
-        });
-        onUpdateCard(listId, updatedCard);
-    } catch (error) {
-        console.error("Lỗi lưu ngày:", error);
     }
   };
 
@@ -136,6 +113,7 @@ if (
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left align-middle shadow-xl transition-all p-6">
                 
+                {/* --- HEADER: TITLE --- */}
                 <div className="flex justify-between items-start gap-4 mb-6">
                   <div className="flex-1 flex items-start gap-3">
                     <CheckSquare className="w-6 h-6 mt-1 text-pro-blue" />
@@ -156,8 +134,10 @@ if (
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                  {/* --- MAIN CONTENT (LEFT) --- */}
                   <div className="md:col-span-3 space-y-6">
                     
+                    {/* Description */}
                     <div>
                       <div className="flex items-center gap-2 mb-2 text-gray-700 dark:text-gray-200 font-semibold">
                         <AlignLeft className="w-5 h-5" />
@@ -227,42 +207,26 @@ if (
                     </div>
                   </div>
 
+                  {/* --- SIDEBAR (RIGHT) --- */}
                   <div className="space-y-4">
                     <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Thêm vào thẻ</div>
                     
+                    {/* Date Picker */}
                     <div className="relative">
-                        <div 
-                            onClick={() => {
-                                if (dateInputRef.current) {
-                                    dateInputRef.current.showPicker(); 
-                                }
-                            }}
-                            className={`flex items-center gap-2 w-full p-2 rounded cursor-pointer transition-colors border border-transparent hover:border-pro-blue/50 ${
-                                dueDate 
-                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
-                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-200'
-                            }`}
-                        >
-                            <Clock className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-sm font-medium flex-1 truncate select-none">
-                                {dueDate 
-                                    ? new Date(dueDate).toLocaleDateString('vi-VN') 
-                                    : 'Deadline'
-                                }
-                            </span>
+                        <label className="flex items-center gap-2 w-full p-2 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer text-gray-700 dark:text-gray-200 text-sm transition-colors">
+                            <Clock className="w-4 h-4" />
+                            <span>Deadline</span>
                             <input 
-                                ref={dateInputRef} 
                                 type="date" 
                                 value={dueDate}
                                 onChange={(e) => {
                                     setDueDate(e.target.value);
                                     // Cần gọi save ngay ở đây vì onBlur input date đôi khi không chuẩn
-                                                                      //test update main
                                     setTimeout(handleSaveCard, 100); 
                                 }}
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                             />
-                        </div>
+                        </label>
                         {dueDate && <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 text-center">{new Date(dueDate).toLocaleDateString('vi-VN')}</div>}
                     </div>
 
