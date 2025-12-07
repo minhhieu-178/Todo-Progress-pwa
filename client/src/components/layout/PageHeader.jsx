@@ -131,9 +131,17 @@ function PageHeader({ title, showSearch = true }) {
                         </div>
 
                         <Link to="/profile">
-                            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white dark:ring-gray-700 shadow hover:ring-indigo-300 transition-all">
-                                {user?.fullName?.charAt(0).toUpperCase()}
-                            </div>
+                            {user?.avatar ? (
+                                <img 
+                                    src={user.avatar} 
+                                    alt="Avatar" 
+                                    className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-white dark:ring-gray-700 shadow hover:ring-indigo-300 transition-all"
+                                />
+                            ) : (
+                                <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white dark:ring-gray-700 shadow hover:ring-indigo-300 transition-all">
+                                    {user?.fullName?.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                         </Link>
                     </div>
                 </div>

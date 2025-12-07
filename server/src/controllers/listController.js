@@ -1,5 +1,5 @@
 import Board from '../models/Board.js';
-
+import { createLog } from '../services/logService.js';
 // @desc    Tạo List mới
 // @route   POST /api/boards/:boardId/lists
 export const createList = async (req, res) => {
@@ -21,6 +21,18 @@ export const createList = async (req, res) => {
 
     board.lists.push(newList);
     await board.save();
+
+    const createdList = board.lists[board.lists.length - 1];
+
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: createdList._id,
+      entityType: 'LIST',
+      action: 'CREATE',
+      content: `đã thêm danh sách mới: "${title}"`
+    });
+    
     res.status(201).json(board.lists[board.lists.length - 1]);
   } catch (error) {
     res.status(500).json({ message: error.message });
