@@ -11,6 +11,8 @@ import commentRoutes from './routes/commentRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { checkDeadlines } from './services/checkDeadline.js';
+import uploadRoutes from './routes/uploadRoutes.js';
+
 dotenv.config();
 connectDB();
 
@@ -26,6 +28,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes)
+app.use('/api/upload', uploadRoutes);
 
 cron.schedule('*/10 * * * *', async () => {
   console.log('Running cron job: check deadlines');
