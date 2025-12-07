@@ -1,12 +1,9 @@
 import Board from '../models/Board.js';
 import mongoose from 'mongoose';
-<<<<<<< HEAD
 import { createLog } from '../services/logService.js';
-=======
 import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js';
 
->>>>>>> 39929d12d5c05eb2b0a999378e59d851dea2c221
 /**
  * @desc   Tạo 1 Card mới trong List
  * @route  POST /api/boards/:boardId/lists/:listId/cards
