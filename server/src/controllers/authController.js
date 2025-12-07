@@ -26,6 +26,7 @@ export const registerUser = async (req, res) => {
         age: user.age,
         phone: user.phone,
         address: user.address,
+        avatar: user.avatar
       });
     } else {
       res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
@@ -48,6 +49,7 @@ export const loginUser = async (req, res) => {
         age: user.age,
         phone: user.phone,
         address: user.address,
+        avatar: user.avatar,
         token: generateToken(user._id),
       });
     } else {

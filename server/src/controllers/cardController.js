@@ -40,6 +40,8 @@ export const createCard = async (req, res) => {
     list.cards.push(newCard);
     await board.save();
 
+    
+
     res.status(201).json(newCard);
   } catch (error) {
     console.error(error);
@@ -260,6 +262,15 @@ export const moveCard = async (req, res) => {
     // 6. Lưu
     await board.save();
 
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: cardId,
+      entityType: 'CARD',
+      action: 'MOVE',
+      content: `đã di chuyển thẻ "${cardToMove.title}" từ "${sourceList.title}" sang "${destList.title}"`
+    });
+    
     res.status(200).json({ message: 'Di chuyển thành công' });
   } catch (error) {
     console.error("Move Card Error:", error);
