@@ -24,4 +24,20 @@ api.interceptors.request.use(
   }
 );
 
+export const uploadImage = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file); 
+
+  try {
+    const { data } = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data.url; 
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
 export default api;

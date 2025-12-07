@@ -1,6 +1,7 @@
 import Board from '../models/Board.js';
 import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js'
+import { createLog } from '../services/logService.js';
 
 export const createBoard = async (req, res) => {
   const { title } = req.body;
@@ -106,6 +107,16 @@ export const addMember = async (req, res) => {
     } catch (err) {
       console.error("Notification error:", err);
     }
+
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: userYz._id, 
+      entityType: 'BOARD',
+      action: 'ADD_MEMBER',
+      content: `đã thêm thành viên "${userYz.fullName}" vào bảng`
+    });
+
     const updatedBoard = await Board.findById(id)
       .populate('members', 'fullName email')
       .populate('ownerId', 'fullName email');

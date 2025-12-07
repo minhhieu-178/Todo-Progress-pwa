@@ -41,9 +41,17 @@ function Sidebar() {
 
             <div className="p-6 border-t border-gray-200 dark:border-gray-700">
                 <Link to="/profile" className="flex items-center gap-3 mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 -mx-2 rounded-lg transition-colors cursor-pointer group">
-                    <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm group-hover:ring-2 group-hover:ring-indigo-300 transition-all">
-                        {user?.fullName?.charAt(0).toUpperCase()} 
-                    </div>
+                    {user?.avatar ? (
+                        <img 
+                            src={user.avatar} 
+                            alt="Avatar" 
+                            className="w-8 h-8 rounded-full object-cover shadow-sm group-hover:ring-2 group-hover:ring-indigo-300 transition-all"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm group-hover:ring-2 group-hover:ring-indigo-300 transition-all">
+                            {user?.fullName?.charAt(0).toUpperCase()} 
+                        </div>
+                    )}                    
                     <div className="overflow-hidden">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.fullName}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
