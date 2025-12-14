@@ -6,6 +6,7 @@ import {
   updateBoard,
   deleteBoard,
   getDashboardStats,
+  getAllUpcomingTasks,
   addMember,
   removeMember
 } from '../controllers/boardController.js';
@@ -19,6 +20,7 @@ router.route('/')
   .post(protect, createBoard)
   .get(protect, getMyBoards);
 
+router.get('/deadlines/all', protect, getAllUpcomingTasks);
 router.get('/stats', protect, getDashboardStats);
 
 router.route('/:id')
