@@ -219,4 +219,46 @@ export const getDashboardStats = async (req, res) => {
     console.error("Lỗi getDashboardStats:", error);
     res.status(500).json({ message: 'Lỗi server khi lấy thống kê' });
   }
+<<<<<<< HEAD
+=======
+};
+
+
+export const getAllUpcomingTasks = async (req, res) => {
+  try {
+    const boards = await Board.find({ members: req.user._id });
+    
+    let allDeadlines = [];
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); 
+
+    boards.forEach(board => {
+      if (board.lists?.length > 0) {
+        board.lists.forEach(list => {
+          if (list.cards?.length > 0) {
+            list.cards.forEach(card => {
+              if (!card.isCompleted && card.dueDate) {
+                const deadline = new Date(card.dueDate);
+                allDeadlines.push({
+                    taskId: card._id,
+                    taskTitle: card.title,
+                    boardId: board._id,
+                    boardTitle: board.title,
+                    deadline: deadline,
+                    isOverdue: deadline < now 
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    allDeadlines.sort((a, b) => a.deadline - b.deadline);
+
+    res.json(allDeadlines);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi lấy lịch trình' });
+  }
+>>>>>>> duchieu
 };
