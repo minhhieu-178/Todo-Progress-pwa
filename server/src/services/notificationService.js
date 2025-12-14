@@ -1,4 +1,3 @@
-// services/NotificationService.js
 import Notification from "../models/Notification.js";
 
 class NotificationService {

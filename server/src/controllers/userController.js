@@ -76,3 +76,16 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+
+export const subscribePush = async (req, res) => {
+  const subscription = req.body;
+  try {
+    // Lưu subscription vào mảng pushSubscriptions của user
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { pushSubscriptions: subscription } // $addToSet để tránh trùng lặp
+    });
+    res.status(201).json({});
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
