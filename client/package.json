@@ -14,11 +14,19 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.1",
+    "dotenv": "^17.2.3",
+    "idb": "^8.0.3",
     "lucide-react": "^0.553.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.9.5",
-    "tailwindcss": "^4.1.16"
+    "tailwindcss": "^4.1.16",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-background-sync": "^7.4.0",
+    "workbox-core": "^7.4.0",
+    "workbox-routing": "^7.4.0",
+    "workbox-strategies": "^7.4.0",
+    "workbox-window": "^7.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
