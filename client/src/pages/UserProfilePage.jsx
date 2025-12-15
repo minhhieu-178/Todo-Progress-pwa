@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/layout/PageHeader';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile } from '../services/authApi';
+import { uploadImage } from '../services/api';
+import { Camera } from 'lucide-react';
 
 function UserProfilePage() {
   const { user, updateUser } = useAuth(); 
@@ -11,11 +13,13 @@ function UserProfilePage() {
     fullName: '',
     age: '',
     phone: '',
-    address: ''
+    address: '',
+    avatar: ''
   });
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -23,11 +27,29 @@ function UserProfilePage() {
         fullName: user.fullName || '',
         age: user.age || '',
         phone: user.phone || '',
-        address: user.address || ''
+        address: user.address || '',
+        avatar: user.avatar || ''
       });
       setEmail(user.email || '');
     }
   }, [user]);
+
+const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const imageUrl = await uploadImage(file);
+      
+      setFormData(prev => ({ ...prev, avatar: imageUrl }));
+      
+    } catch (error) {
+      alert("Lỗi upload ảnh: " + error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -57,10 +79,32 @@ function UserProfilePage() {
 
       <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md mb-4">
-                {user?.fullName?.charAt(0).toUpperCase()}
+
+          <div className="flex flex-col items-center mb-8 relative">
+            <div className="relative">
+                {formData.avatar ? (
+                    <img 
+                        src={formData.avatar} 
+                        alt="Avatar" 
+                        className="w-24 h-24 rounded-full object-cover shadow-md border-2 border-white dark:border-gray-700"
+                    />
+                ) : (
+                    <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md">
+                        {user?.fullName?.charAt(0).toUpperCase()}
+                    </div>
+                )}
+
+                {/* Nút Upload đè lên góc */}
+                <label className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-700 rounded-full shadow-lg cursor-pointer hover:bg-gray-100 transition-colors border border-gray-200 dark:border-gray-600">
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleFileChange} 
+                        disabled={uploading}
+                    />
+                    <Camera className={`w-4 h-4 text-gray-600 dark:text-gray-300 ${uploading ? 'animate-spin' : ''}`} />
+                </label>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user?.fullName}</h2>
             <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
@@ -104,10 +148,14 @@ function UserProfilePage() {
                 <div>
                     <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tuổi</label>
                     <input 
-                        type="number" 
+                        type="text" 
                         id="age" 
+                        placeholder="25"
                         value={formData.age}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          setFormData({ ...formData, age: value });
+                        }}
                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                 </div>

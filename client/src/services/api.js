@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-
 const api = axios.create({
   baseURL: 'http://localhost:5001/api',
   headers: {
@@ -24,5 +23,21 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+export const uploadImage = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file); 
+
+  try {
+    const { data } = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data.url; 
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
 
 export default api;

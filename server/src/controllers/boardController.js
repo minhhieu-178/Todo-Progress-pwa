@@ -1,14 +1,16 @@
 import Board from '../models/Board.js';
 import User from '../models/User.js';
+import NotificationService from '../services/notificationService.js'
+import { createLog } from '../services/logService.js';
 
 export const createBoard = async (req, res) => {
   const { title } = req.body;
   if (!title) return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
   try {
     const defaultLists = [
-      { title: 'Việc cần làm', position: 0 },
-      { title: 'Đang làm', position: 1 },
-      { title: 'Đã xong', position: 2 },
+      { title: 'Việc cần làm', position: 0, isDefault: true }, 
+      { title: 'Đang làm', position: 1, isDefault: true },     
+      { title: 'Đã xong', position: 2, isDefault: true },      
     ];
     const board = await Board.create({
       title,
@@ -93,7 +95,31 @@ export const addMember = async (req, res) => {
 
     board.members.push(userYz._id);
     await board.save();
-    const updatedBoard = await Board.findById(id).populate('members', 'fullName email').populate('ownerId', 'fullName email');
+    try {
+      await NotificationService.create({
+        recipientId: userYz._id,
+        senderId: board.ownerId,
+        type: "ADDED_TO_BOARD",
+        title: "Được thêm vào nhóm",
+        message: `Bạn đã được thêm vào Bảng ${board.title}`,
+        targetUrl: `/boards/${id}`,
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: userYz._id, 
+      entityType: 'BOARD',
+      action: 'ADD_MEMBER',
+      content: `đã thêm thành viên "${userYz.fullName}" vào bảng`
+    });
+
+    const updatedBoard = await Board.findById(id)
+      .populate('members', 'fullName email')
+      .populate('ownerId', 'fullName email');
     res.json(updatedBoard);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -112,7 +138,124 @@ export const removeMember = async (req, res) => {
     await board.save();
     const updatedBoard = await Board.findById(id).populate('members', 'fullName email').populate('ownerId', 'fullName email');
     res.json(updatedBoard);
+    try {
+      await NotificationService.create({
+        recipientId: userId,
+        senderId: board.ownerId,
+        type: "DELETED_FROM_BOARD",
+        title: "Bị xóa khỏi bảng",
+        message: `Bạn đã bị xóa khỏi Bảng ${board.title}`,
+        targetUrl: `/boards/${id}`,
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
   } catch (error) {
     res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const boards = await Board.find({ 
+      members: req.user._id 
+    });
+
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let inProgressTasks = 0;
+    let overdueTasks = 0;
+    let upcomingDeadlines = [];
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    boards.forEach(board => {
+      if (board.lists && board.lists.length > 0) {
+        board.lists.forEach(list => {
+          if (list.cards && list.cards.length > 0) {
+            list.cards.forEach(card => {
+              totalTasks++;
+
+              if (card.isCompleted) {
+                completedTasks++;
+              } else {
+                inProgressTasks++;
+
+                if (card.dueDate) {
+                    const deadline = new Date(card.dueDate);
+                    if (deadline < now) {
+                        overdueTasks++;
+                    } else {
+                        upcomingDeadlines.push({
+                            taskId: card._id,
+                            taskTitle: card.title,
+                            boardId: board._id,
+                            deadline: deadline,
+                            projectName: board.title
+                        });
+                    }
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    upcomingDeadlines.sort((a, b) => a.deadline - b.deadline);
+    const topUpcoming = upcomingDeadlines.slice(0, 5);
+
+    res.json({
+      totalTasks,
+      completedTasks,
+      inProgressTasks,
+      overdueTasks,
+      upcomingDeadlines: topUpcoming
+    });
+
+  } catch (error) {
+    console.error("Lỗi getDashboardStats:", error);
+    res.status(500).json({ message: 'Lỗi server khi lấy thống kê' });
+  }
+};
+
+
+export const getAllUpcomingTasks = async (req, res) => {
+  try {
+    const boards = await Board.find({ members: req.user._id });
+    
+    let allDeadlines = [];
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); 
+
+    boards.forEach(board => {
+      if (board.lists?.length > 0) {
+        board.lists.forEach(list => {
+          if (list.cards?.length > 0) {
+            list.cards.forEach(card => {
+              if (!card.isCompleted && card.dueDate) {
+                const deadline = new Date(card.dueDate);
+                allDeadlines.push({
+                    taskId: card._id,
+                    taskTitle: card.title,
+                    boardId: board._id,
+                    boardTitle: board.title,
+                    deadline: deadline,
+                    isOverdue: deadline < now 
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    allDeadlines.sort((a, b) => a.deadline - b.deadline);
+
+    res.json(allDeadlines);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi lấy lịch trình' });
   }
 };

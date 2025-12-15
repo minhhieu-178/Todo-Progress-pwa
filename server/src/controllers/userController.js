@@ -20,6 +20,7 @@ export const getUserProfile = async (req, res) => {
       age: user.age,
       phone: user.phone,
       address: user.address,
+      avatar: user.avatar,
     });
   } else {
     res.status(404).json({ message: 'Không tìm thấy người dùng' });
@@ -33,6 +34,7 @@ export const updateUserProfile = async (req, res) => {
 
   if (user) {
     user.fullName = req.body.fullName || user.fullName;
+    user.avatar = req.body.avatar || user.avatar;
     user.age = req.body.age || user.age;
     user.phone = req.body.phone || user.phone;
     user.address = req.body.address || user.address;
@@ -46,6 +48,7 @@ export const updateUserProfile = async (req, res) => {
       age: updatedUser.age,
       phone: updatedUser.phone,
       address: updatedUser.address,
+      avatar: updatedUser.avatar,
       token: generateToken(updatedUser._id),
     });
   } else {
@@ -71,5 +74,18 @@ export const deleteUser = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+export const subscribePush = async (req, res) => {
+  const subscription = req.body;
+  try {
+    // Lưu subscription vào mảng pushSubscriptions của user
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { pushSubscriptions: subscription } // $addToSet để tránh trùng lặp
+    });
+    res.status(201).json({});
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server' });
   }
 };

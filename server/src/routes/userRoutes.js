@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserProfile, updateUserProfile, deleteUser } from '../controllers/userController.js';
+import { getUserProfile, updateUserProfile, deleteUser,subscribePush } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -9,4 +9,6 @@ router.route('/profile')
   .put(protect, updateUserProfile)
   .delete(protect, deleteUser);
 
+
+router.post('/subscribe', subscribePush);
 export default router;
