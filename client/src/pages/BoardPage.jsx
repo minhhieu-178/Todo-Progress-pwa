@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-import { createList } from '../services/listApi';
-import { moveCard } from '../services/cardApi';
+import { createList, updateList, deleteList } from '../services/listApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal'; // Import Modal Mới
@@ -149,6 +148,36 @@ function BoardPage() {
     }
   };
 
+  const handleUpdateListTitle = async (listId, newTitle) => {
+    const newLists = board.lists.map(list => 
+      list._id === listId ? { ...list, title: newTitle } : list
+    );
+    setBoard({ ...board, lists: newLists });
+
+    try {
+      await updateList(board._id, listId, { title: newTitle });
+    } catch (error) {
+      console.error("Lỗi cập nhật tên list:", error);
+      fetchBoard(); 
+    }
+  };
+
+
+  const handleDeleteList = async (listId) => {
+    if (!window.confirm("Bạn chắc chắn muốn xóa danh sách này?")) return;
+
+    const newLists = board.lists.filter(list => list._id !== listId);
+    setBoard({ ...board, lists: newLists });
+
+    try {
+      await deleteList(board._id, listId);
+    } catch (error) {
+      console.error("Lỗi xóa list:", error);
+      alert("Không thể xóa: " + error);
+      fetchBoard();
+    }
+  };
+
   if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu Bảng...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
   if (!board) return <div className="p-8 text-center dark:text-white">Không tìm thấy Bảng.</div>;
@@ -220,6 +249,8 @@ function BoardPage() {
                   boardId={board._id}
                   onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
+                  onUpdateTitle={handleUpdateListTitle} 
+                  onDeleteList={handleDeleteList}      
                 />
               ))}
               {provided.placeholder}
@@ -248,6 +279,7 @@ function BoardPage() {
             card={selectedCard}
             listId={selectedListId}
             boardId={board._id}
+            boardMembers={board.members}
             onUpdateCard={handleUpdateCardInBoard}
             onDeleteCard={handleDeleteCardInBoard}
         />

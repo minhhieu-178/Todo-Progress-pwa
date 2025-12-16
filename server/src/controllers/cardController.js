@@ -82,14 +82,16 @@ export const removeMemberFromCard = async (req, res) => {
     );
     await board.save();
 
-    await NotificationService.create({
-      recipientId: userId,
-      senderId: req.user._id,
-      type: "REMOVE_MEMBER_FROM_CARD",
-      title: "Bạn bị xóa khỏi thẻ",
-      message: `Bạn đã bị xóa khỏi Thẻ "${card.title}" trong Bảng "${board.title}"`,
-      targetUrl: `/boards/${board._id}`,
-    });
+    if (req.user._id.toString() !== userId.toString()) {
+      await NotificationService.create({
+        recipientId: userId,
+        senderId: req.user._id,
+        type: "REMOVE_MEMBER_FROM_CARD",
+        title: "Bạn bị xóa khỏi thẻ",
+        message: `${req.user.name || req.user.email} đã xóa bạn khỏi thẻ "${card.title}"`,
+        targetUrl: `/board/${board._id}`, 
+      });
+  }
 
     res.status(200).json({ message: "Xóa thành viên thành công", card });
   } catch (error) {
@@ -135,14 +137,18 @@ export const addMemberToCard = async (req, res) => {
     await board.save();
 
 
-    await NotificationService.create({
-      recipientId: user._id,                 
-      senderId: req.user._id,               
-      type: "ADDED_TO_CARD",
-      title: "Bạn được thêm vào thẻ",
-      message: `${req.user.name} đã thêm bạn vào thẻ "${card.title}" trong bảng "${board.title}"`,
-      targetUrl: `/boards/${boardId}/lists/${listId}/cards/${cardId}`
-    });
+    if (req.user._id.toString() !== userId.toString()) {
+      const user = await User.findById(userId); 
+      
+      await NotificationService.create({
+        recipientId: userId,                 
+        senderId: req.user._id,               
+        type: "ADDED_TO_CARD",
+        title: "Bạn được thêm vào thẻ",
+        message: `${req.user.fullName || req.user.email} đã thêm bạn vào thẻ "${card.title}"`,
+        targetUrl: `/board/${boardId}` 
+      });
+  }
 
     return res.status(200).json({
       message: "Thêm thành viên thành công",
@@ -262,13 +268,21 @@ export const moveCard = async (req, res) => {
     // 6. Lưu
     await board.save();
 
+    let logContent;
+    
+    if (sourceList._id.toString() === destList._id.toString()) {
+        logContent = `đã sắp xếp lại vị trí thẻ "${cardToMove.title}" trong danh sách "${sourceList.title}"`;
+    } else {
+        logContent = `đã di chuyển thẻ "${cardToMove.title}" từ "${sourceList.title}" sang "${destList.title}"`;
+    }
+
     await createLog({
       userId: req.user._id,
       boardId: board._id,
       entityId: cardId,
       entityType: 'CARD',
       action: 'MOVE',
-      content: `đã di chuyển thẻ "${cardToMove.title}" từ "${sourceList.title}" sang "${destList.title}"`
+      content: logContent 
     });
     
     res.status(200).json({ message: 'Di chuyển thành công' });

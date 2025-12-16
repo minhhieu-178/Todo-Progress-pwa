@@ -101,8 +101,8 @@ export const addMember = async (req, res) => {
         senderId: board.ownerId,
         type: "ADDED_TO_BOARD",
         title: "Được thêm vào nhóm",
-        message: `Bạn đã được thêm vào Bảng ${board.title}`,
-        targetUrl: `/boards/${id}`,
+        message: `${req.user.fullName} đã thêm bạn vào bảng "${board.title}"`,
+        targetUrl: `/board/${id}`,
       });
     } catch (err) {
       console.error("Notification error:", err);
@@ -145,7 +145,7 @@ export const removeMember = async (req, res) => {
         type: "DELETED_FROM_BOARD",
         title: "Bị xóa khỏi bảng",
         message: `Bạn đã bị xóa khỏi Bảng ${board.title}`,
-        targetUrl: `/boards/${id}`,
+        targetUrl: `/board/${id}`,
       });
     } catch (err) {
       console.error("Notification error:", err);
