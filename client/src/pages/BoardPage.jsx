@@ -8,6 +8,7 @@ import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal'; // Import Modal Mới
 import { useAuth } from '../context/AuthContext';
 import { Users } from 'lucide-react'; // Đổi icon sang Users
+import { moveCard } from '../services/cardApi';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -94,18 +95,28 @@ function BoardPage() {
   }, [boardId]);
 
   // --- DRAG & DROP ---
-  const onDragEnd = async (result) => {
+const onDragEnd = async (result) => {
     const { source, destination, draggableId, type } = result;
+    
+    // Kiểm tra điểm đến hợp lệ
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     if (type === 'CARD') {
-      const newLists = [...board.lists]; 
-      const sourceListIndex = newLists.findIndex(l => l._id === source.droppableId);
-      const destListIndex = newLists.findIndex(l => l._id === destination.droppableId);
+      const newLists = [...board.lists];
+      
+      const sourceListIndex = newLists.findIndex(l => String(l._id) === String(source.droppableId));
+      const destListIndex = newLists.findIndex(l => String(l._id) === String(destination.droppableId));
+
+      if (sourceListIndex === -1 || destListIndex === -1) {
+        console.error("Không tìm thấy danh sách nguồn hoặc đích");
+        return;
+      }
 
       const sourceList = { ...newLists[sourceListIndex], cards: [...newLists[sourceListIndex].cards] };
-      const destList = sourceListIndex === destListIndex ? sourceList : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
+      const destList = sourceListIndex === destListIndex 
+        ? sourceList 
+        : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
 
       const [movedCard] = sourceList.cards.splice(source.index, 1);
       destList.cards.splice(destination.index, 0, movedCard);
@@ -113,8 +124,10 @@ function BoardPage() {
       newLists[sourceListIndex] = sourceList;
       if (sourceListIndex !== destListIndex) newLists[destListIndex] = destList;
 
+      // 1. Cập nhật giao diện ngay lập tức
       setBoard({ ...board, lists: newLists });
       
+      // 2. Gọi API cập nhật server
       try {
         await moveCard(draggableId, {
           boardId: board._id,
@@ -125,6 +138,7 @@ function BoardPage() {
       } catch (error) {
         console.error('Lỗi di chuyển thẻ:', error);
         fetchBoard();
+        alert("Có lỗi khi di chuyển thẻ, vui lòng thử lại.");
       }
     }
   };

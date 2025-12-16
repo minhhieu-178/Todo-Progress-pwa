@@ -235,6 +235,8 @@ export const deleteCard = async (req, res) => {
 
 
 
+// ... (các import giữ nguyên)
+
 export const moveCard = async (req, res) => {
   const { cardId } = req.params;
   const { boardId, sourceListId, destListId, newPosition } = req.body;
@@ -243,39 +245,75 @@ export const moveCard = async (req, res) => {
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
 
+    // 1. Tìm List nguồn và List đích
+    const sourceList = board.lists.id(sourceListId);
+    const destList = board.lists.id(destListId);
+    if (!sourceList || !destList) return res.status(404).json({ message: 'Lỗi dữ liệu List' });
+
+    // 2. Tìm Card trong List nguồn
     const card = sourceList.cards.id(cardId);
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Thẻ' });
 
+    // 3. Clone dữ liệu thẻ (giữ nguyên _id và các thông tin khác)
+    const cardData = card.toObject(); 
+
+    // 4. Xóa thẻ khỏi nguồn
     sourceList.cards.pull(cardId);
 
+    // 5. Chèn thẻ vào đích tại vị trí mới
+    // Đảm bảo vị trí chèn hợp lệ (không vượt quá độ dài mảng)
     const insertIndex = (newPosition !== undefined && newPosition !== null) 
-                        ? newPosition 
+                        ? Math.min(newPosition, destList.cards.length) 
                         : destList.cards.length;
     
-    destList.cards.splice(insertIndex, 0, card);
+    destList.cards.splice(insertIndex, 0, cardData);
 
-    await board.save();
+    // --- QUAN TRỌNG: CẬP NHẬT LẠI TRƯỜNG POSITION ---
+    // Hàm cập nhật position cho một list
+    const updateCardPositions = (list) => {
+        list.cards.forEach((c, index) => {
+            c.position = index; // Gán position bằng index thực tế trong mảng
+        });
+    };
 
-    let logContent;
-    
-    if (sourceList._id.toString() === destList._id.toString()) {
-        logContent = `đã sắp xếp lại vị trí thẻ "${cardToMove.title}" trong danh sách "${sourceList.title}"`;
+    if (sourceListId === destListId) {
+        // Nếu di chuyển trong cùng 1 list, chỉ cần update list đó
+        updateCardPositions(sourceList); 
     } else {
-        logContent = `đã di chuyển thẻ "${cardToMove.title}" từ "${sourceList.title}" sang "${destList.title}"`;
+        // Nếu khác list, update cả 2 list
+        updateCardPositions(sourceList);
+        updateCardPositions(destList);
     }
 
-    await createLog({
-      userId: req.user._id,
-      boardId: board._id,
-      entityId: cardId,
-      entityType: 'CARD',
-      action: 'MOVE',
-      content: logContent 
-    });
+    // 6. Lưu vào Database
+    await board.save();
+
+    // 7. Ghi Log
+    let logContent;
+    if (sourceListId === destListId) {
+        logContent = `đã sắp xếp lại vị trí thẻ "${cardData.title}" trong danh sách "${sourceList.title}"`;
+    } else {
+        logContent = `đã di chuyển thẻ "${cardData.title}" từ "${sourceList.title}" sang "${destList.title}"`;
+    }
+
+    // Kiểm tra xem ActivityLog có gây lỗi không (nếu vẫn lỗi thì tạm comment đoạn này)
+    try {
+        await createLog({
+            userId: req.user._id,
+            boardId: board._id,
+            entityId: cardId,
+            entityType: 'CARD', // Đảm bảo enum ActivityLog đã có 'CARD'
+            action: 'MOVE',     // Đảm bảo enum ActivityLog đã có 'MOVE'
+            content: logContent 
+        });
+    } catch (logErr) {
+        console.warn("Lỗi ghi log (không ảnh hưởng thao tác chính):", logErr.message);
+    }
     
     res.status(200).json({ message: 'Di chuyển thành công' });
+
   } catch (error) {
     console.error("Move Card Error:", error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: 'Lỗi máy chủ: ' + error.message });
   }
 };
