@@ -183,15 +183,21 @@ export const updateCard = async (req, res) => {
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
 
     if (title !== undefined) card.title = title;
-    if (description !== undefined) card.description = description; // Lưu mô tả
-    if (dueDate !== undefined) card.dueDate = dueDate;             // Lưu deadline
-    if (isCompleted !== undefined) card.isCompleted = isCompleted; // Lưu trạng thái hoàn thành
+    if (description !== undefined) card.description = description;
+    if (dueDate !== undefined) card.dueDate = dueDate;             
+    if (isCompleted !== undefined) card.isCompleted = isCompleted; 
     if (members !== undefined) card.members = members;
 
     await board.save();
     
-    // Trả về card đã update
-    res.status(200).json(card);
+    await board.populate({
+      path: 'lists.cards.members', 
+      select: 'fullName email avatar' 
+    });
+    const populatedList = board.lists.id(listId);
+    const populatedCard = populatedList.cards.id(cardId);
+
+    res.status(200).json(populatedCard);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
@@ -235,7 +241,6 @@ export const deleteCard = async (req, res) => {
 
 
 
-// ... (các import giữ nguyên)
 
 export const moveCard = async (req, res) => {
   const { cardId } = req.params;
@@ -268,19 +273,15 @@ export const moveCard = async (req, res) => {
     
     destList.cards.splice(insertIndex, 0, cardData);
 
-    // --- QUAN TRỌNG: CẬP NHẬT LẠI TRƯỜNG POSITION ---
-    // Hàm cập nhật position cho một list
     const updateCardPositions = (list) => {
         list.cards.forEach((c, index) => {
-            c.position = index; // Gán position bằng index thực tế trong mảng
+            c.position = index; 
         });
     };
 
     if (sourceListId === destListId) {
-        // Nếu di chuyển trong cùng 1 list, chỉ cần update list đó
         updateCardPositions(sourceList); 
     } else {
-        // Nếu khác list, update cả 2 list
         updateCardPositions(sourceList);
         updateCardPositions(destList);
     }
@@ -296,14 +297,13 @@ export const moveCard = async (req, res) => {
         logContent = `đã di chuyển thẻ "${cardData.title}" từ "${sourceList.title}" sang "${destList.title}"`;
     }
 
-    // Kiểm tra xem ActivityLog có gây lỗi không (nếu vẫn lỗi thì tạm comment đoạn này)
     try {
         await createLog({
             userId: req.user._id,
             boardId: board._id,
             entityId: cardId,
-            entityType: 'CARD', // Đảm bảo enum ActivityLog đã có 'CARD'
-            action: 'MOVE',     // Đảm bảo enum ActivityLog đã có 'MOVE'
+            entityType: 'CARD',
+            action: 'MOVE',     
             content: logContent 
         });
     } catch (logErr) {

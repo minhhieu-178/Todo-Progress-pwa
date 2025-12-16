@@ -188,7 +188,7 @@ function PageHeader({ title, showSearch = true }) {
                                                     }}
                                                     className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer flex items-center gap-3 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-0">
                                                     <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                                        {getNotificationIcon(noti.type)}
+                                                                {u.fullName ? u.fullName.charAt(0).toUpperCase() : '?'}
                                                     </div>
                                                     <div className="overflow-hidden">
                                                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.fullName}</p>

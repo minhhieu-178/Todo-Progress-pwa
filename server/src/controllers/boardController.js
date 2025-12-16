@@ -38,8 +38,11 @@ export const getBoardById = async (req, res) => {
     const { id } = req.params;
     const board = await Board.findById(id)
       .populate('members', 'fullName email')
-      .populate('ownerId', 'fullName email');
-
+      .populate('ownerId', 'fullName email')
+      .populate({
+        path: 'lists.cards.members',
+        select: 'fullName email' 
+      });
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
     const isMember = board.members.some(m => m._id.toString() === req.user._id.toString());
     if (!isMember) return res.status(403).json({ message: 'Không có quyền truy cập' });
