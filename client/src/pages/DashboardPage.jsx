@@ -256,9 +256,9 @@ function DashboardPage() {
                             return (
                                 <Link 
                                     key={task.taskId} 
-                                    to={`/board/${task.boardId}`}
-                                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
-                                >
+                                    to={`/board/${task.boardId}?cardId=${task.taskId}`}
+                                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                                    >
                                     <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex flex-col items-center justify-center border ${isUrgent ? 'bg-red-50 text-red-600 border-red-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
                                         <span className="text-[10px] font-bold uppercase">{dateObj.toLocaleString('en-US', { month: 'short' })}</span>
                                         <span className="text-lg font-bold leading-none">{dateObj.getDate()}</span>

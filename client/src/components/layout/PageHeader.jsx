@@ -5,10 +5,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { searchUsersApi } from '../../services/searchApi';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../../services/notificationApi'; 
 import PublicProfileModal from '../user/PublicProfileModal';
+import { useSocket } from '../../context/SocketContext'; 
+
 function PageHeader({ title, showSearch = true }) {
     const { user } = useAuth();
     const navigate = useNavigate();
     
+    const socket = useSocket(); 
+
     // --- STATE TÌM KIẾM ---
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -19,7 +23,7 @@ function PageHeader({ title, showSearch = true }) {
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // --- STATE THÔNG BÁO (MỚI) ---
+    // --- STATE THÔNG BÁO ---
     const [notifications, setNotifications] = useState([]);
     const [showNotiDropdown, setShowNotiDropdown] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -27,24 +31,33 @@ function PageHeader({ title, showSearch = true }) {
     const searchRef = useRef(null);
     const notiRef = useRef(null); 
 
-    useEffect(() => {
-        const fetchNotis = async () => {
-            try {
-                const data = await getNotifications();
-                if (Array.isArray(data)) {
-                    setNotifications(data);
-                    setUnreadCount(data.filter(n => !n.read).length);
-                }
-            } catch (err) {
-                console.error("Lỗi tải thông báo:", err);
+    const fetchNotis = async () => {
+        try {
+            const data = await getNotifications();
+            if (Array.isArray(data)) {
+                setNotifications(data);
+                setUnreadCount(data.filter(n => !n.read).length);
             }
-        };
-        
+        } catch (err) {
+            console.error("Lỗi tải thông báo:", err);
+        }
+    };
+
+    useEffect(() => {
         fetchNotis(); 
         
         const interval = setInterval(fetchNotis, 30000);
         return () => clearInterval(interval);
     }, []);
+
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on('NEW_NOTIFICATION', () => {
+            fetchNotis(); // Giờ thì gọi được rồi vì nó nằm ở ngoài!
+        });
+        return () => socket.off('NEW_NOTIFICATION');
+    }, [socket]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -87,11 +100,11 @@ function PageHeader({ title, showSearch = true }) {
         setSearchTerm('');
     };
 
-    
     const handleNotificationClick = async (noti) => {
         try {
             if (!noti.read) {
                 await markNotificationRead(noti._id);
+                // Cập nhật state cục bộ để giao diện phản hồi ngay
                 const newNotis = notifications.map(n => 
                     n._id === noti._id ? { ...n, read: true } : n
                 );
@@ -131,14 +144,13 @@ function PageHeader({ title, showSearch = true }) {
         return date.toLocaleDateString('vi-VN');
     };
 
-
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'COMMENT': 
             case 'REPLY_COMMENT':
                 return <MessageSquare className="w-4 h-4" />;
             case 'DEADLINE': 
-            case 'DEADLINE_APPROACHING': // Nếu backend có type này
+            case 'DEADLINE_APPROACHING':
                 return <Calendar className="w-4 h-4" />;
             case 'ASSIGN':
             case 'ADDED_TO_BOARD': 
@@ -151,6 +163,7 @@ function PageHeader({ title, showSearch = true }) {
                 return <Bell className="w-4 h-4" />; 
         }
     };
+
     return (
         <>
             <header className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
@@ -164,7 +177,7 @@ function PageHeader({ title, showSearch = true }) {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Tìm thành viên (tên, email)..." // Cập nhật placeholder cho đúng logic mới
+                                    placeholder="Tìm thành viên (tên, email)..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}

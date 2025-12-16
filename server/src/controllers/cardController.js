@@ -107,58 +107,76 @@ export const addMemberToCard = async (req, res) => {
   if (!userId) {
     return res.status(400).json({ message: 'Thiếu userId' });
   }
+
   try {
-    const board = await Board.findById(boardId);
-    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
 
-    const isMember = board.members.some(
-      (m) => m.toString() === req.user._id.toString()
+    const updatedBoard = await Board.findOneAndUpdate(
+      {
+        _id: boardId,
+        "lists._id": listId,
+        "lists.cards._id": cardId,
+        members: req.user._id 
+      },
+      {
+        $addToSet: { "lists.$[list].cards.$[card].members": userId }
+      },
+      {
+        arrayFilters: [{ "list._id": listId }, { "card._id": cardId }],
+        new: true 
+      }
     );
-    if (!isMember)
-      return res.status(403).json({ message: 'Bạn không có quyền cập nhật Card trong Bảng này' });
 
-    const list = board.lists.id(listId);
-    if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
-
-    const card = list.cards.id(cardId);
-    if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User không tồn tại' });
-
-    const alreadyInCard = card.members.some(
-      (m) => m.toString() === userId.toString()
-    );
-    if (alreadyInCard) {
-      return res.status(400).json({ message: 'User đã có trong Card' });
+    if (!updatedBoard) {
+      return res.status(404).json({ message: 'Không tìm thấy Bảng/Thẻ hoặc bạn không có quyền.' });
     }
 
-    card.members.push(userId);
-    await board.save();
+    let targetCard = null;
+    for (const list of updatedBoard.lists) {
+      if (list._id.toString() === listId) {
+        targetCard = list.cards.find(c => c._id.toString() === cardId);
+        break;
+      }
+    }
 
-    if (req.user._id.toString() !== userId.toString()) {
-      await NotificationService.create({
-        recipientId: userId,                 
-        senderId: req.user._id,               
-        type: "ADDED_TO_CARD",
-        title: "Bạn được thêm vào thẻ",
-        message: `${req.user.fullName || req.user.email} đã thêm bạn vào thẻ "${card.title}"`,
-        targetUrl: `/board/${boardId}?cardId=${cardId}`,
-        metadata: { boardId, cardId }
+    if (targetCard) {
+      if (req.user._id.toString() !== userId.toString()) {
+        const actorName = req.user.fullName || req.user.email;
+        const io = req.app.get('socketio');
+        
+        try {
+          await NotificationService.create({
+            recipientId: userId,
+            senderId: req.user._id,
+            type: "ADDED_TO_CARD",
+            title: "Bạn được thêm vào thẻ",
+            message: `${actorName} đã thêm bạn vào thẻ "${targetCard.title}"`,
+            targetUrl: `/board/${boardId}?cardId=${cardId}`,
+            metadata: { boardId, cardId }
+          });
+
+          if (io) {
+             io.to(userId).emit('NEW_NOTIFICATION', {
+                message: `Bạn được thêm vào thẻ "${targetCard.title}"`
+             });
+          }
+        } catch (notiError) {
+          console.error("Lỗi gửi thông báo:", notiError);
+        }
+      }
+
+      return res.status(200).json({
+        message: "Thêm thành viên thành công",
+        card: targetCard
       });
     }
 
-    return res.status(200).json({
-      message: "Thêm thành viên thành công",
-      card
-    });
+    return res.status(404).json({ message: 'Lỗi không xác định khi lấy thẻ.' });
 
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi addMemberToCard:", error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
-
 
 export const updateCard = async (req, res) => {
   const { boardId, listId, cardId } = req.params;

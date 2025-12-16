@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cron from 'node-cron';
+import { createServer } from 'http'; 
+import { Server } from 'socket.io';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js'; 
@@ -20,6 +22,38 @@ connectDB();
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+const httpServer = createServer(app); 
+const io = new Server(httpServer, {   
+  cors: {
+    origin: "http://localhost:5173", 
+    methods: ["GET", "POST"]
+  }
+});
+
+app.set('socketio', io);
+
+io.on('connection', (socket) => {
+  console.log('User connected socket:', socket.id);
+
+  socket.on('join_user_room', (userId) => {
+    if (userId) {
+      socket.join(userId);
+      console.log(`User ${userId} đã vào phòng nhận thông báo`);
+    }
+  });
+
+  socket.on('join_board_room', (boardId) => {
+    if (boardId) {
+      socket.join(boardId);
+      console.log(`Socket ${socket.id} đã vào xem board ${boardId}`);
+    }
+  });
+
+  socket.on('leave_board_room', (boardId) => {
+    socket.leave(boardId);
+  });
+});
 
 app.get('/', (req, res) => res.send('API đang chạy...'));
 app.use('/api/auth', authRoutes);
@@ -44,4 +78,4 @@ cron.schedule('*/10 * * * *', async () => {
 
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));
+httpServer.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));
