@@ -243,29 +243,17 @@ export const moveCard = async (req, res) => {
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
 
-    // 1. Tìm List nguồn và List đích
-    const sourceList = board.lists.id(sourceListId);
-    const destList = board.lists.id(destListId);
-    if (!sourceList || !destList) return res.status(404).json({ message: 'Lỗi dữ liệu List' });
+    const card = sourceList.cards.id(cardId);
+    if (!card) return res.status(404).json({ message: 'Không tìm thấy Thẻ' });
 
-    // 2. Tìm Card trong List nguồn
-    const cardToMove = sourceList.cards.id(cardId);
-    if (!cardToMove) return res.status(404).json({ message: 'Không tìm thấy Thẻ' });
-
-    // 3. CLONE dữ liệu thẻ sang dạng Object thường (QUAN TRỌNG)
-    const cardData = cardToMove.toObject(); 
-
-    // 4. Xóa thẻ ở nguồn
     sourceList.cards.pull(cardId);
 
-    // 5. Chèn thẻ vào đích
     const insertIndex = (newPosition !== undefined && newPosition !== null) 
                         ? newPosition 
                         : destList.cards.length;
     
-    destList.cards.splice(insertIndex, 0, cardData);
+    destList.cards.splice(insertIndex, 0, card);
 
-    // 6. Lưu
     await board.save();
 
     let logContent;

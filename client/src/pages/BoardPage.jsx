@@ -250,7 +250,8 @@ function BoardPage() {
                   onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
                   onUpdateTitle={handleUpdateListTitle} 
-                  onDeleteList={handleDeleteList}      
+                  onDeleteList={handleDeleteList}  
+                  index={index}    
                 />
               ))}
               {provided.placeholder}
