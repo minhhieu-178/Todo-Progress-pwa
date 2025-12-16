@@ -1,6 +1,6 @@
 import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { Clock, Users } from 'lucide-react'; // Import thêm icon Users nếu cần
+import { Clock, Users } from 'lucide-react'; 
 
 const isOverdue = (dateString, isCompleted) => {
   if (!dateString || isCompleted) return false;
@@ -10,7 +10,6 @@ const isOverdue = (dateString, isCompleted) => {
   return deadline < today;
 };
 
-// Hàm lấy chữ cái đầu của tên để làm Avatar
 const getInitials = (name) => {
   if (!name) return '?';
   return name.charAt(0).toUpperCase();
@@ -19,10 +18,13 @@ const getInitials = (name) => {
 function Card({ card, index, onClick }) {
   const overdue = isOverdue(card.dueDate, card.isCompleted);
   
-  // Format ngày tháng đẹp hơn
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    return date.toLocaleDateString('vi-VN', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    }); 
   };
 
   return (

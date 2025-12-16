@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList } from '../services/listApi';
@@ -27,6 +27,8 @@ function BoardPage() {
   // State cho Modal Thành viên
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCardId = searchParams.get('cardId');
   // --- LOGIC MODAL CARD ---
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
@@ -72,6 +74,26 @@ function BoardPage() {
       }
     }
   };
+  
+  useEffect(() => {
+    if (board && activeCardId) {
+      let foundCard = null;
+      let foundListId = null;
+
+      for (const list of board.lists) {
+        const card = list.cards.find(c => c._id === activeCardId);
+        if (card) {
+          foundCard = card;
+          foundListId = list._id;
+          break;
+        }
+      }
+      if (foundCard) {
+        handleCardClick(foundCard, foundListId);
+
+      }
+    }
+  }, [board, activeCardId]);
 
   // --- DATA FETCHING ---
   const fetchBoard = async () => {

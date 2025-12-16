@@ -41,5 +41,7 @@ cron.schedule('*/10 * * * *', async () => {
     console.error('Cron job error:', err);
   }
 });
+
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));

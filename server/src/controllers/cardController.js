@@ -136,19 +136,17 @@ export const addMemberToCard = async (req, res) => {
     card.members.push(userId);
     await board.save();
 
-
     if (req.user._id.toString() !== userId.toString()) {
-      const user = await User.findById(userId); 
-      
       await NotificationService.create({
         recipientId: userId,                 
         senderId: req.user._id,               
         type: "ADDED_TO_CARD",
         title: "Bạn được thêm vào thẻ",
         message: `${req.user.fullName || req.user.email} đã thêm bạn vào thẻ "${card.title}"`,
-        targetUrl: `/board/${boardId}` 
+        targetUrl: `/board/${boardId}?cardId=${cardId}`,
+        metadata: { boardId, cardId }
       });
-  }
+    }
 
     return res.status(200).json({
       message: "Thêm thành viên thành công",

@@ -273,10 +273,6 @@ function PageHeader({ title, showSearch = true }) {
                             )}
                         </div>
                         
-                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1 hidden md:flex">
-                            <Clock className="w-4 h-4 mr-1.5" />
-                            This week
-                        </div>
 
                         <Link to="/profile">
                             {user?.avatar ? (

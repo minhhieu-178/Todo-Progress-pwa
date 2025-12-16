@@ -24,7 +24,7 @@ export const checkDeadlines = async () => {
             type: 'DEADLINE',
             title: 'Nhắc nhở deadline',
             message: `Thẻ "${card.title}" sắp hết hạn!`,
-            targetUrl: `/boards/${board._id}/lists/${list._id}/cards/${card._id}`,
+            targetUrl: `/board/${board._id}?cardId=${card._id}`,
             metadata: {
               boardId: board._id,
               listId: list._id,
