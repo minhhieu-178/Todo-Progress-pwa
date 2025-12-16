@@ -5,6 +5,11 @@ import {
   getBoardById,
   updateBoard,
   deleteBoard,
+  getDashboardStats,
+<<<<<<< HEAD
+=======
+  getAllUpcomingTasks,
+>>>>>>> duchieu
   addMember,
   removeMember
 } from '../controllers/boardController.js';
@@ -17,6 +22,12 @@ const router = express.Router();
 router.route('/')
   .post(protect, createBoard)
   .get(protect, getMyBoards);
+
+<<<<<<< HEAD
+=======
+router.get('/deadlines/all', protect, getAllUpcomingTasks);
+>>>>>>> duchieu
+router.get('/stats', protect, getDashboardStats);
 
 router.route('/:id')
   .get(protect, getBoardById)

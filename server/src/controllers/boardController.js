@@ -154,3 +154,111 @@ export const removeMember = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const boards = await Board.find({ 
+      members: req.user._id 
+    });
+
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let inProgressTasks = 0;
+    let overdueTasks = 0;
+    let upcomingDeadlines = [];
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    boards.forEach(board => {
+      if (board.lists && board.lists.length > 0) {
+        board.lists.forEach(list => {
+          if (list.cards && list.cards.length > 0) {
+            list.cards.forEach(card => {
+              totalTasks++;
+
+              if (card.isCompleted) {
+                completedTasks++;
+              } else {
+                inProgressTasks++;
+
+                if (card.dueDate) {
+                    const deadline = new Date(card.dueDate);
+                    if (deadline < now) {
+                        overdueTasks++;
+                    } else {
+                        upcomingDeadlines.push({
+                            taskId: card._id,
+                            taskTitle: card.title,
+                            boardId: board._id,
+                            deadline: deadline,
+                            projectName: board.title
+                        });
+                    }
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    upcomingDeadlines.sort((a, b) => a.deadline - b.deadline);
+    const topUpcoming = upcomingDeadlines.slice(0, 5);
+
+    res.json({
+      totalTasks,
+      completedTasks,
+      inProgressTasks,
+      overdueTasks,
+      upcomingDeadlines: topUpcoming
+    });
+
+  } catch (error) {
+    console.error("Lỗi getDashboardStats:", error);
+    res.status(500).json({ message: 'Lỗi server khi lấy thống kê' });
+  }
+<<<<<<< HEAD
+=======
+};
+
+
+export const getAllUpcomingTasks = async (req, res) => {
+  try {
+    const boards = await Board.find({ members: req.user._id });
+    
+    let allDeadlines = [];
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); 
+
+    boards.forEach(board => {
+      if (board.lists?.length > 0) {
+        board.lists.forEach(list => {
+          if (list.cards?.length > 0) {
+            list.cards.forEach(card => {
+              if (!card.isCompleted && card.dueDate) {
+                const deadline = new Date(card.dueDate);
+                allDeadlines.push({
+                    taskId: card._id,
+                    taskTitle: card.title,
+                    boardId: board._id,
+                    boardTitle: board.title,
+                    deadline: deadline,
+                    isOverdue: deadline < now 
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    allDeadlines.sort((a, b) => a.deadline - b.deadline);
+
+    res.json(allDeadlines);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi lấy lịch trình' });
+  }
+>>>>>>> duchieu
+};
