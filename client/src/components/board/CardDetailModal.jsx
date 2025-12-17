@@ -33,6 +33,10 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   // --- EFFECT ---
   
   useEffect(() => {
+        setDescription(card.description || "");
+    }, [card]);
+
+  useEffect(() => {
     if (card) {
       setTitle(card.title);
       setDescription(card.description || '');

@@ -35,6 +35,15 @@ function BoardPage() {
 
   const navigate = useNavigate();
 
+  const findCardInBoard = (boardData, cardId) => {
+    if (!boardData?.lists) return null;
+    for (const list of boardData.lists) {
+      const card = list.cards.find(c => c._id === cardId);
+      if (card) return card;
+    }
+    return null;
+  };
+
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
     setSelectedListId(listId);
@@ -81,6 +90,16 @@ function BoardPage() {
   };
   
   useEffect(() => {
+    if (board && selectedCard) {
+      const updatedCard = findCardInBoard(board, selectedCard._id);
+      
+      if (updatedCard && updatedCard !== selectedCard) {
+        setSelectedCard(updatedCard);
+      }
+    }
+  }, [board]);
+
+  useEffect(() => {
     if (board && activeCardId) {
       let foundCard = null;
       let foundListId = null;
@@ -122,7 +141,7 @@ function BoardPage() {
         }
     };
 
-
+    
   useEffect(() => {
         fetchBoard(false); 
     }, [id]);
@@ -206,7 +225,7 @@ const onDragEnd = async (result) => {
     e.preventDefault();
     if (!newListTitle.trim()) return;
     try {
-      const newList = await createList(newListTitle, boardId);
+      const newList = await createList(newListTitle, id);
       setBoard({ ...board, lists: [...board.lists, newList] });
       setNewListTitle('');
     } catch (error) {
@@ -358,6 +377,7 @@ const onDragEnd = async (result) => {
       {/* MODALS */}
       {selectedCard && (
         <CardDetailModal 
+            key={selectedCard._id}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             card={selectedCard}
