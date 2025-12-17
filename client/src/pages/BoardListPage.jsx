@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyBoards, createBoard, deleteBoard, updateBoard } from '../services/boardApi';
 import PageHeader from '../components/layout/PageHeader';
-import { Plus, Loader, Trash2, Edit2, X, Check, Search } from 'lucide-react'; // Thêm icon Search
+import { Plus, Loader, Trash2, Edit2, X, Check, Search } from 'lucide-react'; 
 
 function BoardListPage() {
   const [boards, setBoards] = useState([]);
@@ -12,7 +12,7 @@ function BoardListPage() {
   // State tìm kiếm
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ... (State tạo bảng, chỉnh sửa giữ nguyên)
+  // (State tạo bảng, chỉnh sửa giữ nguyên)
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -34,7 +34,7 @@ function BoardListPage() {
     }
   };
 
-  // ... (Các hàm handleCreateBoard, handleDeleteBoard, Edit giữ nguyên)
+  // (Các hàm handleCreateBoard, handleDeleteBoard, Edit giữ nguyên)
   const handleCreateBoard = async (e) => {
       e.preventDefault();
       if (!newBoardTitle.trim()) return;

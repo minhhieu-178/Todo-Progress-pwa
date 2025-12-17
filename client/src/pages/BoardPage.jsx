@@ -1,33 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-import { createList } from '../services/listApi';
-import { moveCard } from '../services/cardApi';
+import { createList, updateList, deleteList } from '../services/listApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
-import MembersModal from '../components/board/MembersModal'; // Import Modal Mới
+import MembersModal from '../components/board/MembersModal'; 
 import { useAuth } from '../context/AuthContext';
-import { Users } from 'lucide-react'; // Đổi icon sang Users
+import { Users } from 'lucide-react'; 
+import { moveCard } from '../services/cardApi';
+import { useSocket } from '../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 
 function BoardPage() {
   const { user } = useAuth();
-  const { id: boardId } = useParams();
   
   const [board, setBoard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newListTitle, setNewListTitle] = useState('');
   
-  // State cho Modal Card
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // State cho Modal Thành viên
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
-  // --- LOGIC MODAL CARD ---
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCardId = searchParams.get('cardId');
+
+
+  const { id } = useParams();
+  const socket = useSocket();
+
+  const navigate = useNavigate();
+
+  const findCardInBoard = (boardData, cardId) => {
+    if (!boardData?.lists) return null;
+    for (const list of boardData.lists) {
+      const card = list.cards.find(c => c._id === cardId);
+      if (card) return card;
+    }
+    return null;
+  };
+
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
     setSelectedListId(listId);
@@ -72,41 +88,108 @@ function BoardPage() {
       }
     }
   };
-
-  // --- DATA FETCHING ---
-  const fetchBoard = async () => {
-    try {
-      setLoading(true);
-      const data = await getBoardById(boardId);
-      data.lists.sort((a, b) => a.position - b.position);
-      data.lists.forEach((list) => {
-        list.cards.sort((a, b) => a.position - b.position);
-      });
-      setBoard(data);
-    } catch (err) {
-      setError(err.toString());
-    } finally {
-      setLoading(false);
+  
+  useEffect(() => {
+    if (board && selectedCard) {
+      const updatedCard = findCardInBoard(board, selectedCard._id);
+      
+      if (updatedCard && updatedCard !== selectedCard) {
+        setSelectedCard(updatedCard);
+      }
     }
-  };
+  }, [board]);
 
   useEffect(() => {
-    fetchBoard();
-  }, [boardId]);
+    if (board && activeCardId) {
+      let foundCard = null;
+      let foundListId = null;
+
+      for (const list of board.lists) {
+        const card = list.cards.find(c => c._id === activeCardId);
+        if (card) {
+          foundCard = card;
+          foundListId = list._id;
+          break;
+        }
+      }
+      if (foundCard) {
+        handleCardClick(foundCard, foundListId);
+
+      }
+    }
+  }, [board, activeCardId]);
+
+  const fetchBoard = async (isBackground = false) => {
+        try {
+            if (!isBackground) setLoading(true);
+            
+            const data = await getBoardById(id); 
+            
+            if (data.lists) {
+                data.lists.sort((a, b) => a.position - b.position);
+                data.lists.forEach((list) => {
+                    if (list.cards) {
+                        list.cards.sort((a, b) => a.position - b.position);
+                    }
+                });
+            }
+            setBoard(data);
+        } catch (err) {
+            setError(err.toString());
+        } finally {
+            if (!isBackground) setLoading(false);
+        }
+    };
+
+    
+  useEffect(() => {
+        fetchBoard(false); 
+    }, [id]);
+  
+  useEffect(() => {
+        if (!socket || !id) return;
+
+        socket.emit('join_board_room', id);
+        socket.on('BOARD_UPDATED', (data) => {
+            console.log("Update:", data);
+            fetchBoard(true); 
+        });
+
+        socket.on('BOARD_DELETED', (data) => {
+            alert(data.message); 
+            navigate('/'); 
+        });
+
+        return () => {
+            socket.emit('leave_board_room', id);
+            socket.off('BOARD_UPDATED');  
+            socket.off('BOARD_DELETED'); 
+        };
+    }, [socket, id, navigate]);
 
   // --- DRAG & DROP ---
-  const onDragEnd = async (result) => {
+const onDragEnd = async (result) => {
     const { source, destination, draggableId, type } = result;
+    
+    // Kiểm tra điểm đến hợp lệ
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     if (type === 'CARD') {
-      const newLists = [...board.lists]; 
-      const sourceListIndex = newLists.findIndex(l => l._id === source.droppableId);
-      const destListIndex = newLists.findIndex(l => l._id === destination.droppableId);
+      const newLists = [...board.lists];
+      
+      const sourceListIndex = newLists.findIndex(l => String(l._id) === String(source.droppableId));
+      const destListIndex = newLists.findIndex(l => String(l._id) === String(destination.droppableId));
+
+      if (sourceListIndex === -1 || destListIndex === -1) {
+        console.error("Không tìm thấy danh sách nguồn hoặc đích");
+        return;
+      }
 
       const sourceList = { ...newLists[sourceListIndex], cards: [...newLists[sourceListIndex].cards] };
-      const destList = sourceListIndex === destListIndex ? sourceList : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
+      const destList = sourceListIndex === destListIndex 
+        ? sourceList 
+        : { ...newLists[destListIndex], cards: [...newLists[destListIndex].cards] };
 
       const [movedCard] = sourceList.cards.splice(source.index, 1);
       destList.cards.splice(destination.index, 0, movedCard);
@@ -126,6 +209,7 @@ function BoardPage() {
       } catch (error) {
         console.error('Lỗi di chuyển thẻ:', error);
         fetchBoard();
+        alert("Có lỗi khi di chuyển thẻ, vui lòng thử lại.");
       }
     }
   };
@@ -141,11 +225,41 @@ function BoardPage() {
     e.preventDefault();
     if (!newListTitle.trim()) return;
     try {
-      const newList = await createList(newListTitle, boardId);
+      const newList = await createList(newListTitle, id);
       setBoard({ ...board, lists: [...board.lists, newList] });
       setNewListTitle('');
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleUpdateListTitle = async (listId, newTitle) => {
+    const newLists = board.lists.map(list => 
+      list._id === listId ? { ...list, title: newTitle } : list
+    );
+    setBoard({ ...board, lists: newLists });
+
+    try {
+      await updateList(board._id, listId, { title: newTitle });
+    } catch (error) {
+      console.error("Lỗi cập nhật tên list:", error);
+      fetchBoard(); 
+    }
+  };
+
+
+  const handleDeleteList = async (listId) => {
+    if (!window.confirm("Bạn chắc chắn muốn xóa danh sách này?")) return;
+
+    const newLists = board.lists.filter(list => list._id !== listId);
+    setBoard({ ...board, lists: newLists });
+
+    try {
+      await deleteList(board._id, listId);
+    } catch (error) {
+      console.error("Lỗi xóa list:", error);
+      alert("Không thể xóa: " + error);
+      fetchBoard();
     }
   };
 
@@ -175,21 +289,38 @@ function BoardPage() {
         {/* Bên phải: Nút quản lý thành viên */}
         <div className="flex items-center gap-4">
             
-            {/* Avatar Stack (Preview) - Bấm vào để mở Modal */}
+            {/* Avatar Stack (Preview) */}
             <div 
-              className="flex -space-x-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setIsMembersModalOpen(true)}
-              title="Quản lý thành viên"
+                className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setIsMembersModalOpen(true)}
+                title="Quản lý thành viên"
             >
                 {board.members?.slice(0, 5).map((member) => (
-                    <div key={member._id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-                        {member.fullName?.charAt(0).toUpperCase()}
+                    <div 
+                        key={member._id} 
+                        className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
+                    >
+                        {/* Ưu tiên hiện ảnh Avatar nếu có */}
+                        {member.avatar ? (
+                            <img 
+                                src={member.avatar} 
+                                alt="avatar" 
+                                className="w-full h-full object-cover" 
+                            />
+                        ) : (
+                            /* Nếu không có ảnh thì hiện chữ cái đầu */
+                            <span>
+                                {member.fullName ? member.fullName.charAt(0) : member.email?.charAt(0)}
+                            </span>
+                        )}
                     </div>
                 ))}
+
+                {/* Bong bóng hiển thị số lượng còn lại (+3) */}
                 {board.members?.length > 5 && (
-                   <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-200 text-xs font-bold">
-                      +{board.members.length - 5}
-                   </div>
+                    <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 text-xs font-bold z-10">
+                        +{board.members.length - 5}
+                    </div>
                 )}
             </div>
 
@@ -220,6 +351,9 @@ function BoardPage() {
                   boardId={board._id}
                   onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
+                  onUpdateTitle={handleUpdateListTitle} 
+                  onDeleteList={handleDeleteList}  
+                  index={index}    
                 />
               ))}
               {provided.placeholder}
@@ -243,11 +377,13 @@ function BoardPage() {
       {/* MODALS */}
       {selectedCard && (
         <CardDetailModal 
+            key={selectedCard._id}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             card={selectedCard}
             listId={selectedListId}
             boardId={board._id}
+            boardMembers={board.members}
             onUpdateCard={handleUpdateCardInBoard}
             onDeleteCard={handleDeleteCardInBoard}
         />

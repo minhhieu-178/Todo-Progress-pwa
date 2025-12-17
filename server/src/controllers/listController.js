@@ -33,6 +33,13 @@ export const createList = async (req, res) => {
       content: `đã thêm danh sách mới: "${title}"`
     });
     
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'CREATE_LIST',
+        message: `Danh sách "${title}" đã được tạo`
+      });
+    }
     res.status(201).json(board.lists[board.lists.length - 1]);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -59,6 +66,13 @@ export const updateList = async (req, res) => {
     if (position !== undefined) list.position = position;
 
     await board.save();
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'UPDATE_LIST',
+        message: 'Cấu trúc danh sách đã thay đổi'
+      });
+    }
     res.json(list);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -84,6 +98,13 @@ export const deleteList = async (req, res) => {
     board.lists.pull(listId);
     
     await board.save();
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'DELETE_LIST',
+        message: 'Một danh sách đã bị xóa'
+      });
+    }
     res.json({ message: 'Đã xóa danh sách thành công' });
   } catch (error) {
     res.status(500).json({ message: error.message });
