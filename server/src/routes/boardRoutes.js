@@ -21,7 +21,6 @@ router.route('/')
   .get(protect, getMyBoards);
 
 router.get('/deadlines/all', protect, getAllUpcomingTasks);
-
 router.get('/stats', protect, getDashboardStats);
 
 router.route('/:id')

@@ -12,12 +12,12 @@ export const getUserNotifications = async (req, res) => {
 
 export const markRead = async (req, res) => {
   const { id } = req.params;
-  const updated = await Notification.findByIdAndUpdate(id, { isRead: true }, { new: true });
+  const updated = await Notification.findByIdAndUpdate(id, { read: true }, { new: true });
   res.json(updated);
 };
 
 export const markAllRead = async (req, res) => {
   const userId = req.user._id;
-  await Notification.updateMany({ recipientId: userId }, { isRead: true });
+  await Notification.updateMany({ recipientId: userId }, { read: true });
   res.json({ success: true });
 };

@@ -16,6 +16,7 @@ export const searchUsers = async (req, res) => {
         { email: { $regex: keyword, $options: 'i' } },
       ],
     })
+    .collation({ locale: 'vi', strength: 1 })
     .find({ _id: { $ne: req.user._id } }) // Trừ bản thân người tìm
     .select('fullName email age phone address avatar')
     .limit(10);
