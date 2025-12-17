@@ -219,8 +219,7 @@ export const getDashboardStats = async (req, res) => {
     console.error("Lỗi getDashboardStats:", error);
     res.status(500).json({ message: 'Lỗi server khi lấy thống kê' });
   }
-<<<<<<< HEAD
-=======
+
 };
 
 
@@ -260,5 +259,4 @@ export const getAllUpcomingTasks = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Lỗi lấy lịch trình' });
   }
->>>>>>> duchieu
 };
