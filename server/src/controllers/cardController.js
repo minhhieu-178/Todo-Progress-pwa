@@ -40,6 +40,13 @@ export const createCard = async (req, res) => {
     list.cards.push(newCard);
     await board.save();
 
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'CREATE_CARD',
+        message: `Thẻ "${title}" đã được tạo mới`
+      });
+    }
     
 
     res.status(201).json(newCard);
@@ -52,9 +59,11 @@ export const createCard = async (req, res) => {
 export const removeMemberFromCard = async (req, res) => {
   const { boardId, listId, cardId } = req.params;
   const { userId } = req.body;
+
   if (!userId) {
     return res.status(400).json({ message: "Thiếu userId" });
   }
+
   try {
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
@@ -77,25 +86,46 @@ export const removeMemberFromCard = async (req, res) => {
     if (!inCard) {
       return res.status(400).json({ message: "User không nằm trong Card" });
     }
+
     card.members = card.members.filter(
       (m) => m.toString() !== userId.toString()
     );
     await board.save();
 
-    if (req.user._id.toString() !== userId.toString()) {
-      await NotificationService.create({
-        recipientId: userId,
-        senderId: req.user._id,
-        type: "REMOVE_MEMBER_FROM_CARD",
-        title: "Bạn bị xóa khỏi thẻ",
-        message: `${req.user.name || req.user.email} đã xóa bạn khỏi thẻ "${card.title}"`,
-        targetUrl: `/board/${board._id}`, 
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+          action: 'REMOVE_MEMBER_CARD',
+          cardId: cardId
       });
   }
+    if (req.user._id.toString() !== userId.toString()) {
+      try {
+        const actorName = req.user.fullName || req.user.email;
+        const io = req.app.get('socketio');
+        
+        const newNoti = await NotificationService.create({
+            recipientId: userId,
+            senderId: req.user._id,
+            type: "REMOVE_MEMBER_FROM_CARD",
+            title: "Bạn bị xóa khỏi thẻ",
+            message: `${actorName} đã xóa bạn khỏi thẻ "${card.title}"`,
+            targetUrl: `/board/${board._id}?cardId=${cardId}`,
+            metadata: { boardId, cardId }
+        });
+
+        if (io) {
+            const notiPayload = newNoti.toObject ? newNoti.toObject() : newNoti;
+            io.to(userId.toString()).emit('NEW_NOTIFICATION', notiPayload);
+        }
+      } catch (error) {
+         console.error("Lỗi gửi thông báo removeMemberFromCard:", error.message);
+      }
+    }
 
     res.status(200).json({ message: "Xóa thành viên thành công", card });
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi removeMemberFromCard:", error);
     res.status(500).json({ message: "Lỗi máy chủ" });
   }
 };
@@ -109,7 +139,6 @@ export const addMemberToCard = async (req, res) => {
   }
 
   try {
-
     const updatedBoard = await Board.findOneAndUpdate(
       {
         _id: boardId,
@@ -139,12 +168,20 @@ export const addMemberToCard = async (req, res) => {
     }
 
     if (targetCard) {
+
+      const io = req.app.get('socketio');
+      if (io) {
+          io.to(boardId).emit('BOARD_UPDATED', { 
+              action: 'ADD_MEMBER_CARD',
+              cardId: cardId
+          });
+      }
+      
       if (req.user._id.toString() !== userId.toString()) {
-        const actorName = req.user.fullName || req.user.email;
-        const io = req.app.get('socketio');
-        
         try {
-          await NotificationService.create({
+          const actorName = req.user.fullName || req.user.email;
+          
+          const newNoti = await NotificationService.create({
             recipientId: userId,
             senderId: req.user._id,
             type: "ADDED_TO_CARD",
@@ -154,13 +191,16 @@ export const addMemberToCard = async (req, res) => {
             metadata: { boardId, cardId }
           });
 
+          const io = req.app.get('socketio');
           if (io) {
-             io.to(userId).emit('NEW_NOTIFICATION', {
-                message: `Bạn được thêm vào thẻ "${targetCard.title}"`
-             });
+              const notiData = newNoti.toObject ? newNoti.toObject() : newNoti;
+              
+              io.to(userId.toString()).emit('NEW_NOTIFICATION', notiData);
+              console.log(`Socket sent to user ${userId}`);
           }
-        } catch (notiError) {
-          console.error("Lỗi gửi thông báo:", notiError);
+
+        } catch (err) {
+          console.error("Notification/Socket error:", err.message);
         }
       }
 
@@ -205,7 +245,14 @@ export const updateCard = async (req, res) => {
     if (members !== undefined) card.members = members;
 
     await board.save();
-    
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'UPDATE_CARD',
+        cardId: cardId,
+        message: 'Thông tin thẻ đã thay đổi'
+      });
+    }
     await board.populate({
       path: 'lists.cards.members', 
       select: 'fullName email avatar' 
@@ -248,6 +295,15 @@ export const deleteCard = async (req, res) => {
     card.deleteOne();
 
     await board.save();
+
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'DELETE_CARD',
+        message: 'Một thẻ vừa bị xóa'
+      });
+    }
+
     res.status(200).json({ message: 'Đã xóa Card thành công' });
   } catch (error) {
     console.error(error);
@@ -266,23 +322,18 @@ export const moveCard = async (req, res) => {
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
 
-    // 1. Tìm List nguồn và List đích
-    const sourceList = board.lists.id(sourceListId);
+      const sourceList = board.lists.id(sourceListId);
     const destList = board.lists.id(destListId);
     if (!sourceList || !destList) return res.status(404).json({ message: 'Lỗi dữ liệu List' });
 
-    // 2. Tìm Card trong List nguồn
     const card = sourceList.cards.id(cardId);
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Thẻ' });
 
-    // 3. Clone dữ liệu thẻ (giữ nguyên _id và các thông tin khác)
     const cardData = card.toObject(); 
 
-    // 4. Xóa thẻ khỏi nguồn
     sourceList.cards.pull(cardId);
 
-    // 5. Chèn thẻ vào đích tại vị trí mới
-    // Đảm bảo vị trí chèn hợp lệ (không vượt quá độ dài mảng)
+
     const insertIndex = (newPosition !== undefined && newPosition !== null) 
                         ? Math.min(newPosition, destList.cards.length) 
                         : destList.cards.length;
@@ -302,10 +353,16 @@ export const moveCard = async (req, res) => {
         updateCardPositions(destList);
     }
 
-    // 6. Lưu vào Database
     await board.save();
 
-    // 7. Ghi Log
+    const io = req.app.get('socketio');
+    if (io) {
+        io.to(boardId).emit('BOARD_UPDATED', { 
+            message: 'Danh sách thẻ đã thay đổi',
+            action: 'MOVE_CARD'
+        });
+    }
+
     let logContent;
     if (sourceListId === destListId) {
         logContent = `đã sắp xếp lại vị trí thẻ "${cardData.title}" trong danh sách "${sourceList.title}"`;
@@ -331,5 +388,75 @@ export const moveCard = async (req, res) => {
   } catch (error) {
     console.error("Move Card Error:", error);
     res.status(500).json({ message: 'Lỗi máy chủ: ' + error.message });
+  }
+};
+
+export const uploadAttachment = async (req, res) => {
+  const { boardId, listId, cardId } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'Chưa chọn file để upload' });
+  }
+
+  try {
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
+
+    const isMember = board.members.some(m => m.toString() === req.user._id.toString());
+    if (!isMember) return res.status(403).json({ message: 'Không có quyền truy cập' });
+
+    const list = board.lists.id(listId);
+    if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
+
+    const card = list.cards.id(cardId);
+    if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
+
+    const newAttachment = {
+      name: req.file.originalname, 
+      url: req.file.path,          
+      publicId: req.file.filename,
+      type: req.file.mimetype,
+    };
+
+    card.attachments.push(newAttachment);
+    await board.save();
+
+    const io = req.app.get('socketio');
+    const actorName = req.user.fullName || req.user.email;
+
+    const notificationPromises = card.members.map(async (memberId) => {
+        if (memberId.toString() !== req.user._id.toString()) {
+            
+            const noti = await NotificationService.create({
+                recipientId: memberId,
+                senderId: req.user._id,
+                type: "attachment", 
+                title: "Tệp đính kèm mới",
+                message: `${actorName} đã đính kèm "${newAttachment.name}" vào thẻ "${card.title}"`,
+                targetUrl: `/board/${boardId}?cardId=${cardId}`,
+                metadata: { boardId, cardId, fileUrl: newAttachment.url }
+            });
+
+            if (io) {
+                io.to(memberId.toString()).emit('NEW_NOTIFICATION', noti);
+            }
+        }
+    });
+
+    await Promise.all(notificationPromises);
+
+    if (io) {
+        io.to(boardId).emit('BOARD_UPDATED', {
+            action: 'UPLOAD_ATTACHMENT',
+            cardId: cardId,
+            message: 'Có tệp mới được tải lên'
+        });
+    }
+
+    res.status(200).json(newAttachment);
+
+  } catch (error) {
+    console.error("Lỗi upload attachment:", error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };

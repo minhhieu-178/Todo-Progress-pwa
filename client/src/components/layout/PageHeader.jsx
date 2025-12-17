@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+import React, { useState, useEffect, useRef, Fragment, useCallback } from 'react'; 
 import { Search, Clock, Bell, Loader, CheckCheck, MessageSquare, Calendar, UserPlus, Trash2 } from 'lucide-react'; 
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -45,17 +45,19 @@ function PageHeader({ title, showSearch = true }) {
 
     useEffect(() => {
         fetchNotis(); 
-        
-        const interval = setInterval(fetchNotis, 30000);
-        return () => clearInterval(interval);
     }, []);
 
 
     useEffect(() => {
         if (!socket) return;
-        socket.on('NEW_NOTIFICATION', () => {
-            fetchNotis(); // Giờ thì gọi được rồi vì nó nằm ở ngoài!
+
+        socket.on('NEW_NOTIFICATION', (newNoti) => {
+            console.log("Đã nhận thông báo mới từ Socket:", newNoti); 
+
+            setNotifications((prevNotifications) => [newNoti, ...prevNotifications]);
+            setUnreadCount((prevCount) => prevCount + 1);
         });
+
         return () => socket.off('NEW_NOTIFICATION');
     }, [socket]);
 

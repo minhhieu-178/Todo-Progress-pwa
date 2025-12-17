@@ -28,9 +28,12 @@ export const createComment = async (req, res) => {
                 }
             }
 
+            const io = req.app.get('socketio');
+
             const notificationPromises = cardMembers.map(async (memberId) => {
                 if (memberId.toString() !== userId.toString()) { 
-                    await NotificationService.create({
+                    
+                    const newNoti = await NotificationService.create({
                         recipientId: memberId,
                         senderId: userId,
                         type: 'COMMENT',
@@ -39,6 +42,10 @@ export const createComment = async (req, res) => {
                         targetUrl: `/board/${boardId}?cardId=${cardId}`, 
                         metadata: { boardId, cardId }
                     });
+
+                    if (io) {
+                        io.to(memberId.toString()).emit('NEW_NOTIFICATION', newNoti);
+                    }
                 }
             });
 

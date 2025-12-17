@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment, useRef } from 'react'; 
 import { Dialog, Transition, Popover } from '@headlessui/react';
-import { X, Clock, AlignLeft, MessageSquare, Trash2, CheckSquare, Plus, User as UserIcon, Search } from 'lucide-react';
-import { updateCard, deleteCard, addMemberToCard, removeMemberFromCard } from '../../services/cardApi';
+import { X, Clock, AlignLeft, MessageSquare, Trash2, CheckSquare, Plus, User as UserIcon, Search, Paperclip, FileText, Download } from 'lucide-react';
+import { updateCard, deleteCard, addMemberToCard, removeMemberFromCard, uploadCardAttachment } from '../../services/cardApi';
 import { getComments, createComment } from '../../services/commentApi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,6 +9,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   const { user } = useAuth();
   const dateInputRef = useRef(null);
   const searchInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // --- STATE ---
   const [title, setTitle] = useState(card?.title || '');
@@ -25,6 +26,8 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
 
+  const [attachments, setAttachments] = useState(card?.attachments || []);
+  const [uploading, setUploading] = useState(false);
   // --- EFFECT ---
   useEffect(() => {
     if (card) {
@@ -33,6 +36,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
       setDueDate(card.dueDate ? new Date(card.dueDate).toISOString().split('T')[0] : '');
       setIsCompleted(card.isCompleted || false);
       setCardMembers(card.members || []);
+      setAttachments(card.attachments || []);
       setMemberSearch('');
       loadComments();
     }
@@ -152,6 +156,32 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
     return notInCard && matchesSearch;
   });
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert("File quá lớn! Vui lòng chọn file dưới 5MB.");
+        return;
+    }
+
+    setUploading(true);
+    try {
+        const newAttachment = await uploadCardAttachment(boardId, listId, card._id, file);
+        
+        const updatedAttachments = [...attachments, newAttachment];
+        setAttachments(updatedAttachments);
+        
+        onUpdateCard(listId, { ...card, attachments: updatedAttachments });
+        
+    } catch (error) {
+        alert("Lỗi upload file: " + error);
+    } finally {
+        setUploading(false);
+        e.target.value = ''; // Reset input
+    }
+  };
+
   if (!card) return null;
 
   return (
@@ -244,6 +274,51 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                         className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all resize-none shadow-sm text-sm leading-relaxed hover:bg-white dark:hover:bg-gray-800"
                       />
                     </div>
+                    
+                    {attachments.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-2 mb-3 text-gray-900 dark:text-white font-semibold text-lg">
+                                <Paperclip className="w-5 h-5 text-gray-500" />
+                                <h3>Tệp đính kèm ({attachments.length})</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {attachments.map((file) => (
+                                    <div key={file._id || file.url} className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors group">
+                                        {/* Preview file (nếu là ảnh) hoặc icon file */}
+                                        <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-600 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                                            {file.type?.startsWith('image/') ? (
+                                                <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <FileText className="w-8 h-8 text-gray-500 dark:text-gray-400" />
+                                            )}
+                                        </div>
+                                        
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate" title={file.name}>
+                                                {file.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mb-2">
+                                                {new Date(file.uploadedAt).toLocaleDateString('vi-VN')}
+                                            </p>
+                                            
+                                            <div className="flex items-center gap-3">
+                                                <a 
+                                                    href={file.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1"
+                                                >
+                                                    <Download className="w-3 h-3" />
+                                                    Tải xuống
+                                                </a>
+                                                {/* Nút xóa file (nếu cần làm thêm API xóa) */}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Comments */}
                     <div>
@@ -420,7 +495,8 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                     {/* 2. ADD TO CARD (Deadline) */}
                     <div>
                         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thêm vào thẻ</div>
-                        
+
+
                         <div 
                             className="relative cursor-pointer group"
                             onClick={() => dateInputRef.current?.showPicker()}
@@ -444,8 +520,30 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                 </div>
                             )}
                         </div>
-                    </div>
 
+                    </div>
+                      <div>
+                       <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thêm tệp</div>
+                            
+                        <div className="mt-2">
+                             <input 
+                                ref={fileInputRef}
+                                type="file" 
+                                className="hidden" 
+                                onChange={handleFileUpload}
+                             />
+                             <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-gray-700 dark:text-gray-200 text-sm font-medium border border-gray-200 dark:border-gray-700 group hover:border-indigo-300 dark:hover:border-indigo-600 text-left"
+                             >
+                                <Paperclip className="w-4 h-4 text-gray-500 group-hover:text-indigo-500 transition-colors" />
+                                <span>
+                                    {uploading ? 'Đang tải lên...' : 'Đính kèm tệp'}
+                                </span>
+                             </button>
+                        </div>
+                    </div>
                     {/* 3. ACTIONS */}
                     <div>
                         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thao tác</div>

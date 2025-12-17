@@ -37,11 +37,11 @@ export const getBoardById = async (req, res) => {
   try {
     const { id } = req.params;
     const board = await Board.findById(id)
-      .populate('members', 'fullName email')
-      .populate('ownerId', 'fullName email')
+      .populate('members', 'fullName email avatar') 
+      .populate('ownerId', 'fullName email avatar') 
       .populate({
         path: 'lists.cards.members',
-        select: 'fullName email' 
+        select: 'fullName email avatar' 
       });
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
     const isMember = board.members.some(m => m._id.toString() === req.user._id.toString());
@@ -73,11 +73,43 @@ export const updateBoard = async (req, res) => {
 export const deleteBoard = async (req, res) => {
   try {
     const { id } = req.params;
+    
     const board = await Board.findById(id);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
-    if (board.ownerId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Không có quyền xóa' });
+
+    if (board.ownerId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Không có quyền xóa' });
+    }
+
+    const notificationPromises = board.members.map(async (memberId) => {
+        if (memberId.toString() !== req.user._id.toString()) {
+            return NotificationService.create({
+                recipientId: memberId,
+                senderId: req.user._id,
+                type: "BOARD_DELETED",
+                title: "Bảng đã bị xóa",
+                message: `Chủ bảng ${req.user.fullName || req.user.email} đã xóa bảng "${board.title}"`,
+                targetUrl: `/`, 
+            });
+        }
+    });
+
+    try {
+        await Promise.all(notificationPromises);
+    } catch (err) {
+        console.error("Lỗi gửi thông báo xóa bảng:", err);
+    }
+
+    const io = req.app.get('socketio');
+    if (io) {
+        io.to(id).emit('BOARD_DELETED', { 
+            message: `Bảng "${board.title}" đã bị xóa bởi chủ sở hữu.`,
+            boardId: id
+        });
+    }
 
     await board.deleteOne();
+
     res.json({ message: 'Đã xóa Bảng thành công' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -98,8 +130,16 @@ export const addMember = async (req, res) => {
 
     board.members.push(userYz._id);
     await board.save();
+
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(id).emit('BOARD_UPDATED', { 
+          action: 'ADD_MEMBER_BOARD',
+          message: 'Thành viên mới đã được thêm vào bảng'
+      });
+  }
     try {
-      await NotificationService.create({
+      const newNoti = await NotificationService.create({
         recipientId: userYz._id,
         senderId: board.ownerId,
         type: "ADDED_TO_BOARD",
@@ -107,8 +147,14 @@ export const addMember = async (req, res) => {
         message: `${req.user.fullName} đã thêm bạn vào bảng "${board.title}"`,
         targetUrl: `/board/${id}`,
       });
+
+      const io = req.app.get('socketio');
+      if (io) {
+          io.to(userYz._id.toString()).emit('NEW_NOTIFICATION', newNoti);
+      }
+
     } catch (err) {
-      console.error("Notification error:", err);
+      console.error("Notification error:", err.message);
     }
 
     await createLog({
@@ -121,8 +167,8 @@ export const addMember = async (req, res) => {
     });
 
     const updatedBoard = await Board.findById(id)
-      .populate('members', 'fullName email')
-      .populate('ownerId', 'fullName email');
+      .populate('members', 'fullName email avatar') 
+      .populate('ownerId', 'fullName email avatar');
     res.json(updatedBoard);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -139,10 +185,20 @@ export const removeMember = async (req, res) => {
 
     board.members = board.members.filter(memberId => memberId.toString() !== userId);
     await board.save();
-    const updatedBoard = await Board.findById(id).populate('members', 'fullName email').populate('ownerId', 'fullName email');
+
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(id).emit('BOARD_UPDATED', { 
+          action: 'REMOVE_MEMBER_BOARD',
+          message: 'Danh sách thành viên bảng đã thay đổi'
+      });
+  }
+    const updatedBoard = await Board.findById(id)
+      .populate('members', 'fullName email avatar') 
+      .populate('ownerId', 'fullName email avatar');
     res.json(updatedBoard);
     try {
-      await NotificationService.create({
+      const newNoti = await NotificationService.create({
         recipientId: userId,
         senderId: board.ownerId,
         type: "DELETED_FROM_BOARD",
@@ -150,8 +206,14 @@ export const removeMember = async (req, res) => {
         message: `Bạn đã bị xóa khỏi Bảng ${board.title}`,
         targetUrl: `/board/${id}`,
       });
+
+      const io = req.app.get('socketio');
+      if (io) {
+        io.to(userId).emit('NEW_NOTIFICATION', newNoti);
+      }
+
     } catch (err) {
-      console.error("Notification error:", err);
+      console.error("Notification error:", err.message);
     }
   } catch (error) {
     res.status(500).json({ message: 'Lỗi máy chủ' });

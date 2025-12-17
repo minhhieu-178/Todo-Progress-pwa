@@ -5,31 +5,36 @@ import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../servic
 import { createList, updateList, deleteList } from '../services/listApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
-import MembersModal from '../components/board/MembersModal'; // Import Modal Mới
+import MembersModal from '../components/board/MembersModal'; 
 import { useAuth } from '../context/AuthContext';
-import { Users } from 'lucide-react'; // Đổi icon sang Users
+import { Users } from 'lucide-react'; 
 import { moveCard } from '../services/cardApi';
+import { useSocket } from '../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 
 function BoardPage() {
   const { user } = useAuth();
-  const { id: boardId } = useParams();
   
   const [board, setBoard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newListTitle, setNewListTitle] = useState('');
   
-  // State cho Modal Card
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // State cho Modal Thành viên
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCardId = searchParams.get('cardId');
-  // --- LOGIC MODAL CARD ---
+
+
+  const { id } = useParams();
+  const socket = useSocket();
+
+  const navigate = useNavigate();
+
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
     setSelectedListId(listId);
@@ -95,26 +100,53 @@ function BoardPage() {
     }
   }, [board, activeCardId]);
 
-  // --- DATA FETCHING ---
-  const fetchBoard = async () => {
-    try {
-      setLoading(true);
-      const data = await getBoardById(boardId);
-      data.lists.sort((a, b) => a.position - b.position);
-      data.lists.forEach((list) => {
-        list.cards.sort((a, b) => a.position - b.position);
-      });
-      setBoard(data);
-    } catch (err) {
-      setError(err.toString());
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchBoard = async (isBackground = false) => {
+        try {
+            if (!isBackground) setLoading(true);
+            
+            const data = await getBoardById(id); 
+            
+            if (data.lists) {
+                data.lists.sort((a, b) => a.position - b.position);
+                data.lists.forEach((list) => {
+                    if (list.cards) {
+                        list.cards.sort((a, b) => a.position - b.position);
+                    }
+                });
+            }
+            setBoard(data);
+        } catch (err) {
+            setError(err.toString());
+        } finally {
+            if (!isBackground) setLoading(false);
+        }
+    };
+
 
   useEffect(() => {
-    fetchBoard();
-  }, [boardId]);
+        fetchBoard(false); 
+    }, [id]);
+  
+  useEffect(() => {
+        if (!socket || !id) return;
+
+        socket.emit('join_board_room', id);
+        socket.on('BOARD_UPDATED', (data) => {
+            console.log("Update:", data);
+            fetchBoard(true); 
+        });
+
+        socket.on('BOARD_DELETED', (data) => {
+            alert(data.message); 
+            navigate('/'); 
+        });
+
+        return () => {
+            socket.emit('leave_board_room', id);
+            socket.off('BOARD_UPDATED');  
+            socket.off('BOARD_DELETED'); 
+        };
+    }, [socket, id, navigate]);
 
   // --- DRAG & DROP ---
 const onDragEnd = async (result) => {
@@ -146,10 +178,8 @@ const onDragEnd = async (result) => {
       newLists[sourceListIndex] = sourceList;
       if (sourceListIndex !== destListIndex) newLists[destListIndex] = destList;
 
-      // 1. Cập nhật giao diện ngay lập tức
       setBoard({ ...board, lists: newLists });
       
-      // 2. Gọi API cập nhật server
       try {
         await moveCard(draggableId, {
           boardId: board._id,
@@ -240,21 +270,38 @@ const onDragEnd = async (result) => {
         {/* Bên phải: Nút quản lý thành viên */}
         <div className="flex items-center gap-4">
             
-            {/* Avatar Stack (Preview) - Bấm vào để mở Modal */}
+            {/* Avatar Stack (Preview) */}
             <div 
-              className="flex -space-x-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setIsMembersModalOpen(true)}
-              title="Quản lý thành viên"
+                className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setIsMembersModalOpen(true)}
+                title="Quản lý thành viên"
             >
                 {board.members?.slice(0, 5).map((member) => (
-                    <div key={member._id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-                        {member.fullName?.charAt(0).toUpperCase()}
+                    <div 
+                        key={member._id} 
+                        className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
+                    >
+                        {/* Ưu tiên hiện ảnh Avatar nếu có */}
+                        {member.avatar ? (
+                            <img 
+                                src={member.avatar} 
+                                alt="avatar" 
+                                className="w-full h-full object-cover" 
+                            />
+                        ) : (
+                            /* Nếu không có ảnh thì hiện chữ cái đầu */
+                            <span>
+                                {member.fullName ? member.fullName.charAt(0) : member.email?.charAt(0)}
+                            </span>
+                        )}
                     </div>
                 ))}
+
+                {/* Bong bóng hiển thị số lượng còn lại (+3) */}
                 {board.members?.length > 5 && (
-                   <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-200 text-xs font-bold">
-                      +{board.members.length - 5}
-                   </div>
+                    <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 text-xs font-bold z-10">
+                        +{board.members.length - 5}
+                    </div>
                 )}
             </div>
 

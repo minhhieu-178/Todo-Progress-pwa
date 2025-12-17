@@ -69,7 +69,7 @@ app.use('/api/search', searchRoutes);
 cron.schedule('*/10 * * * *', async () => {
   console.log('Running cron job: check deadlines');
   try {
-    const notifications = await checkDeadlines();
+    const notifications = await checkDeadlines(io); 
     console.log(`Created ${notifications.length} notifications`);
   } catch (err) {
     console.error('Cron job error:', err);

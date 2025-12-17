@@ -8,7 +8,16 @@ const CardSchema = new mongoose.Schema(
     position: { type: Number, required: true },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     isCompleted: { type: Boolean, default: false },
-    labels: [{ type: String }], 
+    labels: [{ type: String }],
+    
+    attachments: [{
+      name: String,       
+      url: String,        
+      publicId: String,  
+      type: String,       
+      uploadedAt: { type: Date, default: Date.now }
+    }],
+    
   },
   { timestamps: true }
 );

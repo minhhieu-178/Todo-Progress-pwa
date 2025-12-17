@@ -1,6 +1,7 @@
 import express from 'express';
-import { createCard, updateCard, deleteCard, moveCard, addMemberToCard, removeMemberFromCard } from '../controllers/cardController.js';
+import { createCard, updateCard, deleteCard, moveCard, addMemberToCard, removeMemberFromCard, uploadAttachment } from '../controllers/cardController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import upload from '../config/cloudinary.js';
 
 const router = express.Router();
 router.use(protect);
@@ -11,5 +12,10 @@ router.delete('/boards/:boardId/lists/:listId/cards/:cardId', deleteCard);
 router.put('/boards/:boardId/cards/:cardId/move', moveCard);
 router.post('/boards/:boardId/lists/:listId/cards/:cardId/members', addMemberToCard);
 router.delete('/boards/:boardId/lists/:listId/cards/:cardId/members', removeMemberFromCard);
+router.post(
+  '/boards/:boardId/lists/:listId/cards/:cardId/attachments',
+  upload.single('file'), 
+  uploadAttachment       
+);
 
 export default router;

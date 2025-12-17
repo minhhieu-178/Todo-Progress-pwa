@@ -60,3 +60,21 @@ export const removeMemberFromCard = async (boardId, listId, cardId, userId) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+export const uploadCardAttachment = async (boardId, listId, cardId, file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file); 
+
+    const { data } = await api.post(
+      `/boards/${boardId}/lists/${listId}/cards/${cardId}/attachments`, 
+      formData, 
+      {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }
+    );
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
