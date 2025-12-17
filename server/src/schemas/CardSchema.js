@@ -14,7 +14,9 @@ const CardSchema = new mongoose.Schema(
       name: String,       
       url: String,        
       publicId: String,  
-      type: String,       
+      
+      type: { type: String },       
+      
       uploadedAt: { type: Date, default: Date.now }
     }],
     

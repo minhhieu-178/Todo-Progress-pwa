@@ -78,3 +78,14 @@ export const uploadCardAttachment = async (boardId, listId, cardId, file) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+export const deleteCardAttachment = async (boardId, listId, cardId, attachmentId) => {
+  try {
+    const { data } = await api.delete(
+      `/boards/${boardId}/lists/${listId}/cards/${cardId}/attachments/${attachmentId}`
+    );
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};

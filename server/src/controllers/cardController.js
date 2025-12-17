@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { createLog } from '../services/logService.js';
 import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js';
-
+import { v2 as cloudinary } from 'cloudinary';
 /**
  * @desc   Tạo 1 Card mới trong List
  * @route  POST /api/boards/:boardId/lists/:listId/cards
@@ -398,6 +398,8 @@ export const uploadAttachment = async (req, res) => {
     return res.status(400).json({ message: 'Chưa chọn file để upload' });
   }
 
+  const fixedName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+
   try {
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
@@ -412,7 +414,7 @@ export const uploadAttachment = async (req, res) => {
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
 
     const newAttachment = {
-      name: req.file.originalname, 
+      name: fixedName,
       url: req.file.path,          
       publicId: req.file.filename,
       type: req.file.mimetype,
@@ -420,6 +422,8 @@ export const uploadAttachment = async (req, res) => {
 
     card.attachments.push(newAttachment);
     await board.save();
+
+    const savedAttachment = card.attachments[card.attachments.length - 1];
 
     const io = req.app.get('socketio');
     const actorName = req.user.fullName || req.user.email;
@@ -430,7 +434,7 @@ export const uploadAttachment = async (req, res) => {
             const noti = await NotificationService.create({
                 recipientId: memberId,
                 senderId: req.user._id,
-                type: "attachment", 
+                type: "ATTACHMENT", 
                 title: "Tệp đính kèm mới",
                 message: `${actorName} đã đính kèm "${newAttachment.name}" vào thẻ "${card.title}"`,
                 targetUrl: `/board/${boardId}?cardId=${cardId}`,
@@ -453,10 +457,60 @@ export const uploadAttachment = async (req, res) => {
         });
     }
 
-    res.status(200).json(newAttachment);
+    res.status(200).json(savedAttachment);
 
   } catch (error) {
     console.error("Lỗi upload attachment:", error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+export const deleteAttachment = async (req, res) => {
+  const { boardId, listId, cardId, attachmentId } = req.params;
+
+  try {
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
+    
+    const isMember = board.members.some(m => m.toString() === req.user._id.toString());
+    if (!isMember) return res.status(403).json({ message: 'Không có quyền truy cập' });
+
+    const list = board.lists.id(listId);
+    const card = list.cards.id(cardId);
+    if (!card) return res.status(404).json({ message: 'Không tìm thấy Thẻ' });
+
+    const attachment = card.attachments.id(attachmentId);
+    if (!attachment) return res.status(404).json({ message: 'Không tìm thấy tệp đính kèm' });
+
+    if (attachment.publicId) {
+       let resourceType = 'raw';
+       if (attachment.type.startsWith('image/') || attachment.type === 'application/pdf') {
+           resourceType = 'image';
+       } else if (attachment.type.startsWith('video/')) {
+           resourceType = 'video';
+       }
+
+       await cloudinary.uploader.destroy(attachment.publicId, { 
+           resource_type: resourceType 
+       });
+    }
+
+    card.attachments.pull(attachmentId);
+    await board.save();
+
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', {
+        action: 'DELETE_ATTACHMENT',
+        cardId: cardId,
+        message: 'Đã xóa tệp đính kèm'
+      });
+    }
+
+    res.status(200).json({ message: 'Xóa tệp thành công', attachmentId });
+
+  } catch (error) {
+    console.error("Lỗi xóa attachment:", error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
