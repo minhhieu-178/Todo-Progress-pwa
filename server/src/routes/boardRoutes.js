@@ -22,7 +22,6 @@ router.route('/')
   .post(protect, createBoard)
   .get(protect, getMyBoards);
 
-// --- Các route thống kê & deadlines (Đặt trước route /:id để tránh bị nhầm ID) ---
 router.get('/deadlines/all', protect, getAllUpcomingTasks);
 router.get('/stats', protect, getDashboardStats);
 
