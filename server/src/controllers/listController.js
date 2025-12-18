@@ -110,3 +110,41 @@ export const deleteList = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+export const moveList = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const { listId, newPosition } = req.body;
+
+    const board = await Board.findById(boardId);
+    if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
+
+    
+    const listIndex = board.lists.findIndex(l => l._id.toString() === listId);
+    if (listIndex === -1) return res.status(404).json({ message: 'Không tìm thấy List' });
+    
+    const [movedList] = board.lists.splice(listIndex, 1);
+
+    board.lists.splice(newPosition, 0, movedList);
+
+  
+    board.lists.forEach((list, index) => {
+      list.position = index; 
+    });
+
+    await board.save();
+
+    const io = req.app.get('socketio');
+    if (io) {
+      io.to(boardId).emit('BOARD_UPDATED', { 
+        action: 'MOVE_LIST',
+        message: 'Vị trí danh sách đã thay đổi'
+      });
+    }
+
+    res.json(board.lists);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
