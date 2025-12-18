@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import ScheduleModal from '../components/board/ScheduleModal';
 import { 
-    Layout, CheckCircle, Clock, AlertCircle, 
-    Plus, ArrowRight, Calendar, Activity 
+  Layout, CheckCircle, Clock, AlertCircle, 
+  Plus, ArrowRight, Calendar, Activity 
 } from 'lucide-react';
 
 function DashboardPage() {
@@ -18,6 +18,7 @@ function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   
+  // State chứa thống kê
   const [stats, setStats] = useState({
     totalTasks: 0,
     inProgressTasks: 0,
@@ -47,6 +48,7 @@ function DashboardPage() {
     fetchData();
   }, []);
 
+  // Xử lý tạo bảng mới
   const handleCreateBoard = async (e) => {
     e.preventDefault();
     if (!newBoardTitle.trim()) {
@@ -82,6 +84,7 @@ function DashboardPage() {
     return total === 0 ? 0 : Math.round((completed / total) * 100);
   };
 
+  // Cấu hình thẻ thống kê (Stat Cards)
   const statCards = [
     { 
         title: "Tổng Task", 
@@ -294,6 +297,11 @@ function DashboardPage() {
             />
         </div>
       </div>
+      
+      <ScheduleModal 
+          isOpen={isScheduleModalOpen} 
+          onClose={() => setIsScheduleModalOpen(false)} 
+      />
     </div>
   );
 }

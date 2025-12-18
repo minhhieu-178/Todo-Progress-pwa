@@ -2,11 +2,13 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { Dialog, Transition, Popover } from '@headlessui/react';
 import { X, Clock, AlignLeft, MessageSquare, Trash2, CheckSquare, Plus, User as UserIcon, Search, Paperclip, FileText, Download, Eye } from 'lucide-react';
 import { updateCard, deleteCard, addMemberToCard, removeMemberFromCard, uploadCardAttachment, deleteCardAttachment } from '../../services/cardApi';
-import { getComments, createComment } from '../../services/commentApi';
+import { getComments, createComment, updateComment, deleteComment } from '../../services/commentApi';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 
 function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers = [], onUpdateCard, onDeleteCard }) {
   const { user } = useAuth();
+  const socket = useSocket();
   const dateInputRef = useRef(null);
   const searchInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -26,12 +28,18 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
 
+  // State Mention
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+
   const [attachments, setAttachments] = useState(card?.attachments || []);
   const [uploading, setUploading] = useState(false);
 
   const [previewFile, setPreviewFile] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+
   // --- EFFECT ---
-  
   useEffect(() => {
         setDescription(card.description || "");
     }, [card]);
@@ -54,6 +62,82 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
         searchInputRef.current?.focus();
     }, 100);
   };
+
+  // --- LOGIC SOCKET ---
+  useEffect(() => {
+    if (!socket || !card) return;
+
+    const handleNewComment = (newComment) => {
+        if (newComment.cardId === card._id) {
+            setComments((prev) => {
+                if (prev.some(c => c._id === newComment._id)) return prev;
+                return [...prev, newComment];
+            });
+        }
+    };
+
+    const handleUpdateCommentSocket = (updatedComment) => {
+        if (updatedComment.cardId === card._id) {
+            setComments((prev) => prev.map(c => c._id === updatedComment._id ? updatedComment : c));
+        }
+    };
+
+    const handleDeleteCommentSocket = ({ commentId, cardId }) => {
+        if (cardId === card._id) {
+            setComments((prev) => prev.filter(c => c._id !== commentId));
+        }
+    };
+
+    socket.on('NEW_COMMENT', handleNewComment);
+    socket.on('UPDATE_COMMENT', handleUpdateCommentSocket);
+    socket.on('DELETE_COMMENT', handleDeleteCommentSocket);
+
+    return () => {
+        socket.off('NEW_COMMENT', handleNewComment);
+        socket.off('UPDATE_COMMENT', handleUpdateCommentSocket);
+        socket.off('DELETE_COMMENT', handleDeleteCommentSocket);
+    };
+  }, [socket, card]);
+
+
+  // --- LOGIC MENTION (ĐÃ FIX) ---
+  const handleCommentChange = (e) => {
+    const val = e.target.value;
+    setNewComment(val);
+
+    const lastWord = val.split(/\s+/).pop();
+    
+    // Kiểm tra ký tự @
+    if (lastWord && lastWord.startsWith('@')) {
+        setShowMentions(true);
+        // Lấy từ khóa tìm kiếm (bỏ chữ @)
+        // Lưu ý: Nếu user đang gõ tên có dấu cách (vd: @Minh Hieu), logic đơn giản này sẽ bị ngắt
+        // Tuy nhiên với Non-breaking space thì nó vẫn hoạt động tốt khi chọn từ list.
+        setMentionQuery(lastWord.slice(1)); 
+    } else {
+        setShowMentions(false);
+    }
+  };
+
+  const handleSelectMention = (member) => {
+    // Tách chuỗi theo dấu cách thường
+    const words = newComment.split(/\s+/);
+    words.pop(); // Xóa cái từ đang gõ dở (@...)
+    
+    // --- KEY FIX: Dùng 'Non-breaking space' (\u00A0) thay cho dấu cách thường ---
+    // Điều này giúp máy tính hiểu "Minh Hieu" là 1 từ dính liền, nhưng mắt người vẫn thấy có cách.
+    const safeName = member.fullName.replace(/\s+/g, '\u00A0'); 
+    
+    const newValue = words.join(' ') + (words.length > 0 ? ' ' : '') + `@${safeName} `;
+    
+    setNewComment(newValue);
+    setShowMentions(false);
+  };
+
+  const filteredMentionMembers = boardMembers.filter(m => 
+    m.fullName.toLowerCase().includes(mentionQuery.toLowerCase())
+  );
+
 
   // --- API HANDLERS ---
   const handleUpdateDate = async (newDateVal) => {
@@ -98,12 +182,38 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
     setCommentLoading(true);
     try {
       const savedComment = await createComment(newComment, boardId, card._id);
-      setComments([...comments, savedComment]);
+      if (!socket) { 
+         setComments(prev => [...prev, savedComment]);
+      }
       setNewComment('');
     } catch (error) {
       alert(error);
     } finally {
       setCommentLoading(false);
+    }
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    try {
+        const updatedCmt = await updateComment(commentId, editContent);
+        if (!socket) {
+            setComments(comments.map(c => c._id === commentId ? updatedCmt : c));
+        }
+        setEditingCommentId(null);
+    } catch (error) {
+        alert(error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Xóa bình luận này?")) return;
+    try {
+      await deleteComment(commentId);
+      if (!socket) {
+          setComments(comments.filter(c => c._id !== commentId));
+      }
+    } catch (error) {
+      alert(error);
     }
   };
 
@@ -175,12 +285,9 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
     setUploading(true);
     try {
         const newAttachment = await uploadCardAttachment(boardId, listId, card._id, file);
-        
         const updatedAttachments = [...attachments, newAttachment];
         setAttachments(updatedAttachments);
-        
         onUpdateCard(listId, { ...card, attachments: updatedAttachments });
-        
     } catch (error) {
         alert("Lỗi upload file: " + error);
     } finally {
@@ -195,60 +302,27 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
 
   const renderPreviewContent = () => {
     if (!previewFile) return null;
-
     const { type, url } = previewFile;
 
     if (type?.startsWith('image/')) {
-      return (
-        <img 
-          src={url} 
-          alt="Preview" 
-          className="max-w-full max-h-[85vh] object-contain rounded-md shadow-lg" 
-        />
-      );
+      return <img src={url} alt="Preview" className="max-w-full max-h-[85vh] object-contain rounded-md shadow-lg" />;
     }
-
     if (type === 'application/pdf') {
-       return (
-         <iframe 
-            src={url}
-            title="PDF Preview"
-            className="w-full h-full rounded-md bg-white"
-         />
-       );
+       return <iframe src={url} title="PDF Preview" className="w-full h-full rounded-md bg-white"/>;
     }
-
-    if (
-        type?.includes('msword') || 
-        type?.includes('wordprocessingml') || 
-        type?.includes('spreadsheetml') || 
-        type?.includes('presentationml')
-    ) {
+    if (type?.includes('msword') || type?.includes('wordprocessingml') || type?.includes('spreadsheetml') || type?.includes('presentationml')) {
         const encodedUrl = encodeURIComponent(url);
-        return (
-            <iframe 
-                src={`https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`}
-                title="Office Preview"
-                className="w-full h-full rounded-md bg-white border-none"
-            />
-        );
+        return <iframe src={`https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`} title="Office Preview" className="w-full h-full rounded-md bg-white border-none"/>;
     }
   };
 
   const handleDeleteAttachment = async (attachmentId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa tệp này vĩnh viễn không?")) {
-        return;
-    }
-
+    if (!window.confirm("Bạn có chắc chắn muốn xóa tệp này vĩnh viễn không?")) return;
     try {
         await deleteCardAttachment(boardId, listId, card._id, attachmentId);
-        
         const updatedAttachments = attachments.filter(a => a._id !== attachmentId);
         setAttachments(updatedAttachments);
-        
         onUpdateCard(listId, { ...card, attachments: updatedAttachments });
-        
-        
     } catch (error) {
         console.error(error);
         alert("Lỗi khi xóa tệp: " + error);
@@ -259,24 +333,20 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
     try {
       const response = await fetch(file.url);
       const blob = await response.blob();
-
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement('a');
       link.href = url;
-      
       link.download = file.name; 
-      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url); 
-
     } catch (error) {
       console.error("Lỗi tải file:", error);
       window.open(file.url, '_blank');
     }
   };
+
   if (!card) return null;
 
   return (
@@ -394,7 +464,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                       </div>
                                       
                                     <div className="flex-1 min-w-0 pr-6">
-                                          {/* 2. Tên file: Bấm vào cũng là XEM */}
                                           <p 
                                               onClick={() => handlePreview(file)} 
                                               className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
@@ -407,7 +476,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                               {new Date(file.uploadedAt).toLocaleDateString('vi-VN')}
                                           </p>
                                           
-                                          {/* 3. Nút chức năng nhỏ bên dưới */}
                                           <div className="flex items-center gap-3">
                                               <button 
                                                   onClick={() => handlePreview(file)}
@@ -431,15 +499,15 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                       </div>
 
                                       <button 
-                                  onClick={(e) => {
-                                      e.stopPropagation(); 
-                                      handleDeleteAttachment(file._id); 
-                                  }}
-                                  className="absolute top-2 right-2 p-1.5 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all cursor-pointer bg-white/50 dark:bg-gray-800/50"
-                                  title="Xóa tệp"
-                              >
-                                  <X className="w-4 h-4" />
-                              </button>
+                                          onClick={(e) => {
+                                              e.stopPropagation(); 
+                                              handleDeleteAttachment(file._id); 
+                                          }}
+                                          className="absolute top-2 right-2 p-1.5 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all cursor-pointer bg-white/50 dark:bg-gray-800/50"
+                                          title="Xóa tệp"
+                                      >
+                                          <X className="w-4 h-4" />
+                                      </button>
                                   </div>
                               ))}
                           </div>
@@ -458,11 +526,46 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                           {user?.fullName?.charAt(0).toUpperCase()}
                         </div>
                         <form onSubmit={handlePostComment} className="flex-1 relative group">
+                          
+                          {/* --- DANH SÁCH GỢI Ý MENTION --- */}
+                          {showMentions && filteredMentionMembers.length > 0 && (
+                              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                  <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700 text-xs font-bold text-gray-500 uppercase">
+                                      Nhắc đến thành viên
+                                  </div>
+                                  <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                                      {filteredMentionMembers.map(member => (
+                                          <div 
+                                              key={member._id}
+                                              onClick={() => handleSelectMention(member)}
+                                              className="flex items-center gap-3 p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer transition-colors"
+                                          >
+                                              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-gray-700 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-bold text-xs">
+                                                  {member.avatar ? (
+                                                      <img src={member.avatar} alt="" className="w-full h-full rounded-full object-cover"/>
+                                                  ) : (
+                                                      member.fullName.charAt(0).toUpperCase()
+                                                  )}
+                                              </div>
+                                              <div>
+                                                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                                      {member.fullName}
+                                                  </p>
+                                                  <p className="text-xs text-gray-400 truncate max-w-[140px]">
+                                                      {member.email}
+                                                  </p>
+                                              </div>
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+
                           <input
                             type="text"
                             value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Viết bình luận..."
+                            onChange={handleCommentChange} 
+                            placeholder="Viết bình luận... (Gõ @ để nhắc tên)"
                             className="w-full pl-5 pr-14 py-3 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm transition-shadow"
                           />
                           <button 
@@ -480,42 +583,107 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                       </div>
 
                       <div className="space-y-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                        {comments.length > 0 ? comments.map((cmt) => (
-                          <div key={cmt._id} className="flex gap-4 group">
-                             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0 mt-1">
-                              {cmt.userId?.fullName?.charAt(0).toUpperCase() || '?'}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-baseline gap-2 mb-1">
-                                <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {cmt.userId?.fullName || 'Người dùng ẩn'}
-                                </span>
-                                <span className="text-xs text-gray-400 font-medium">{new Date(cmt.createdAt).toLocaleString('vi-VN')}</span>
-                              </div>
-                              <div className="p-3 bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700/50 rounded-2xl rounded-tl-none text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                                {cmt.content}
-                              </div>
-                            </div>
+                      {comments.length > 0 ? comments.map((cmt) => (
+                        <div key={cmt._id} className="flex gap-4 group">
+                          {/* Avatar */}
+                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0 mt-1">
+                            {cmt.userId?.fullName?.charAt(0).toUpperCase() || '?'}
                           </div>
-                        )) : (
-                            <p className="text-sm text-gray-400 italic text-center py-4">Chưa có bình luận nào.</p>
-                        )}
-                      </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between mb-1">
+                        <div className="flex items-baseline gap-2">
+            <span className="text-sm font-bold text-gray-900 dark:text-white">
+              {cmt.userId?.fullName || 'Người dùng ẩn'}
+            </span>
+            <span className="text-xs text-gray-400 font-medium">
+              {new Date(cmt.createdAt).toLocaleString('vi-VN')}
+            </span>
+          </div>
+
+          {/* Nút thao tác */}
+          {user?._id === (cmt.userId?._id || cmt.userId) && editingCommentId !== cmt._id && (
+            <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => {
+                  setEditingCommentId(cmt._id);
+                  setEditContent(cmt.content);
+                }}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+              >
+                Sửa
+              </button>
+              <button 
+                onClick={() => handleDeleteComment(cmt._id)}
+                className="text-xs font-semibold text-red-500 hover:text-red-600"
+              >
+                Xóa
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Chế độ Sửa/Hiển thị */}
+        {editingCommentId === cmt._id ? (
+          <div className="mt-2 space-y-2">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full p-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+              rows="2"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setEditingCommentId(null)}
+                className="px-3 py-1.5 text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => handleUpdateComment(cmt._id)}
+                disabled={!editContent.trim()}
+                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                Cập nhật
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700/50 rounded-2xl rounded-tl-none text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-words shadow-sm">
+            {/* Logic hiển thị Mention: Tự động tách và tô màu */}
+            {cmt.content.split(' ').map((word, index) => (
+                <React.Fragment key={index}>
+                    {word.startsWith('@') ? (
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1 rounded mx-0.5">
+                            {word}
+                        </span>
+                    ) : (
+                        word
+                    )}
+                    {' '}
+                </React.Fragment>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )) : (
+    <p className="text-sm text-gray-400 italic text-center py-4">Chưa có bình luận nào.</p>
+  )}
+</div>
                     </div>
                   </div>
 
                   {/* --- RIGHT COLUMN (SIDEBAR) --- */}
                   <div className="space-y-6">
-                    
-                    {/* 1. MEMBERS SECTION (Moved here) */}
+                    {/* Phần Sidebar giữ nguyên */}
                     <div>
                         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thành viên</div>
                         <div className="flex flex-wrap gap-2">
-                            {/* Danh sách thành viên */}
                             {cardMembers.map((m) => {
                                 const memberInfo = typeof m === 'string' ? boardMembers.find(bm => bm._id === m) : m;
                                 if (!memberInfo) return null;
-                                
                                 return (
                                     <div key={memberInfo._id} className="group relative">
                                         <div 
@@ -528,7 +696,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                                 memberInfo.fullName?.charAt(0).toUpperCase()
                                             )}
                                         </div>
-                                        {/* Hover để xóa */}
                                         <div 
                                             onClick={() => handleRemoveMember(memberInfo._id)}
                                             className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
@@ -539,8 +706,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                     </div>
                                 );
                             })}
-
-                            {/* Nút Add Member (+ Button) */}
                             <Popover className="relative">
                                 {({ open }) => (
                                     <>
@@ -551,7 +716,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                         >
                                             <Plus className="w-4 h-4" strokeWidth={2} />
                                         </Popover.Button>
-
                                         <Transition
                                             as={Fragment}
                                             enter="transition ease-out duration-200"
@@ -561,7 +725,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                             leaveFrom="opacity-100 translate-y-0"
                                             leaveTo="opacity-0 translate-y-1"
                                         >
-                                            {/* Dropdown căn chỉnh phải để không bị tràn màn hình */}
                                             <Popover.Panel className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50 overflow-hidden">
                                                 <div className="p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                                                     <div className="relative">
@@ -576,10 +739,8 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                                         />
                                                     </div>
                                                 </div>
-                                                
                                                 <div className="max-h-60 overflow-y-auto custom-scrollbar p-1">
                                                     <p className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Thành viên bảng</p>
-                                                    
                                                     {availableMembers.length > 0 ? (
                                                         availableMembers.map((m) => (
                                                             <button
@@ -618,11 +779,8 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                         </div>
                     </div>
 
-                    {/* 2. ADD TO CARD (Deadline) */}
                     <div>
                         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thêm vào thẻ</div>
-
-
                         <div 
                             className="relative cursor-pointer group"
                             onClick={() => dateInputRef.current?.showPicker()}
@@ -631,7 +789,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                 <Clock className="w-4 h-4 text-gray-500 group-hover:text-indigo-500 transition-colors" />
                                 <span>Deadline</span>
                             </div>
-                            
                             <input 
                                 ref={dateInputRef}
                                 type="date" 
@@ -639,18 +796,15 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                 onChange={(e) => handleUpdateDate(e.target.value)} 
                                 className="absolute inset-0 opacity-0 w-0 h-0 pointer-events-none" 
                             />
-
                             {dueDate && (
                                 <div className="mt-2 text-xs bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-md border border-indigo-100 dark:border-indigo-800 text-center font-semibold shadow-sm">
                                     {new Date(dueDate).toLocaleDateString('vi-VN')}
                                 </div>
                             )}
                         </div>
-
                     </div>
                       <div>
                        <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thêm tệp</div>
-                            
                         <div className="mt-2">
                              <input 
                                 ref={fileInputRef}
@@ -670,7 +824,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                              </button>
                         </div>
                     </div>
-                    {/* 3. ACTIONS */}
                     <div>
                         <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Thao tác</div>
                         <button 
@@ -694,7 +847,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                         >
                             <X className="w-8 h-8" />
                         </button>
-
                         <div 
                             className="w-full h-full max-w-6xl max-h-[90vh] flex items-center justify-center relative"
                             onClick={(e) => e.stopPropagation()} 
