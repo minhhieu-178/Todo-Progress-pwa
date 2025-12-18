@@ -2,8 +2,9 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { Dialog, Transition, Popover } from '@headlessui/react';
 import { X, Clock, AlignLeft, MessageSquare, Trash2, CheckSquare, Plus, User as UserIcon, Search, Paperclip, FileText, Download, Eye } from 'lucide-react';
 import { updateCard, deleteCard, addMemberToCard, removeMemberFromCard, uploadCardAttachment, deleteCardAttachment } from '../../services/cardApi';
-import { getComments, createComment } from '../../services/commentApi';
+import { getComments, createComment, updateComment, deleteComment } from '../../services/commentApi';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 
 function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers = [], onUpdateCard, onDeleteCard }) {
   const { user } = useAuth();
@@ -30,6 +31,9 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   const [uploading, setUploading] = useState(false);
 
   const [previewFile, setPreviewFile] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+
   // --- EFFECT ---
   
   useEffect(() => {
@@ -54,6 +58,45 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
         searchInputRef.current?.focus();
     }, 100);
   };
+
+  useEffect(() => {
+    if (!socket || !card) return;
+
+    //Có comment mới
+    const handleNewComment = (newComment) => {
+        if (newComment.cardId === card._id) {
+            setComments((prev) => {
+                if (prev.some(c => c._id === newComment._id)) return prev;
+                return [...prev, newComment];
+            });
+        }
+    };
+
+    //Comment được cập nhật
+    const handleUpdateCommentSocket = (updatedComment) => {
+        if (updatedComment.cardId === card._id) {
+            setComments((prev) => prev.map(c => c._id === updatedComment._id ? updatedComment : c));
+        }
+    };
+
+    //Comment bị xóa
+    const handleDeleteCommentSocket = ({ commentId, cardId }) => {
+        if (cardId === card._id) {
+            setComments((prev) => prev.filter(c => c._id !== commentId));
+        }
+    };
+
+    socket.on('NEW_COMMENT', handleNewComment);
+    socket.on('UPDATE_COMMENT', handleUpdateCommentSocket);
+    socket.on('DELETE_COMMENT', handleDeleteCommentSocket);
+
+    return () => {
+        socket.off('NEW_COMMENT', handleNewComment);
+        socket.off('UPDATE_COMMENT', handleUpdateCommentSocket);
+        socket.off('DELETE_COMMENT', handleDeleteCommentSocket);
+    };
+  }, [socket, card]);
+
 
   // --- API HANDLERS ---
   const handleUpdateDate = async (newDateVal) => {
@@ -104,6 +147,26 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
       alert(error);
     } finally {
       setCommentLoading(false);
+    }
+  };
+
+  const handleUpdateComment = async (commentId) => {
+  try {
+    const updatedCmt = await updateComment(commentId, editContent);
+    setComments(comments.map(c => c._id === commentId ? updatedCmt : c));
+    setEditingCommentId(null);
+  } catch (error) {
+    alert(error);
+  }
+};
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Xóa bình luận này?")) return;
+    try {
+      await deleteComment(commentId);
+      setComments(comments.filter(c => c._id !== commentId));
+    } catch (error) {
+    alert(error);
     }
   };
 
@@ -480,27 +543,83 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                       </div>
 
                       <div className="space-y-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                        {comments.length > 0 ? comments.map((cmt) => (
-                          <div key={cmt._id} className="flex gap-4 group">
-                             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0 mt-1">
-                              {cmt.userId?.fullName?.charAt(0).toUpperCase() || '?'}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-baseline gap-2 mb-1">
-                                <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {cmt.userId?.fullName || 'Người dùng ẩn'}
-                                </span>
-                                <span className="text-xs text-gray-400 font-medium">{new Date(cmt.createdAt).toLocaleString('vi-VN')}</span>
-                              </div>
-                              <div className="p-3 bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700/50 rounded-2xl rounded-tl-none text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                                {cmt.content}
-                              </div>
-                            </div>
+                      {comments.length > 0 ? comments.map((cmt) => (
+                        <div key={cmt._id} className="flex gap-4 group">
+                          {/* Avatar */}
+                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0 mt-1">
+                            {cmt.userId?.fullName?.charAt(0).toUpperCase() || '?'}
                           </div>
-                        )) : (
-                            <p className="text-sm text-gray-400 italic text-center py-4">Chưa có bình luận nào.</p>
-                        )}
-                      </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between mb-1">
+                        <div className="flex items-baseline gap-2">
+            <span className="text-sm font-bold text-gray-900 dark:text-white">
+              {cmt.userId?.fullName || 'Người dùng ẩn'}
+            </span>
+            <span className="text-xs text-gray-400 font-medium">
+              {new Date(cmt.createdAt).toLocaleString('vi-VN')}
+            </span>
+          </div>
+
+          {/* Nút thao tác: Chỉ hiển thị khi là chủ bình luận và đang hover vào component */}
+          {user?._id === (cmt.userId?._id || cmt.userId) && editingCommentId !== cmt._id && (
+            <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => {
+                  setEditingCommentId(cmt._id);
+                  setEditContent(cmt.content);
+                }}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+              >
+                Sửa
+              </button>
+              <button 
+                onClick={() => handleDeleteComment(cmt._id)}
+                className="text-xs font-semibold text-red-500 hover:text-red-600"
+              >
+                Xóa
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Logic hiển thị nội dung hoặc ô nhập liệu khi đang sửa */}
+        {editingCommentId === cmt._id ? (
+          <div className="mt-2 space-y-2">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full p-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+              rows="2"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setEditingCommentId(null)}
+                className="px-3 py-1.5 text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => handleUpdateComment(cmt._id)}
+                disabled={!editContent.trim()}
+                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                Cập nhật
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700/50 rounded-2xl rounded-tl-none text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-words shadow-sm">
+            {cmt.content}
+          </div>
+        )}
+      </div>
+    </div>
+  )) : (
+    <p className="text-sm text-gray-400 italic text-center py-4">Chưa có bình luận nào.</p>
+  )}
+</div>
                     </div>
                   </div>
 
