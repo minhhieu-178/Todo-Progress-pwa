@@ -42,9 +42,17 @@ function PublicProfileModal({ isOpen, onClose, user }) {
                         <X className="w-6 h-6" />
                     </button>
 
-                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-3 ring-4 ring-white dark:ring-gray-700">
-                        {user.fullName?.charAt(0).toUpperCase()}
-                    </div>
+                    {user.avatar ? (
+                        <img 
+                            src={user.avatar} 
+                            alt={user.fullName} 
+                            className="w-20 h-20 rounded-full object-cover shadow-lg mb-3 ring-4 ring-white dark:ring-gray-700 bg-gray-200"
+                        />
+                    ) : (
+                        <div className="w-20 h-20 bg-blue-600 dark:bg-blue-700 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-3 ring-4 ring-white dark:ring-gray-700">
+                            {user.fullName?.charAt(0).toUpperCase()}
+                        </div>
+                    )}
                     
                     <Dialog.Title as="h3" className="text-2xl font-bold text-gray-900 dark:text-white text-center">
                         {user.fullName}

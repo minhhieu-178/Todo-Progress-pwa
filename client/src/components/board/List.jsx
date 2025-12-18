@@ -4,7 +4,7 @@ import { MoreHorizontal, Plus, Trash2, X, Check, Pencil } from 'lucide-react';
 import Card from './Card';
 import { createCard } from '../../services/cardApi';
 
-function List({ list, boardId, onCardCreated, onCardClick, index, onUpdateTitle, onDeleteList }) {
+function List({ list, boardId, boardMembers, onCardCreated, onCardClick, index, onUpdateTitle, onDeleteList }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
 
@@ -125,7 +125,8 @@ function List({ list, boardId, onCardCreated, onCardClick, index, onUpdateTitle,
                     <Card 
                         key={card._id} 
                         card={card} 
-                        index={index} 
+                        index={index}
+                        boardMembers={boardMembers} 
                         onClick={() => onCardClick(card, list._id)} 
                     />
                   ))}

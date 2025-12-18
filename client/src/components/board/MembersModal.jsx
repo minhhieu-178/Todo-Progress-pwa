@@ -85,9 +85,16 @@ function MembersModal({ isOpen, onClose, members, ownerId, currentUser, onInvite
                                         onClick={() => handleSelectUser(user)}
                                         className="p-3 hover:bg-indigo-50 dark:hover:bg-gray-600 cursor-pointer transition-colors flex items-center gap-3"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                                            {user.fullName.charAt(0).toUpperCase()}
-                                        </div>
+                                        {user.avatar ? (
+                                            <img 
+                                                src={user.avatar} 
+                                                alt={user.fullName} 
+                                                className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-500 flex-shrink-0"
+                                            />
+                                        ) : (
+                                        <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">                                                {user.fullName ? user.fullName.charAt(0).toUpperCase() : '?'}
+                                            </div>
+                                        )}
                                         <div className="overflow-hidden">
                                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.fullName}</p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
@@ -111,9 +118,17 @@ function MembersModal({ isOpen, onClose, members, ownerId, currentUser, onInvite
                     return (
                       <div key={member._id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-sm border-2 border-white dark:border-gray-800 shadow-sm">
-                            {member.fullName?.charAt(0).toUpperCase()}
-                          </div>
+                          {member.avatar ? (
+                            <img 
+                              src={member.avatar} 
+                              alt={member.fullName} 
+                              className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-700 text-white flex items-center justify-center font-bold text-sm border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0">
+                              {member.fullName?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                               {member.fullName}

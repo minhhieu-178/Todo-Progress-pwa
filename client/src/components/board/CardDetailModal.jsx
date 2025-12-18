@@ -100,7 +100,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   }, [socket, card]);
 
 
-  // --- LOGIC MENTION (ĐÃ FIX) ---
+  // --- LOGIC MENTION ---
   const handleCommentChange = (e) => {
     const val = e.target.value;
     setNewComment(val);
@@ -110,9 +110,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
     // Kiểm tra ký tự @
     if (lastWord && lastWord.startsWith('@')) {
         setShowMentions(true);
-        // Lấy từ khóa tìm kiếm (bỏ chữ @)
-        // Lưu ý: Nếu user đang gõ tên có dấu cách (vd: @Minh Hieu), logic đơn giản này sẽ bị ngắt
-        // Tuy nhiên với Non-breaking space thì nó vẫn hoạt động tốt khi chọn từ list.
         setMentionQuery(lastWord.slice(1)); 
     } else {
         setShowMentions(false);
@@ -122,10 +119,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
   const handleSelectMention = (member) => {
     // Tách chuỗi theo dấu cách thường
     const words = newComment.split(/\s+/);
-    words.pop(); // Xóa cái từ đang gõ dở (@...)
-    
-    // --- KEY FIX: Dùng 'Non-breaking space' (\u00A0) thay cho dấu cách thường ---
-    // Điều này giúp máy tính hiểu "Minh Hieu" là 1 từ dính liền, nhưng mắt người vẫn thấy có cách.
+    words.pop();    
     const safeName = member.fullName.replace(/\s+/g, '\u00A0'); 
     
     const newValue = words.join(' ') + (words.length > 0 ? ' ' : '') + `@${safeName} `;
@@ -522,8 +516,12 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                       </div>
                       
                       <div className="flex gap-4 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
-                          {user?.fullName?.charAt(0).toUpperCase()}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0 overflow-hidden">
+                          {user?.avatar ? (
+                            <img src={user.avatar} alt="Me" className="w-full h-full object-cover" />
+                          ) : (
+                            user?.fullName?.charAt(0).toUpperCase()
+                          )}
                         </div>
                         <form onSubmit={handlePostComment} className="flex-1 relative group">
                           
@@ -540,7 +538,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                               onClick={() => handleSelectMention(member)}
                                               className="flex items-center gap-3 p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer transition-colors"
                                           >
-                                              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-gray-700 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-bold text-xs">
+                                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1 overflow-hidden shadow-sm">
                                                   {member.avatar ? (
                                                       <img src={member.avatar} alt="" className="w-full h-full rounded-full object-cover"/>
                                                   ) : (
@@ -586,8 +584,16 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                       {comments.length > 0 ? comments.map((cmt) => (
                         <div key={cmt._id} className="flex gap-4 group">
                           {/* Avatar */}
-                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs flex-shrink-0 mt-1">
-                            {cmt.userId?.fullName?.charAt(0).toUpperCase() || '?'}
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1 overflow-hidden shadow-sm">
+                            {cmt.userId?.avatar ? (
+                              <img 
+                                src={cmt.userId.avatar} 
+                                alt="User" 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              cmt.userId?.fullName?.charAt(0).toUpperCase() || '?'
+                            )}
                           </div>
 
                         <div className="flex-1 min-w-0">
@@ -687,7 +693,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                 return (
                                     <div key={memberInfo._id} className="group relative">
                                         <div 
-                                            className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold cursor-pointer shadow-sm overflow-hidden"
+                                            className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold cursor-pointer shadow-sm overflow-hidden"
                                             title={memberInfo.fullName}
                                         >
                                             {memberInfo.avatar ? (
@@ -748,13 +754,14 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                                                 onClick={() => handleAddMember(m._id)}
                                                                 className="flex items-center gap-3 w-full p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors group text-left"
                                                             >
-                                                                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center text-xs font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1 overflow-hidden shadow-sm">
                                                                     {m.avatar ? (
                                                                         <img src={m.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                                                                     ) : (
                                                                         m.fullName?.charAt(0).toUpperCase()
                                                                     )}
                                                                 </div>
+                                                                
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 truncate">
                                                                         {m.fullName}

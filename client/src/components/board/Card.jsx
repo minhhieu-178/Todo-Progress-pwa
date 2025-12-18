@@ -15,7 +15,7 @@ const getInitials = (name) => {
   return name.charAt(0).toUpperCase();
 };
 
-function Card({ card, index, onClick }) {
+function Card({ card, index, onClick, boardMembers = [] }) {
   const overdue = isOverdue(card.dueDate, card.isCompleted);
   
   const formatDate = (dateString) => {
@@ -66,15 +66,25 @@ function Card({ card, index, onClick }) {
             {/* Hiển thị Members (Avatar Stack) */}
             {card.members && card.members.length > 0 && (
               <div className="flex -space-x-1.5 overflow-hidden pl-1 py-0.5">
-                {card.members.slice(0, 3).map((member) => (
-                  <div 
-                    key={member._id} 
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-700 bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-200 text-[10px] font-bold"
-                    title={member.fullName || member.email}
-                  >
-                    {getInitials(member.fullName)}
-                  </div>
-                ))}
+                {card.members.slice(0, 3).map((member) => {
+                    const memberInfo = member.fullName 
+                        ? member 
+                        : boardMembers.find(bm => bm._id === member || bm._id === member._id) || {};
+
+                    return (
+                      <div 
+                          key={memberInfo._id || member} 
+                          className="inline-flex items-center justify-center w-6 h-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[10px] font-bold overflow-hidden shadow-sm"
+                          title={memberInfo.fullName || 'Thành viên'}
+                      >
+                          {memberInfo.avatar ? (
+                              <img src={memberInfo.avatar} alt="avt" className="w-full h-full object-cover" />
+                          ) : (
+                              getInitials(memberInfo.fullName)
+                          )}
+                      </div>
+                    );
+                })}
                 
                 {/* Nếu có nhiều hơn 3 người thì hiện số dư */}
                 {card.members.length > 3 && (
