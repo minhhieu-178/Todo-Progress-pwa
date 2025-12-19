@@ -6,9 +6,9 @@ import { createList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
-import MembersModal from '../components/board/MembersModal'; // Import Modal Mới
+import MembersModal from '../components/board/MembersModal'; 
 import { useAuth } from '../context/AuthContext';
-import { Users } from 'lucide-react'; // Đổi icon sang Users
+import { Users } from 'lucide-react'; 
 
 function BoardPage() {
   const { user } = useAuth();
@@ -19,15 +19,12 @@ function BoardPage() {
   const [error, setError] = useState('');
   const [newListTitle, setNewListTitle] = useState('');
   
-  // State cho Modal Card
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // State cho Modal Thành viên
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
-  // --- LOGIC MODAL CARD ---
   const handleCardClick = (card, listId) => {
     setSelectedCard(card);
     setSelectedListId(listId);
@@ -51,7 +48,6 @@ function BoardPage() {
     setBoard(newBoard);
   };
 
-  // --- LOGIC QUẢN LÝ THÀNH VIÊN (Được gọi từ MembersModal) ---
   const handleInvite = async (email) => {
     try {
       const updatedBoard = await addMemberToBoard(board._id, email);
@@ -73,7 +69,6 @@ function BoardPage() {
     }
   };
 
-  // --- DATA FETCHING ---
   const fetchBoard = async () => {
     try {
       setLoading(true);
@@ -94,7 +89,6 @@ function BoardPage() {
     fetchBoard();
   }, [boardId]);
 
-  // --- DRAG & DROP ---
   const onDragEnd = async (result) => {
     const { source, destination, draggableId, type } = result;
     if (!destination) return;
@@ -158,10 +152,8 @@ function BoardPage() {
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       
-      {/* HEADER */}
       <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
         
-        {/* Bên trái */}
         <div>
           <Link to="/boards" className="text-sm text-gray-500 hover:underline mb-1 block">
              &larr; Danh sách bảng
@@ -172,10 +164,8 @@ function BoardPage() {
           </div>
         </div>
 
-        {/* Bên phải: Nút quản lý thành viên */}
         <div className="flex items-center gap-4">
             
-            {/* Avatar Stack (Preview) - Bấm vào để mở Modal */}
             <div 
               className="flex -space-x-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setIsMembersModalOpen(true)}
@@ -193,7 +183,6 @@ function BoardPage() {
                 )}
             </div>
 
-            {/* Nút Members */}
             <button 
                 onClick={() => setIsMembersModalOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors font-medium"
@@ -204,7 +193,6 @@ function BoardPage() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
           {(provided) => (
@@ -240,7 +228,6 @@ function BoardPage() {
         </Droppable>
       </DragDropContext>
 
-      {/* MODALS */}
       {selectedCard && (
         <CardDetailModal 
             isOpen={isModalOpen}
@@ -253,7 +240,6 @@ function BoardPage() {
         />
       )}
 
-      {/* MODAL THÀNH VIÊN MỚI */}
       <MembersModal 
         isOpen={isMembersModalOpen}
         onClose={() => setIsMembersModalOpen(false)}

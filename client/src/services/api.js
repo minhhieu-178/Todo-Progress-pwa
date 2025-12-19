@@ -1,20 +1,24 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 api.interceptors.request.use(
   (config) => {
     const userInfo = localStorage.getItem('userInfo');
-
     if (userInfo) {
-      const token = JSON.parse(userInfo).token;
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+      try {
+        const parsedUser = JSON.parse(userInfo);
+        if (parsedUser.accessToken) {
+            config.headers['Authorization'] = `Bearer ${parsedUser.accessToken}`;
+        }
+      } catch (e) {
+        console.error("Lỗi parse userInfo", e);
       }
     }
     return config; 

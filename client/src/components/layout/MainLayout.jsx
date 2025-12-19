@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import ProtectedRoute from '../../router/ProtectedRoute'; 
+import NetworkStatus from '../NetworkStatus';
 
 function MainLayout({ children }) {
   return (
@@ -12,6 +13,7 @@ function MainLayout({ children }) {
         <main className="flex-1 h-screen overflow-hidden">
           {children} 
         </main>
+        <NetworkStatus />
       </div>
     </ProtectedRoute>
   );

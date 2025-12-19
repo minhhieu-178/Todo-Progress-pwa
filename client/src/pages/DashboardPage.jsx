@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMyBoards, createBoard, getDashboardStats } from '../services/boardApi';
+import { getMyBoards, createBoard, getDashboardStats, getBoardById } from '../services/boardApi';
 import { Link } from 'react-router-dom'; 
 import PageHeader from '../components/layout/PageHeader';
 import ScheduleModal from '../components/board/ScheduleModal';
 import { 
     Layout, CheckCircle, Clock, AlertCircle, 
-    Plus, ArrowRight, Calendar, Activity 
+    Plus, ArrowRight, Calendar, Activity,
+    Wifi 
 } from 'lucide-react';
 
 function DashboardPage() {
@@ -18,6 +19,8 @@ function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   
+  const [syncing, setSyncing] = useState(false);
+
   const [stats, setStats] = useState({
     totalTasks: 0,
     inProgressTasks: 0,
@@ -26,40 +29,6 @@ function DashboardPage() {
     upcomingDeadlines: []
   });
   
-<<<<<<< HEAD
-  const [stats, setStats] = useState({
-    totalTasks: 0,
-    inProgressTasks: 0,
-    completedTasks: 0,
-    overdueTasks: 0,
-    upcomingDeadlines: []
-  });
-  
-    useEffect(() => {
-        const fetchData = async () => {
-        try {
-            setLoading(true);
-            
-            const [boardsData, statsData] = await Promise.all([
-                getMyBoards(),
-                getDashboardStats()
-            ]);
-
-            setBoards(boardsData);
-            setStats(statsData); 
-            setError('');
-        } catch (err) {
-            console.error(err);
-            setError('Không thể tải dữ liệu dashboard.');
-        } finally {
-            setLoading(false);
-        }
-        };
-        fetchData();
-    }, []);
-
-
-=======
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,19 +37,31 @@ function DashboardPage() {
           getMyBoards(),
           getDashboardStats()
         ]);
+        
         setBoards(boardsData);
         setStats(statsData); 
         setError('');
+
+        if (navigator.onLine && boardsData.length > 0) {
+            setSyncing(true);
+            
+            await Promise.allSettled(
+                boardsData.map(board => getBoardById(board._id))
+            );
+            
+            setSyncing(false);
+            console.log('Đã cache xong toàn bộ dữ liệu Board!');
+        }
+
       } catch (err) {
         console.error(err);
-        setError('Không thể tải dữ liệu dashboard.');
+        if (boards.length === 0) setError('Không thể tải dữ liệu dashboard.');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
   }, []);
->>>>>>> duchieu
 
   const handleCreateBoard = async (e) => {
     e.preventDefault();
@@ -94,6 +75,10 @@ function DashboardPage() {
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
         setError('');
+
+        if (navigator.onLine) {
+            getBoardById(newBoard._id).catch(console.error);
+        }
     } catch (err) {
         setError(err.toString());
     } finally {
@@ -101,13 +86,6 @@ function DashboardPage() {
     }
   };
 
-<<<<<<< HEAD
- const statCards = [
-    { title: "Total Tasks", value: stats.totalTasks, color: 'text-gray-900 dark:text-white', bg: 'bg-white dark:bg-gray-800' },
-    { title: "In Progress", value: stats.inProgressTasks, color: 'text-[--color-pro-orange]', bg: 'bg-white dark:bg-gray-800' },
-    { title: "Completed", value: stats.completedTasks, color: 'text-[--color-pro-green]', bg: 'bg-white dark:bg-gray-800' },
-    { title: "Overdue", value: stats.overdueTasks, color: 'text-[--color-pro-pink]', bg: 'bg-white dark:bg-gray-800' },
-=======
   // Tính toán phần trăm hoàn thành cho mỗi Board
   const calculateProgress = (board) => {
     if (!board.lists || board.lists.length === 0) return 0;
@@ -157,22 +135,22 @@ function DashboardPage() {
         bg: 'bg-pink-50 dark:bg-pink-900/20',
         border: 'border-pink-100 dark:border-pink-800'
     },
->>>>>>> duchieu
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 relative">
+      
+      {syncing && (
+        <div className="bg-indigo-500 text-white px-4 py-1 text-xs text-center flex items-center justify-center gap-2 transition-all">
+           <Wifi className="w-3 h-3 animate-pulse" /> 
+           Đang đồng bộ dữ liệu offline...
+        </div>
+      )}
+
       <PageHeader title="Tổng quan" showSearch={true} />
       
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         
-<<<<<<< HEAD
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {statCards.map((stat) => (
-                <div key={stat.title} className={`p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 ${stat.bg}`}>
-                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{stat.title}</span>
-                    <p className={`text-3xl font-bold mt-2 ${stat.color}`}>{stat.value}</p>
-=======
         {/* --- WELCOME BANNER --- */}
         <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -197,7 +175,6 @@ function DashboardPage() {
                             <stat.icon className="w-6 h-6" />
                         </div>
                     </div>
->>>>>>> duchieu
                 </div>
             ))}
         </div>
@@ -283,10 +260,6 @@ function DashboardPage() {
                 </div>
             </div>
 
-<<<<<<< HEAD
-                {loading ? (
-                    <p className="dark:text-gray-300">Đang tải...</p>
-=======
             {/* --- RIGHT COLUMN: UPCOMING --- */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-fit sticky top-24">
                 <div className="flex items-center gap-2 mb-6">
@@ -298,7 +271,6 @@ function DashboardPage() {
                     <div className="text-center py-8">
                         <p className="text-sm text-gray-500 dark:text-gray-400">Tuyệt vời! Không có task nào gấp.</p>
                     </div>
->>>>>>> duchieu
                 ) : (
                     <div className="space-y-4">
                         {stats.upcomingDeadlines.map((task) => {
@@ -344,49 +316,14 @@ function DashboardPage() {
                      </button>
                 </div>
             </div>
-<<<<<<< HEAD
-
-            <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-                <h2 className="font-semibold text-gray-800 dark:text-white mb-4">Sắp Đến Hạn (Deadline)</h2>
-                
-                {stats.upcomingDeadlines.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Không có task nào sắp đến hạn.</p>
-                ) : (
-                    <ul className="space-y-4">
-                        {stats.upcomingDeadlines.map((task) => {
-                            const dateObj = new Date(task.deadline);
-                            const month = dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                            const day = dateObj.getDate();
-
-                            return (
-                                <li key={task.taskId} className="flex items-center gap-3">
-                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 text-orange-700 flex flex-col items-center justify-center">
-                                        <span className="text-xs font-bold">{month}</span>
-                                        <span className="font-bold">{day}</span>
-                                    </div>
-                                    <div className="overflow-hidden">
-                                        <Link to={`/board/${task.boardId}`} className="hover:underline">
-                                            <p className="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate">{task.taskTitle}</p>
-                                        </Link>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Board: {task.projectName}</p>
-                                    </div>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
-            </div>
-=======
             <ScheduleModal 
                 isOpen={isScheduleModalOpen} 
                 onClose={() => setIsScheduleModalOpen(false)} 
             />
->>>>>>> duchieu
         </div>
       </div>
     </div>
   );
 }
-
 
 export default DashboardPage;
