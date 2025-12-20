@@ -15,7 +15,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'todo-progress-app', 
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], 
+    resource_type: 'auto',
   },
 });
 

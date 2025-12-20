@@ -7,12 +7,15 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App.jsx';
 import './index.css';
 registerSW({ immediate: true });
+import { SocketProvider } from './context/SocketContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AuthProvider>
       <ThemeProvider>
-        <App />
+        <SocketProvider>
+          <App />
+        </SocketProvider>
       </ThemeProvider>
     </AuthProvider>
   </BrowserRouter>
