@@ -3,13 +3,14 @@ import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList } from '../services/listApi';
-import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal'; 
 import { useAuth } from '../context/AuthContext';
 import { Users } from 'lucide-react'; 
+import { moveCard } from '../services/cardApi';
 import { useSocket } from '../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -28,9 +29,14 @@ function BoardPage() {
 
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const activeCardId = searchParams.get('cardId');
 
+
+  const { id } = useParams();
+  const socket = useSocket();
+
+  const navigate = useNavigate();
 
   const findCardInBoard = (boardData, cardId) => {
     if (!boardData?.lists) return null;
@@ -84,36 +90,11 @@ function BoardPage() {
       }
     }
   };
-
-  const fetchBoard = async (isBackground = false) => {
-    try {
-        if (!isBackground) setLoading(true);
-        
-        const data = await getBoardById(id); 
-        
-        if (data.lists) {
-            data.lists.sort((a, b) => a.position - b.position);
-            data.lists.forEach((list) => {
-                if (list.cards) {
-                    list.cards.sort((a, b) => a.position - b.position);
-                }
-            });
-        }
-        setBoard(data);
-    } catch (err) {
-        setError(err.toString());
-    } finally {
-        if (!isBackground) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBoard(false); 
-  }, [id]);
-
+  
   useEffect(() => {
     if (board && selectedCard) {
       const updatedCard = findCardInBoard(board, selectedCard._id);
+      
       if (updatedCard && updatedCard !== selectedCard) {
         setSelectedCard(updatedCard);
       }
@@ -135,36 +116,64 @@ function BoardPage() {
       }
       if (foundCard) {
         handleCardClick(foundCard, foundListId);
+
       }
     }
   }, [board, activeCardId]);
 
-  useEffect(() => {
-    if (!socket || !id) return;
-
-    socket.emit('join_board_room', id);
-    socket.on('BOARD_UPDATED', (data) => {
-        console.log("Update:", data);
-        fetchBoard(true); 
-    });
-
-    socket.on('BOARD_DELETED', (data) => {
-        alert(data.message); 
-        navigate('/'); 
-    });
-
-    return () => {
-        socket.emit('leave_board_room', id);
-        socket.off('BOARD_UPDATED');  
-        socket.off('BOARD_DELETED'); 
+  const fetchBoard = async (isBackground = false) => {
+        try {
+            if (!isBackground) setLoading(true);
+            
+            const data = await getBoardById(id); 
+            
+            if (data.lists) {
+                data.lists.sort((a, b) => a.position - b.position);
+                data.lists.forEach((list) => {
+                    if (list.cards) {
+                        list.cards.sort((a, b) => a.position - b.position);
+                    }
+                });
+            }
+            setBoard(data);
+        } catch (err) {
+            setError(err.toString());
+        } finally {
+            if (!isBackground) setLoading(false);
+        }
     };
-  }, [socket, id, navigate]);
 
+    
+  useEffect(() => {
+        fetchBoard(false); 
+    }, [id]);
+  
+  useEffect(() => {
+        if (!socket || !id) return;
 
+        socket.emit('join_board_room', id);
+        socket.on('BOARD_UPDATED', (data) => {
+            console.log("Update:", data);
+            fetchBoard(true); 
+        });
 
-  const onDragEnd = async (result) => {
+        socket.on('BOARD_DELETED', (data) => {
+            alert(data.message); 
+            navigate('/'); 
+        });
+
+        return () => {
+            socket.emit('leave_board_room', id);
+            socket.off('BOARD_UPDATED');  
+            socket.off('BOARD_DELETED'); 
+        };
+    }, [socket, id, navigate]);
+
+  // --- DRAG & DROP ---
+const onDragEnd = async (result) => {
     const { source, destination, draggableId, type } = result;
     
+    // Kiểm tra điểm đến hợp lệ
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
@@ -201,7 +210,7 @@ function BoardPage() {
         });
       } catch (error) {
         console.error('Lỗi di chuyển thẻ:', error);
-        fetchBoard(); // Revert lại nếu lỗi
+        fetchBoard();
         alert("Có lỗi khi di chuyển thẻ, vui lòng thử lại.");
       }
     }
@@ -240,6 +249,7 @@ function BoardPage() {
     }
   };
 
+
   const handleDeleteList = async (listId) => {
     if (!window.confirm("Bạn chắc chắn muốn xóa danh sách này?")) return;
 
@@ -254,7 +264,6 @@ function BoardPage() {
       fetchBoard();
     }
   };
-
 
   if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu Bảng...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
@@ -280,15 +289,16 @@ function BoardPage() {
         <div className="flex items-center gap-4">
             
             <div 
-              className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setIsMembersModalOpen(true)}
-              title="Quản lý thành viên"
+                className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setIsMembersModalOpen(true)}
+                title="Quản lý thành viên"
             >
                 {board.members?.slice(0, 5).map((member) => (
                     <div 
                         key={member._id} 
                         className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
                     >
+                        {/* Ưu tiên hiện ảnh Avatar nếu có */}
                         {member.avatar ? (
                             <img 
                                 src={member.avatar} 
@@ -296,6 +306,7 @@ function BoardPage() {
                                 className="w-full h-full object-cover" 
                             />
                         ) : (
+                            /* Nếu không có ảnh thì hiện chữ cái đầu */
                             <span>
                                 {member.fullName ? member.fullName.charAt(0) : member.email?.charAt(0)}
                             </span>
@@ -303,6 +314,7 @@ function BoardPage() {
                     </div>
                 ))}
 
+                {/* Bong bóng hiển thị số lượng còn lại (+3) */}
                 {board.members?.length > 5 && (
                     <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 text-xs font-bold z-10">
                         +{board.members.length - 5}
