@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMyBoards, createBoard, getDashboardStats } from '../services/boardApi';
+import { getMyBoards, createBoard, getDashboardStats, getBoardById } from '../services/boardApi';
 import { Link } from 'react-router-dom'; 
 import PageHeader from '../components/layout/PageHeader';
 import ScheduleModal from '../components/board/ScheduleModal';
 import { 
     Layout, CheckCircle, Clock, AlertCircle, 
-    Plus, ArrowRight, Calendar, Activity 
+    Plus, ArrowRight, Calendar, Activity,
+    Wifi 
 } from 'lucide-react';
 
 function DashboardPage() {
@@ -18,6 +19,8 @@ function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   
+  const [syncing, setSyncing] = useState(false);
+
   const [stats, setStats] = useState({
     totalTasks: 0,
     inProgressTasks: 0,
@@ -34,12 +37,25 @@ function DashboardPage() {
           getMyBoards(),
           getDashboardStats()
         ]);
+        
         setBoards(boardsData);
         setStats(statsData); 
         setError('');
+
+        if (navigator.onLine && boardsData.length > 0) {
+            setSyncing(true);
+            
+            await Promise.allSettled(
+                boardsData.map(board => getBoardById(board._id))
+            );
+            
+            setSyncing(false);
+            console.log('Đã cache xong toàn bộ dữ liệu Board!');
+        }
+
       } catch (err) {
         console.error(err);
-        setError('Không thể tải dữ liệu dashboard.');
+        if (boards.length === 0) setError('Không thể tải dữ liệu dashboard.');
       } finally {
         setLoading(false);
       }
@@ -59,6 +75,10 @@ function DashboardPage() {
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
         setError('');
+
+        if (navigator.onLine) {
+            getBoardById(newBoard._id).catch(console.error);
+        }
     } catch (err) {
         setError(err.toString());
     } finally {
@@ -118,7 +138,15 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 relative">
+      
+      {syncing && (
+        <div className="bg-indigo-500 text-white px-4 py-1 text-xs text-center flex items-center justify-center gap-2 transition-all">
+           <Wifi className="w-3 h-3 animate-pulse" /> 
+           Đang đồng bộ dữ liệu offline...
+        </div>
+      )}
+
       <PageHeader title="Tổng quan" showSearch={true} />
       
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
@@ -302,6 +330,5 @@ function DashboardPage() {
     </div>
   );
 }
-
 
 export default DashboardPage;
