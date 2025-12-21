@@ -10,13 +10,9 @@ import { useAuth } from '../context/AuthContext';
 import { Users } from 'lucide-react'; 
 import { moveCard } from '../services/cardApi';
 import { useSocket } from '../context/SocketContext';
-import { useNavigate } from 'react-router-dom';
 
 function BoardPage() {
   const { user } = useAuth();
-  const { id } = useParams(); 
-  const navigate = useNavigate();
-  const socket = useSocket();
   
   const [board, setBoard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -338,7 +334,7 @@ const onDragEnd = async (result) => {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900 transition-colors"
+              className="flex grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900 transition-colors"
             >
               {board.lists.map((list, index) => (
                 <List
@@ -354,7 +350,7 @@ const onDragEnd = async (result) => {
               ))}
               {provided.placeholder}
 
-              <div className="flex-shrink-0 w-72 p-2">
+              <div className="shrink-0 w-72 p-2">
                 <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700 transition-colors">
                   <input
                     type="text"
