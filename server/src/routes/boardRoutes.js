@@ -38,5 +38,6 @@ router.delete('/:id/members/:userId', protect, removeMember);
 router.post('/:boardId/lists', protect, createList);
 router.put('/:boardId/lists/:listId', protect, updateList);
 router.delete('/:boardId/lists/:listId', protect, deleteList); 
+router.put('/:boardId/lists/:listId/move', protect, moveList);
 
 export default router;
