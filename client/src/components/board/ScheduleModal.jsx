@@ -64,29 +64,33 @@ function ScheduleModal({ isOpen, onClose }) {
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-2xl transition-all border border-gray-200 dark:border-slate-700">
+                            {/* Nền Modal #323940 */}
+                            <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-[#323940] p-6 text-left align-middle shadow-xl transition-all border border-gray-100 dark:border-white/10">
                                 
-                                <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-slate-700 pb-4">
-                                    <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Calendar className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                                <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-white/10 pb-4">
+                                    <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-gray-900 dark:text-[#b6c2cf] flex items-center gap-2">
+                                        <Calendar className="w-6 h-6 text-indigo-600 dark:text-blue-400" />
                                         Toàn bộ lịch trình
                                     </Dialog.Title>
-                                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
                                         <X className="w-6 h-6" />
                                     </button>
                                 </div>
 
                                 <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                                     {loading ? (
-                                        <div className="text-center py-8 text-gray-500 dark:text-slate-400">Đang tải dữ liệu...</div>
+                                        <div className="text-center py-8 text-gray-500 dark:text-[#9fadbc]">Đang tải dữ liệu...</div>
                                     ) : tasks.length === 0 ? (
-                                        <div className="text-center py-8 text-gray-500 dark:text-slate-400">Không có công việc nào sắp tới hạn.</div>
+                                        <div className="text-center py-10 bg-gray-50 dark:bg-[#22272b] rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                            <p className="text-gray-500 dark:text-[#9fadbc]">Không có công việc nào sắp tới hạn.</p>
+                                        </div>
                                     ) : (
                                         <div className="space-y-6">
                                             {Object.keys(groupedTasks).map((dateKey) => (
                                                 <div key={dateKey}>
-                                                    <div className="sticky top-0 bg-white dark:bg-slate-900 z-10 py-2 mb-2 border-b border-gray-100 dark:border-slate-700/50">
-                                                        <h4 className="font-bold text-indigo-600 dark:text-indigo-400 text-sm uppercase">
+                                                    {/* Header ngày dính (Sticky) */}
+                                                    <div className="sticky top-0 bg-white dark:bg-[#323940] z-10 py-2 mb-2 border-b border-gray-100 dark:border-white/10">
+                                                        <h4 className="font-bold text-indigo-600 dark:text-blue-400 text-sm uppercase">
                                                             {formatDate(dateKey)}
                                                         </h4>
                                                     </div>
@@ -97,25 +101,22 @@ function ScheduleModal({ isOpen, onClose }) {
                                                                 key={task.taskId}
                                                                 to={`/board/${task.boardId}`}
                                                                 onClick={onClose} 
-                                                                className={`block p-3 rounded-xl border transition-all hover:shadow-md 
-                                                                    ${task.isOverdue 
-                                                                        ? 'border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-500/30' 
-                                                                        : 'border-gray-200 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800'
-                                                                    }`}
+                                                                // Item task nền #22272b
+                                                                className={`block p-3 rounded-lg border transition-all hover:bg-gray-50 dark:bg-[#22272b] dark:hover:bg-[#2c333a] ${task.isOverdue ? 'border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800' : 'border-gray-200 dark:border-white/5'}`}
                                                             >
                                                                 <div className="flex justify-between items-center">
                                                                     <div className="overflow-hidden">
                                                                         <div className="flex items-center gap-2">
-                                                                            <span className="font-semibold text-gray-800 dark:text-slate-200 truncate">{task.taskTitle}</span>
+                                                                            <span className="font-semibold text-gray-800 dark:text-[#b6c2cf] truncate">{task.taskTitle}</span>
                                                                             {task.isOverdue && (
                                                                                 <AlertTriangle className="w-4 h-4 text-red-500" />
                                                                             )}
                                                                         </div>
-                                                                        <p className="text-xs text-gray-500 dark:text-slate-400 truncate mt-1">
+                                                                        <p className="text-xs text-gray-500 dark:text-[#9fadbc] truncate">
                                                                             Dự án: {task.boardTitle}
                                                                         </p>
                                                                     </div>
-                                                                    <ArrowRight className="w-4 h-4 text-gray-400 dark:text-slate-500" />
+                                                                    <ArrowRight className="w-4 h-4 text-gray-400 dark:text-[#9fadbc]" />
                                                                 </div>
                                                             </Link>
                                                         ))}
@@ -126,10 +127,10 @@ function ScheduleModal({ isOpen, onClose }) {
                                     )}
                                 </div>
 
-                                <div className="mt-6 flex justify-end pt-4 border-t border-gray-100 dark:border-slate-700">
+                                <div className="mt-6 flex justify-end">
                                     <button
                                         type="button"
-                                        className="inline-flex justify-center rounded-lg border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-900 hover:bg-indigo-200 focus:outline-none dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-700 transition-colors"
+                                        className="inline-flex justify-center rounded-md border border-transparent bg-indigo-100 dark:bg-[#22272b] px-4 py-2 text-sm font-medium text-indigo-900 dark:text-[#b6c2cf] hover:bg-indigo-200 dark:hover:bg-[#2c333a] focus:outline-none transition-colors"
                                         onClick={onClose}
                                     >
                                         Đóng
