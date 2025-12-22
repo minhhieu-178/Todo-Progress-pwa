@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList } from 'lucide-react'; 
+import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList, BarChart2 } from 'lucide-react'; 
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },

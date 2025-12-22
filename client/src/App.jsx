@@ -10,6 +10,7 @@ import UserProfilePage from './pages/UserProfilePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SettingPage from './pages/SettingPage';
 import BoardListPage from './pages/BoardListPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
 
       <Route path="/" element={<MainLayout><DashboardPage /></MainLayout>} />
       <Route path="/board/:id" element={<MainLayout><BoardPage /></MainLayout>} />
-      <Route path="/analytics" element={<MainLayout><div>Analytics Page</div></MainLayout>} />
+      <Route path="/analytics" element={<MainLayout><AnalyticsPage /></MainLayout>} />
 
       <Route path="/settings" element={<MainLayout><SettingPage /></MainLayout>} />
       <Route path="/profile" element={<MainLayout><UserProfilePage /></MainLayout>} />
