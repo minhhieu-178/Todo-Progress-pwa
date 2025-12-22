@@ -9,7 +9,7 @@ function MainLayout({ children }) {
         
         <Sidebar />
         
-        <main className="flex-1 h-screen overflow-hidden">
+        <main className="flex-1 h-screen overflow-hidden relative">
           {children} 
         </main>
       </div>

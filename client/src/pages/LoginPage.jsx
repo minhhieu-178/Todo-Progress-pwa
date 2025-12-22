@@ -36,47 +36,53 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    // SỬA: Nền chính #1d2125
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
       
-      <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      {/* SỬA: Form nền #22272b, Viền white/10 */}
+      <div className="w-full max-w-md p-8 bg-white dark:bg-[#22272b] rounded-lg shadow-sm border border-gray-200 dark:border-white/10">
         
         <div className="flex items-center justify-center gap-3 mb-4">
-          <span className="text-2xl font-bold text-gray-900 dark:text-white">Task Management</span>
+          {/* SỬA: Tiêu đề chính #b6c2cf */}
+          <span className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf]">Task Management</span>
         </div>
-        <h2 className="text-xl font-semibold text-center text-gray-800 dark:text-gray-200 mb-6">Welcome back!</h2>
+        {/* SỬA: Tiêu đề phụ #9fadbc */}
+        <h2 className="text-xl font-semibold text-center text-gray-800 dark:text-[#9fadbc] mb-6">Welcome back!</h2>
 
         {error && (
-          <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg">
+          <div className="p-3 mb-4 text-sm text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Email address</label>
+            {/* SỬA: Input nền #1d2125, Placeholder #9fadbc */}
             <input 
               type="email" 
               id="email" 
               placeholder="you@example.com"
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
               required
             />
           </div>
 
           <div>
             <div className="flex justify-between items-baseline mb-1">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-              <Link to="/forgot-password" className="text-sm font-medium text-pro-blue hover:underline">Forgot password?</Link>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf]">Password</label>
+              <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">Forgot password?</Link>
             </div>
+            {/* SỬA: Input nền #1d2125 */}
             <input 
               type="password" 
               id="password" 
               placeholder="••••••••"
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
               required
             />
           </div>
@@ -85,16 +91,16 @@ function LoginPage() {
             <button 
               type="submit"
               disabled={loading} 
-              className="w-full px-4 py-3 text-white bg-pro-blue rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+              className="w-full px-4 py-3 text-white bg-indigo-600 rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-colors font-medium"
             >
               {loading ? 'Logging in...' : 'Log In'}
             </button>
           </div>
         </form>
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-600 dark:text-[#9fadbc] mt-6">
           Don't have an account? 
-          <Link to="/register" className="font-semibold text-pro-blue hover:underline ml-1">
+          <Link to="/register" className="font-semibold text-indigo-600 hover:underline ml-1 dark:text-indigo-400">
             Sign up
           </Link>
         </p>

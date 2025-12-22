@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, Mail, Phone, MapPin, Calendar, User, Briefcase } from 'lucide-react'; // Import thêm icon
+import { X, Mail, Phone, MapPin, Calendar, User, Briefcase } from 'lucide-react';
 
 function PublicProfileModal({ isOpen, onClose, user }) {
   if (!user) return null;

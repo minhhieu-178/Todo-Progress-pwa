@@ -95,34 +95,39 @@ function SettingPage() {
     <div className="flex flex-col h-full">
       <PageHeader title="Cài đặt" showSearch={false} />
 
-      <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      {/* SỬA: Nền chính #1d2125 */}
+      <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
         <div className="max-w-3xl mx-auto space-y-6">
           
           {/* --- GIAO DIỆN --- */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          {/* SỬA: Card nền #22272b, Viền white/10 */}
+          <div className="bg-white dark:bg-[#22272b] p-6 rounded-lg shadow-sm border border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Giao diện</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Chuyển đổi giữa giao diện sáng và tối.</p>
+                {/* SỬA: Màu chữ tiêu đề #b6c2cf */}
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#b6c2cf]">Giao diện</h3>
+                {/* SỬA: Màu chữ phụ #9fadbc */}
+                <p className="text-sm text-gray-500 dark:text-[#9fadbc]">Chuyển đổi giữa giao diện sáng và tối.</p>
               </div>
-              <button onClick={toggleTheme} className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 transition-colors">
+              {/* SỬA: Nút toggle nền #1d2125 */}
+              <button onClick={toggleTheme} className="p-2 rounded-full bg-gray-100 dark:bg-[#1d2125] hover:bg-gray-200 dark:hover:bg-[#2c333a] transition-colors">
                 {theme === 'light' ? <Moon className="w-6 h-6 text-gray-600" /> : <Sun className="w-6 h-6 text-yellow-400" />}
               </button>
             </div>
           </div>
 
           {/* --- ĐỔI MẬT KHẨU --- */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-[#22272b] p-6 rounded-lg shadow-sm border border-gray-200 dark:border-white/10">
             <div className="flex items-start gap-3 mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400"><Lock className="w-6 h-6" /></div>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400"><Lock className="w-6 h-6" /></div>
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Đổi mật khẩu</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Bảo mật tài khoản bằng cách cập nhật mật khẩu định kỳ.</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-[#b6c2cf]">Đổi mật khẩu</h3>
+                    <p className="text-sm text-gray-500 dark:text-[#9fadbc]">Bảo mật tài khoản bằng cách cập nhật mật khẩu định kỳ.</p>
                 </div>
             </div>
 
             {pwdMessage.text && (
-                <div className={`p-3 mb-4 text-sm rounded-lg ${pwdMessage.type === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                <div className={`p-3 mb-4 text-sm rounded-lg ${pwdMessage.type === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'}`}>
                     {pwdMessage.text}
                 </div>
             )}
@@ -130,8 +135,9 @@ function SettingPage() {
             {step === 1 ? (
                 <form onSubmit={handleRequestOtp} className="space-y-4 max-w-md">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mật khẩu hiện tại</label>
-                        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pro-blue" required />
+                        <label className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Mật khẩu hiện tại</label>
+                        {/* SỬA: Input nền #1d2125 */}
+                        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] focus:ring-2 focus:ring-pro-blue" required />
                     </div>
                     <button type="submit" disabled={loadingPwd} className="px-4 py-2 bg-pro-blue hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                         {loadingPwd ? 'Đang kiểm tra...' : 'Tiếp tục (Gửi OTP)'}
@@ -140,27 +146,27 @@ function SettingPage() {
             ) : (
                 <form onSubmit={handleConfirmChange} className="space-y-4 max-w-md animate-in fade-in slide-in-from-top-2 duration-300">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mã OTP</label>
-                        <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white tracking-widest font-mono" placeholder="6 số" required />
+                        <label className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Mã OTP</label>
+                        <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] tracking-widest font-mono" placeholder="6 số" required />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mật khẩu mới</label>
-                        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required />
+                        <label className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Mật khẩu mới</label>
+                        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]" required />
                     </div>
                     <div className="flex gap-3">
                         <button type="submit" disabled={loadingPwd} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2">
                             <CheckCircle className="w-4 h-4" /> {loadingPwd ? 'Đang lưu...' : 'Xác nhận'}
                         </button>
-                        <button type="button" onClick={() => { setStep(1); setPwdMessage({type:'', text:''}); }} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium">Hủy</button>
+                        <button type="button" onClick={() => { setStep(1); setPwdMessage({type:'', text:''}); }} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-[#1d2125] dark:hover:bg-[#2c333a] text-gray-700 dark:text-[#b6c2cf] rounded-lg text-sm font-medium">Hủy</button>
                     </div>
                 </form>
             )}
           </div>
 
           {/* --- VÙNG NGUY HIỂM --- */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-red-200 dark:border-red-900/30">
+          <div className="bg-white dark:bg-[#22272b] p-6 rounded-lg shadow-sm border border-red-200 dark:border-red-900/30">
             <h3 className="text-lg font-semibold text-red-600 mb-2">Vùng nguy hiểm</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 dark:text-[#9fadbc] mb-4">
               Khi bạn xóa tài khoản, mọi dữ liệu liên quan (Bảng công việc, Thẻ task) sẽ bị xóa vĩnh viễn và không thể khôi phục.
             </p>
             <button onClick={openDeleteModal} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm">
@@ -183,7 +189,7 @@ function SettingPage() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/50" />
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
           </Transition.Child>
 
           <div className="fixed inset-0 overflow-y-auto">
@@ -197,23 +203,24 @@ function SettingPage() {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all border border-red-200 dark:border-red-900">
+                {/* SỬA: Modal Delete nền #22272b */}
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#22272b] p-6 text-left align-middle shadow-xl transition-all border border-red-200 dark:border-red-900/50">
                   
                   <div className="flex items-center justify-between mb-4">
                     <Dialog.Title as="h3" className="text-lg font-bold text-red-600 flex items-center gap-2">
                       <AlertTriangle className="w-6 h-6" />
                       Xác nhận xóa tài khoản
                     </Dialog.Title>
-                    <button onClick={closeDeleteModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <button onClick={closeDeleteModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-[#b6c2cf]">
                         <X className="w-5 h-5" />
                     </button>
                   </div>
 
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-300">
+                    <p className="text-sm text-gray-500 dark:text-[#9fadbc]">
                       Hành động này <strong>không thể hoàn tác</strong>. Toàn bộ bảng công việc, danh sách và thẻ của bạn sẽ bị xóa vĩnh viễn.
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-300 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-[#9fadbc] mt-2">
                       Vui lòng nhập mật khẩu của bạn để xác nhận:
                     </p>
                   </div>
@@ -221,7 +228,7 @@ function SettingPage() {
                   <form onSubmit={handleConfirmDelete} className="mt-4 space-y-4">
                     <input
                         type="password"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
                         placeholder="Nhập mật khẩu của bạn"
                         value={deletePassword}
                         onChange={(e) => setDeletePassword(e.target.value)}
@@ -237,7 +244,7 @@ function SettingPage() {
                     <div className="flex justify-end gap-3 mt-6">
                         <button
                             type="button"
-                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#b6c2cf] bg-gray-100 dark:bg-[#1d2125] rounded-lg hover:bg-gray-200 dark:hover:bg-[#2c333a] focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                             onClick={closeDeleteModal}
                         >
                             Hủy bỏ

@@ -10,9 +10,12 @@
     --color-pro-gray: #6B7280;
     
     --color-trello-bg: #1d2125;
-    --color-trello-card: #22272b;
-    --color-trello-text: #9fadbc;
-    --color-trello-title: #b6c2cf;
+    --color-trello-header: #1d2125;  
+    --color-trello-content: #323940; 
+    --color-trello-card: #22272b;     
+    --color-trello-text: #9fadbc;     
+    --color-trello-subtext: #b6c2cf;  
+    --color-trello-border: #454F59;   
 }
 
 @layer base {
