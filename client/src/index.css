@@ -8,12 +8,20 @@
     --color-pro-green: #22C55E;
     --color-pro-cyan: #06B6D4;
     --color-pro-gray: #6B7280;
+    
+    --color-trello-bg: #1d2125;
+    --color-trello-header: #1d2125;  
+    --color-trello-content: #323940; 
+    --color-trello-card: #22272b;     
+    --color-trello-text: #9fadbc;     
+    --color-trello-subtext: #b6c2cf;  
+    --color-trello-border: #454F59;   
 }
 
 @layer base {
   html.dark body {
-    background-color: #111827; 
-    color: #f9fafb;            
+    background-color: #1d2125; 
+    color: #9fadbc;            
   }
   body {
     transition-property: color, background-color, border-color;
@@ -22,7 +30,6 @@
   }
 }
 
-/* Custom Scrollbar cho List */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -31,15 +38,12 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* gray-300 */
+  background: #cbd5e1; 
   border-radius: 3px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* gray-400 */
-}
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569; /* gray-600 */
+  background: #384148; 
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #64748b; /* gray-500 */
+  background: #5a6672; 
 }

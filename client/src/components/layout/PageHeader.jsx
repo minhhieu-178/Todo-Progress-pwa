@@ -167,152 +167,160 @@ function PageHeader({ title, showSearch = true }) {
     };
 
     return (
-        <>
-            <header className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{title}</h1>
+    <>
+        {/* SỬA: Nền Header #1d2125, Viền mờ white/10 */}
+        <header className="flex items-center justify-between p-6 bg-white dark:bg-[#1d2125] shadow-sm border-b border-gray-100 dark:border-white/10 sticky top-0 z-10 transition-colors duration-200">
+            {/* SỬA: Màu tiêu đề #b6c2cf */}
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-[#b6c2cf]">{title}</h1>
+            
+            <div className="flex items-center space-x-6">
                 
-                <div className="flex items-center space-x-6">
-                    
-                    {showSearch && (
-                        <div className="relative hidden sm:block w-72" ref={searchRef}> 
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Tìm thành viên (tên, email)..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
-                                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none transition-all"
-                                />
-                                {isSearching && (
-                                    <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-500" />
+                {showSearch && (
+                    <div className="relative hidden sm:block w-72" ref={searchRef}> 
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#9fadbc]" />
+                            {/* SỬA: Nền input tối #22272b */}
+                            <input
+                                type="text"
+                                placeholder="Tìm thành viên (tên, email)..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
+                                className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-[#22272b] text-gray-900 dark:text-[#b6c2cf] outline-none transition-all dark:placeholder-[#9fadbc]"
+                            />
+                            {isSearching && (
+                                <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-500" />
+                            )}
+                        </div>
+
+                        {showDropdown && (
+                            // SỬA: Nền dropdown kết quả tìm kiếm #22272b
+                            <div className="absolute top-full mt-2 w-full bg-white dark:bg-[#22272b] rounded-lg shadow-lg border border-gray-200 dark:border-white/10 max-h-80 overflow-y-auto z-50">
+                                {searchResults.length > 0 ? (
+                                    <ul>
+                                        {searchResults.map((u) => (
+                                            <li 
+                                                key={u._id}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    handleUserClick(u);
+                                                }}
+                                                // SỬA: Hover item #2c333a
+                                                className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#2c333a] cursor-pointer flex items-center gap-3 transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                    {u.fullName ? u.fullName.charAt(0).toUpperCase() : '?'}
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-[#b6c2cf] truncate">{u.fullName}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-[#9fadbc] truncate">{u.email}</p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="p-4 text-sm text-gray-500 dark:text-[#9fadbc] text-center">
+                                        {!isSearching && "Không tìm thấy kết quả."}
+                                    </div>
                                 )}
                             </div>
+                        )}
+                    </div>
+                )}
+                
+                <div className="flex items-center space-x-4">
+                    
+                    <div className="relative" ref={notiRef}>
+                        <button 
+                            onClick={() => setShowNotiDropdown(!showNotiDropdown)}
+                            className="relative text-gray-500 dark:text-[#9fadbc] hover:text-indigo-600 dark:hover:text-[#b6c2cf] transition-colors p-1"
+                        >
+                            <Bell className="w-6 h-6" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#1d2125] animate-pulse" />
+                            )}
+                        </button>
 
-                            {showDropdown && (
-                                <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 max-h-80 overflow-y-auto z-50">
-                                    {searchResults.length > 0 ? (
-                                        <ul>
-                                            {searchResults.map((u) => (
-                                                <li 
-                                                    key={u._id}
-                                                    onMouseDown={(e) => {
-                                                        e.preventDefault();
-                                                        handleUserClick(u);
-                                                    }}
-                                                    className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer flex items-center gap-3 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-0">
-                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                                                {u.fullName ? u.fullName.charAt(0).toUpperCase() : '?'}
-                                                    </div>
-                                                    <div className="overflow-hidden">
-                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.fullName}</p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email}</p>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <div className="p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                                            {!isSearching && "Không tìm thấy kết quả."}
-                                        </div>
+                        {showNotiDropdown && (
+                            // SỬA: Nền dropdown thông báo #22272b
+                            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-[#22272b] rounded-xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden z-50">
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-[#1d2125]">
+                                    <h3 className="font-semibold text-gray-900 dark:text-[#b6c2cf]">Thông báo</h3>
+                                    {unreadCount > 0 && (
+                                        <button 
+                                            onClick={handleMarkAllRead}
+                                            className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1"
+                                        >
+                                            <CheckCheck className="w-3 h-3" /> Đọc tất cả
+                                        </button>
                                     )}
                                 </div>
-                            )}
-                        </div>
-                    )}
-                    
-                    <div className="flex items-center space-x-4">
-                        
-                        <div className="relative" ref={notiRef}>
-                            <button 
-                                onClick={() => setShowNotiDropdown(!showNotiDropdown)}
-                                className="relative text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1"
-                            >
-                                <Bell className="w-6 h-6" />
-                                {unreadCount > 0 && (
-                                    <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800 animate-pulse" />
-                                )}
-                            </button>
-
-                            {showNotiDropdown && (
-                                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
-                                    <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-700/50">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
-                                        {unreadCount > 0 && (
-                                            <button 
-                                                onClick={handleMarkAllRead}
-                                                className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1"
+                                
+                                <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                    {notifications.length === 0 ? (
+                                        <div className="p-8 text-center text-gray-500 dark:text-[#9fadbc]">
+                                            <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                            <p className="text-sm">Bạn chưa có thông báo nào.</p>
+                                        </div>
+                                    ) : (
+                                        notifications.map(noti => (
+                                            <div 
+                                                key={noti._id} 
+                                                onClick={() => handleNotificationClick(noti)}
+                                                // SỬA: Hover thông báo #2c333a
+                                                className={`p-4 hover:bg-gray-50 dark:hover:bg-[#2c333a] cursor-pointer flex gap-3 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${!noti.read ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : ''}`}
                                             >
-                                                <CheckCheck className="w-3 h-3" /> Đọc tất cả
-                                            </button>
-                                        )}
-                                    </div>
-                                    
-                                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                                        {notifications.length === 0 ? (
-                                            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                                                <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                                                <p className="text-sm">Bạn chưa có thông báo nào.</p>
-                                            </div>
-                                        ) : (
-                                            notifications.map(noti => (
-                                                <div 
-                                                    key={noti._id} 
-                                                    onClick={() => handleNotificationClick(noti)}
-                                                    className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex gap-3 transition-colors border-b border-gray-50 dark:border-gray-700 last:border-0 ${!noti.read ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : ''}`}
-                                                >
-                                                    <div className="mt-1">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm ${
-                                                            ['DELETED_FROM_BOARD', 'REMOVE_MEMBER_FROM_CARD'].includes(noti.type) 
-                                                                ? 'bg-red-500' 
-                                                                : 'bg-gradient-to-br from-purple-500 to-indigo-500'}`}>
-                                                            {getNotificationIcon(noti.type)}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex-1">
-                                                        <p className={`text-sm ${!noti.read ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-600 dark:text-gray-300'}`}>
-                                                            {noti.message}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                                            {formatTime(noti.createdAt)}
-                                                            {!noti.read && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block ml-1"></span>}
-                                                        </p>
+                                                <div className="mt-1">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm ${
+                                                        ['DELETED_FROM_BOARD', 'REMOVE_MEMBER_FROM_CARD'].includes(noti.type) 
+                                                            ? 'bg-red-500' 
+                                                            : 'bg-gradient-to-br from-purple-500 to-indigo-500'}`}>
+                                                        {getNotificationIcon(noti.type)}
                                                     </div>
                                                 </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        
 
-                        <Link to="/profile">
-                            {user?.avatar ? (
-                                <img 
-                                    src={user.avatar} 
-                                    alt="Avatar" 
-                                    className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-white dark:ring-gray-700 shadow hover:ring-indigo-300 transition-all"
-                                />
-                            ) : (
-                                <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white dark:ring-gray-700 shadow hover:ring-indigo-300 transition-all">
-                                    {user?.fullName?.charAt(0).toUpperCase()}
+                                                <div className="flex-1">
+                                                    <p className={`text-sm ${!noti.read ? 'text-gray-900 dark:text-[#b6c2cf] font-semibold' : 'text-gray-600 dark:text-[#9fadbc]'}`}>
+                                                        {noti.message}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+                                                        {formatTime(noti.createdAt)}
+                                                        {!noti.read && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block ml-1"></span>}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                            )}
-                        </Link>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </header>
+                    
 
-            <PublicProfileModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                user={selectedUser} 
-            />
-        </>
-    );
+                    <Link to="/profile">
+                        {user?.avatar ? (
+                            <img 
+                                src={user.avatar} 
+                                alt="Avatar" 
+                                // SỬA: Ring avatar tối màu
+                                className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-white dark:ring-[#22272b] shadow hover:ring-indigo-300 transition-all"
+                            />
+                        ) : (
+                            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white dark:ring-[#22272b] shadow hover:ring-indigo-300 transition-all">
+                                {user?.fullName?.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                    </Link>
+                </div>
+            </div>
+        </header>
+
+        <PublicProfileModal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+            user={selectedUser} 
+        />
+    </>
+);
 }
 
 export default PageHeader;

@@ -268,17 +268,22 @@ const onDragEnd = async (result) => {
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+    // SỬA: Nền chính #1d2125
+    <div className="flex flex-col h-screen bg-white dark:bg-[#1d2125] transition-colors duration-200">
       
-      <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+      {/* HEADER */}
+      {/* SỬA: Header nền #1d2125, Viền white/10 */}
+      <header className="p-4 bg-white dark:bg-[#1d2125] shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-white/10 transition-colors">
         
         <div>
-          <Link to="/boards" className="text-sm text-gray-500 hover:underline mb-1 block">
+          {/* SỬA: Màu link quay lại #9fadbc */}
+          <Link to="/boards" className="text-sm text-gray-500 dark:text-[#9fadbc] hover:underline mb-1 block">
              &larr; Danh sách bảng
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{board.title}</h1>
-            {isOwner && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">Owner</span>}
+            {/* SỬA: Tiêu đề bảng #b6c2cf */}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf]">{board.title}</h1>
+            {isOwner && <span className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs px-2 py-1 rounded-full font-medium">Owner</span>}
           </div>
         </div>
 
@@ -292,9 +297,9 @@ const onDragEnd = async (result) => {
                 {board.members?.slice(0, 5).map((member) => (
                     <div 
                         key={member._id} 
-                        className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
+                        // SỬA: Ring trùng màu nền header #1d2125
+                        className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
                     >
-                        {/* Ưu tiên hiện ảnh Avatar nếu có */}
                         {member.avatar ? (
                             <img 
                                 src={member.avatar} 
@@ -302,7 +307,6 @@ const onDragEnd = async (result) => {
                                 className="w-full h-full object-cover" 
                             />
                         ) : (
-                            /* Nếu không có ảnh thì hiện chữ cái đầu */
                             <span>
                                 {member.fullName ? member.fullName.charAt(0) : member.email?.charAt(0)}
                             </span>
@@ -312,15 +316,18 @@ const onDragEnd = async (result) => {
 
                 {/* Bong bóng hiển thị số lượng còn lại (+3) */}
                 {board.members?.length > 5 && (
-                    <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 text-xs font-bold z-10">
+                    // SỬA: Nền bong bóng #22272b, Ring #1d2125
+                    <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-gray-200 dark:bg-[#22272b] text-gray-600 dark:text-[#b6c2cf] text-xs font-bold z-10">
                         +{board.members.length - 5}
                     </div>
                 )}
             </div>
 
+            {/* Nút Members */}
+            {/* SỬA: Nền nút #22272b, Hover #2c333a */}
             <button 
                 onClick={() => setIsMembersModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#22272b] text-gray-700 dark:text-[#b6c2cf] rounded-md hover:bg-gray-200 dark:hover:bg-[#2c333a] text-sm transition-colors font-medium"
             >
                 <Users className="w-4 h-4" />
                 <span>Thành viên</span>
@@ -334,7 +341,8 @@ const onDragEnd = async (result) => {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900 transition-colors"
+              // SỬA: Nền khu vực kéo thả #1d2125
+              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-[#1d2125] transition-colors items-start"
             >
               {board.lists.map((list, index) => (
                 <List
@@ -350,14 +358,16 @@ const onDragEnd = async (result) => {
               ))}
               {provided.placeholder}
 
-              <div className="shrink-0 w-72 p-2">
-                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700 transition-colors">
+              <div className="flex-shrink-0 w-72 p-2">
+                {/* SỬA: Form thêm list mới nền đen #101204 (giống List.jsx) */}
+                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-[#101204] rounded-xl border border-transparent dark:border-white/5 transition-colors">
+                  {/* SỬA: Input nền #22272b */}
                   <input
                     type="text"
                     value={newListTitle}
                     onChange={(e) => setNewListTitle(e.target.value)}
                     placeholder="+ Thêm danh sách mới"
-                    className="w-full px-2 py-1 text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-[#22272b] text-gray-900 dark:text-[#b6c2cf] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:placeholder-[#9fadbc]"
                   />
                 </form>
               </div>

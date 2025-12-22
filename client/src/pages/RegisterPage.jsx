@@ -53,21 +53,26 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    // SỬA: Nền chính #1d2125
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
+      
+      {/* SỬA: Form nền #22272b, Viền white/10 */}
+      <div className="w-full max-w-md p-8 bg-white dark:bg-[#22272b] rounded-lg shadow-sm border border-gray-200 dark:border-white/10">
         
         <div className="flex items-center justify-center gap-3 mb-4">
-          <span className="text-2xl font-bold text-gray-900 dark:text-white">Task Management</span>
+          {/* SỬA: Tiêu đề chính #b6c2cf */}
+          <span className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf]">Task Management</span>
         </div>
-        <h2 className="text-xl font-semibold text-center text-gray-800 dark:text-gray-200 mb-6">Create your account</h2>
+        {/* SỬA: Tiêu đề phụ #9fadbc */}
+        <h2 className="text-xl font-semibold text-center text-gray-800 dark:text-[#9fadbc] mb-6">Create your account</h2>
 
         {error && (
-          <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg">
+          <div className="p-3 mb-4 text-sm text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
         {success && (
-          <div className="p-3 mb-4 text-sm text-green-700 bg-green-100 dark:bg-green-900/30 dark:text-green-400 rounded-lg">
+          <div className="p-3 mb-4 text-sm text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800">
             {success}
           </div>
         )}
@@ -75,7 +80,8 @@ const RegisterPage = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full name</label>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Full name</label>
+            {/* SỬA: Input nền #1d2125 */}
             <input 
               type="text" 
               id="fullName" 
@@ -83,14 +89,14 @@ const RegisterPage = () => {
               placeholder="John Doe"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
               required
             />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
              <div>
-                <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tuổi</label>
+                <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Tuổi</label>
                 <input 
                 type="text" 
                 id="age" 
@@ -101,11 +107,11 @@ const RegisterPage = () => {
                   const value = e.target.value.replace(/\D/g, '');
                   setFormData({ ...formData, age: value });
                 }}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
                 />
              </div>
              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Số điện thoại</label>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Số điện thoại</label>
                 <input 
                   type="text" 
                   id="phone" 
@@ -113,13 +119,13 @@ const RegisterPage = () => {
                   placeholder="0987..."
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
                 />
              </div>
           </div>
 
           <div>
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ</label>
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Địa chỉ</label>
             <input 
               type="text" 
               id="address" 
@@ -127,12 +133,12 @@ const RegisterPage = () => {
               placeholder="Hà Nội, Việt Nam"
               value={formData.address}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Email address</label>
             <input 
               type="email" 
               id="email" 
@@ -140,13 +146,13 @@ const RegisterPage = () => {
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Password</label>
             <input 
               type="password" 
               id="password" 
@@ -154,13 +160,13 @@ const RegisterPage = () => {
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
               required
             />
           </div>
           
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Confirm Password</label>
             <input 
               type="password" 
               id="confirmPassword" 
@@ -168,7 +174,7 @@ const RegisterPage = () => {
               placeholder="••••••••"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pro-blue bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] dark:placeholder-[#9fadbc]"
               required
             />
           </div>
@@ -177,16 +183,16 @@ const RegisterPage = () => {
             <button 
               type="submit"
               disabled={loading || !!success}
-              className="w-full px-4 py-3 text-white bg-pro-blue rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+              className="w-full px-4 py-3 text-white bg-indigo-600 rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-colors font-medium"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </div>
         </form>
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-600 dark:text-[#9fadbc] mt-6">
           Already have an account? 
-          <Link to="/login" className="font-semibold text-pro-blue hover:underline ml-1">
+          <Link to="/login" className="font-semibold text-indigo-600 hover:underline ml-1 dark:text-indigo-400">
             Log in
           </Link>
         </p>
