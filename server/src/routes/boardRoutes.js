@@ -11,8 +11,7 @@ import {
   removeMember
 } from '../controllers/boardController.js';
 
-// --- Import mới từ listController ---
-import { createList, updateList, deleteList } from '../controllers/listController.js';
+import { createList, updateList, deleteList, moveList } from '../controllers/listController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();

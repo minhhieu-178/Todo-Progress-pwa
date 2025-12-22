@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-import { createList, updateList, deleteList } from '../services/listApi';
+import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal'; 
@@ -171,9 +171,23 @@ function BoardPage() {
 const onDragEnd = async (result) => {
     const { source, destination, draggableId, type } = result;
     
-    // Kiểm tra điểm đến hợp lệ
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    if (type === 'LIST') {
+      const newLists = [...board.lists];
+      const [movedList] = newLists.splice(source.index, 1);
+      newLists.splice(destination.index, 0, movedList);
+
+      setBoard({ ...board, lists: newLists });
+
+      try {
+        await moveList(board._id, draggableId, destination.index);
+      } catch (error) {
+        console.error("Lỗi cập nhật vị trí list:", error);
+      }
+      return;
+    }
 
     if (type === 'CARD') {
       const newLists = [...board.lists];
@@ -208,10 +222,10 @@ const onDragEnd = async (result) => {
         });
       } catch (error) {
         console.error('Lỗi di chuyển thẻ:', error);
-        fetchBoard();
+        fetchBoard(); // Load lại nếu lỗi
         alert("Có lỗi khi di chuyển thẻ, vui lòng thử lại.");
       }
-    }
+    };
   };
 
   const handleCardCreated = (listId, newCard) => {
