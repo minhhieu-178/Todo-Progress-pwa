@@ -270,20 +270,17 @@ const onDragEnd = async (result) => {
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
-    // SỬA: Nền chính #1d2125
     <div className="flex flex-col h-screen bg-white dark:bg-[#1d2125] transition-colors duration-200">
       
       {/* HEADER */}
-      <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+      <header className="p-4 bg-white dark:bg-[#1d2125] shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-white/10 transition-colors">
         
         {/* Bên trái */}
         <div>
-          {/* SỬA: Màu link quay lại #9fadbc */}
           <Link to="/boards" className="text-sm text-gray-500 dark:text-[#9fadbc] hover:underline mb-1 block">
              &larr; Danh sách bảng
           </Link>
           <div className="flex items-center gap-3">
-            {/* SỬA: Tiêu đề bảng #b6c2cf */}
             <h1 className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf]">{board.title}</h1>
             {isOwner && <span className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs px-2 py-1 rounded-full font-medium">Owner</span>}
           </div>
@@ -301,7 +298,6 @@ const onDragEnd = async (result) => {
                 {board.members?.slice(0, 5).map((member) => (
                     <div 
                         key={member._id} 
-                        // SỬA: Ring trùng màu nền header #1d2125
                         className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
                     >
                         {member.avatar ? (
@@ -320,7 +316,6 @@ const onDragEnd = async (result) => {
 
                 {/* Bong bóng hiển thị số lượng còn lại (+3) */}
                 {board.members?.length > 5 && (
-                    // SỬA: Nền bong bóng #22272b, Ring #1d2125
                     <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-gray-200 dark:bg-[#22272b] text-gray-600 dark:text-[#b6c2cf] text-xs font-bold z-10">
                         +{board.members.length - 5}
                     </div>
@@ -345,7 +340,7 @@ const onDragEnd = async (result) => {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900 transition-colors"
+              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-[#1d2125] transition-colors"
             >
               {board.lists.map((list, index) => (
                 <List
@@ -362,7 +357,7 @@ const onDragEnd = async (result) => {
               {provided.placeholder}
 
               <div className="flex-shrink-0 w-72 p-2">
-                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700 transition-colors">
+                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-[#101204] rounded-md border border-transparent dark:border-white/5 transition-colors">
                   <input
                     type="text"
                     value={newListTitle}

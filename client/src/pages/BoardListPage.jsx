@@ -78,7 +78,6 @@ function BoardListPage() {
   );
 
   return (
-    // SỬA: Nền chính #1d2125
     <div className="flex flex-col h-full bg-white dark:bg-[#1d2125] transition-colors duration-200">
       <PageHeader title="Danh sách Bảng" showSearch={false} />
 
@@ -91,7 +90,6 @@ function BoardListPage() {
             {/* Ô Tìm kiếm Bảng */}
             <div className="relative w-full md:w-96">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-[#9fadbc]" />
-                {/* SỬA: Input nền #22272b */}
                 <input 
                     type="text" 
                     placeholder="Tìm kiếm bảng..." 
@@ -103,7 +101,6 @@ function BoardListPage() {
 
             {/* Form Tạo Bảng */}
             <form onSubmit={handleCreateBoard} className="flex gap-2 w-full md:w-auto">
-                {/* SỬA: Input nền #22272b */}
                 <input
                     type="text"
                     placeholder="Tên bảng mới..."
@@ -133,9 +130,7 @@ function BoardListPage() {
                   <div key={board._id} className="relative group">
                     {editingId === board._id ? (
                         // Form sửa (Edit Mode)
-                        // SỬA: Nền edit form #22272b
                         <div className="p-6 bg-white dark:bg-[#22272b] border-2 border-pro-blue rounded-xl shadow-lg">
-                            {/* SỬA: Input bên trong edit mode nền #1d2125 */}
                             <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full mb-4 p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]" autoFocus />
                             <div className="flex justify-end gap-2">
                                 <button onClick={cancelEditing} className="p-2 hover:bg-gray-100 dark:hover:bg-[#2c333a] rounded text-gray-500 dark:text-[#9fadbc]"><X className="w-5 h-5" /></button>
@@ -144,15 +139,11 @@ function BoardListPage() {
                         </div>
                     ) : (
                         // Card hiển thị
-                        // SỬA: Nền card #22272b, Viền white/10
                         <Link to={`/board/${board._id}`} className="block h-full p-6 bg-gray-50 dark:bg-[#22272b] border border-gray-200 dark:border-white/10 rounded-xl hover:shadow-lg hover:border-pro-blue transition-all duration-200">
-                            {/* SỬA: Tiêu đề #b6c2cf */}
                             <h3 className="text-lg font-bold text-gray-900 dark:text-[#b6c2cf] mb-2 truncate pr-8">{board.title}</h3>
-                            {/* SỬA: Chữ phụ #9fadbc */}
                             <p className="text-sm text-gray-500 dark:text-[#9fadbc]">{board.lists?.length || 0} danh sách</p>
                             
                             {/* Nút thao tác (Hiện khi hover) */}
-                            {/* SỬA: Nền nút thao tác #1d2125 để nổi lên trên nền card */}
                             <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-[#1d2125] p-1 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                                 <button onClick={(e) => startEditing(e, board)} className="p-1.5 text-gray-500 dark:text-[#9fadbc] hover:text-pro-blue rounded-md"><Edit2 className="w-4 h-4" /></button>
                                 <button onClick={(e) => handleDeleteBoard(e, board._id)} className="p-1.5 text-gray-500 dark:text-[#9fadbc] hover:text-red-600 rounded-md"><Trash2 className="w-4 h-4" /></button>

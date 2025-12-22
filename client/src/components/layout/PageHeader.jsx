@@ -168,9 +168,7 @@ function PageHeader({ title, showSearch = true }) {
 
     return (
     <>
-        {/* SỬA: Nền Header #1d2125, Viền mờ white/10 */}
         <header className="flex items-center justify-between p-6 bg-white dark:bg-[#1d2125] shadow-sm border-b border-gray-100 dark:border-white/10 sticky top-0 z-10 transition-colors duration-200">
-            {/* SỬA: Màu tiêu đề #b6c2cf */}
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-[#b6c2cf]">{title}</h1>
             
             <div className="flex items-center space-x-6">
@@ -179,7 +177,6 @@ function PageHeader({ title, showSearch = true }) {
                     <div className="relative hidden sm:block w-72" ref={searchRef}> 
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#9fadbc]" />
-                            {/* SỬA: Nền input tối #22272b */}
                             <input
                                 type="text"
                                 placeholder="Tìm thành viên (tên, email)..."
@@ -194,7 +191,6 @@ function PageHeader({ title, showSearch = true }) {
                         </div>
 
                         {showDropdown && (
-                            // SỬA: Nền dropdown kết quả tìm kiếm #22272b
                             <div className="absolute top-full mt-2 w-full bg-white dark:bg-[#22272b] rounded-lg shadow-lg border border-gray-200 dark:border-white/10 max-h-80 overflow-y-auto z-50">
                                 {searchResults.length > 0 ? (
                                     <ul>
@@ -205,7 +201,6 @@ function PageHeader({ title, showSearch = true }) {
                                                     e.preventDefault();
                                                     handleUserClick(u);
                                                 }}
-                                                // SỬA: Hover item #2c333a
                                                 className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#2c333a] cursor-pointer flex items-center gap-3 transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0">
                                                 <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
                                                     {u.fullName ? u.fullName.charAt(0).toUpperCase() : '?'}
@@ -241,7 +236,6 @@ function PageHeader({ title, showSearch = true }) {
                         </button>
 
                         {showNotiDropdown && (
-                            // SỬA: Nền dropdown thông báo #22272b
                             <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-[#22272b] rounded-xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden z-50">
                                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-[#1d2125]">
                                     <h3 className="font-semibold text-gray-900 dark:text-[#b6c2cf]">Thông báo</h3>
@@ -266,7 +260,6 @@ function PageHeader({ title, showSearch = true }) {
                                             <div 
                                                 key={noti._id} 
                                                 onClick={() => handleNotificationClick(noti)}
-                                                // SỬA: Hover thông báo #2c333a
                                                 className={`p-4 hover:bg-gray-50 dark:hover:bg-[#2c333a] cursor-pointer flex gap-3 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${!noti.read ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : ''}`}
                                             >
                                                 <div className="mt-1">
@@ -301,7 +294,6 @@ function PageHeader({ title, showSearch = true }) {
                             <img 
                                 src={user.avatar} 
                                 alt="Avatar" 
-                                // SỬA: Ring avatar tối màu
                                 className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-white dark:ring-[#22272b] shadow hover:ring-indigo-300 transition-all"
                             />
                         ) : (

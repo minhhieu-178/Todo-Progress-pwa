@@ -365,7 +365,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              {/* SỬA: Nền Modal #323940 */}
               <Dialog.Panel className="w-full max-w-4xl transform overflow-visible rounded-2xl bg-white dark:bg-[#323940] text-left align-middle shadow-2xl transition-all p-8 border border-gray-100 dark:border-[#323940]">
                 
                 {/* --- HEADER --- */}
@@ -378,7 +377,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                         group flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border
                         ${isCompleted 
                           ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20' 
-                          // SỬA: Nền badge khi chưa hoàn thành #22272b
                           : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-[#22272b] dark:text-[#b6c2cf] dark:border-gray-700 dark:hover:bg-[#2c333a]'}
                       `}
                     >
@@ -422,7 +420,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                         <AlignLeft className="w-5 h-5 text-gray-500 dark:text-[#9fadbc]" />
                         <h3>Mô tả</h3>
                       </div>
-                      {/* SỬA: Nền input tối #22272b */}
                       <textarea
                         rows="6"
                         value={description}
@@ -443,7 +440,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                               {attachments.map((file) => (
                                   <div 
                                       key={file._id || file.url} 
-                                      // SỬA: Nền file item #22272b
                                       className="relative flex items-start gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#22272b] hover:bg-white dark:hover:bg-[#2c333a] transition-all group"
                                   >
                                       <div 
@@ -555,7 +551,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                               </div>
                           )}
 
-                          {/* SỬA: Input bình luận nền #22272b */}
                           <input
                             type="text"
                             value={newComment}
@@ -645,7 +640,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
             </div>
           </div>
         ) : (
-          /* SỬA: Nền comment item #22272b */
           <div className="p-3 bg-gray-50 dark:bg-[#22272b] border border-gray-100 dark:border-gray-700/50 rounded-2xl rounded-tl-none text-sm text-gray-700 dark:text-[#b6c2cf] leading-relaxed break-words shadow-sm">
             {/* Logic hiển thị Mention */}
             {cmt.content.split(' ').map((word, index) => (
@@ -721,7 +715,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                             leaveFrom="opacity-100 translate-y-0"
                                             leaveTo="opacity-0 translate-y-1"
                                         >
-                                            {/* SỬA: Nền Popover #323940 */}
                                             <Popover.Panel className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-[#323940] rounded-xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50 overflow-hidden">
                                                 <div className="p-3 border-b border-gray-100 dark:border-gray-600 bg-gray-50 dark:bg-[#22272b]">
                                                     <div className="relative">
@@ -782,7 +775,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                             className="relative cursor-pointer group"
                             onClick={() => dateInputRef.current?.showPicker()}
                         >
-                            {/* SỬA: Nền nút Sidebar #22272b */}
                             <div className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-gray-50 dark:bg-[#22272b] hover:bg-gray-100 dark:hover:bg-[#2c333a] transition-all text-gray-700 dark:text-[#b6c2cf] text-sm font-medium border border-gray-200 dark:border-gray-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-600">
                                 <Clock className="w-4 h-4 text-gray-500 group-hover:text-indigo-500 transition-colors" />
                                 <span>Deadline</span>

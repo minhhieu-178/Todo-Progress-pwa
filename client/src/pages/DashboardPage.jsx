@@ -120,18 +120,16 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
       <PageHeader title="Tổng quan" showSearch={true} />
       
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         
         {/* --- WELCOME BANNER --- */}
         <div className="mb-8">
-            {/* SỬA: Tiêu đề #b6c2cf */}
             <h2 className="text-2xl font-bold text-gray-800 dark:text-[#b6c2cf]">
                 Chào mừng trở lại, {user?.fullName || 'bạn'}! 👋
             </h2>
-            {/* SỬA: Chữ phụ #9fadbc */}
             <p className="text-gray-500 dark:text-[#9fadbc] mt-1 flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -141,15 +139,13 @@ function DashboardPage() {
         {/* --- STAT CARDS --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {statCards.map((stat) => (
-                // SỬA: Card stat nền #22272b (lớp dark:bg-[#22272b] sẽ đè lên stat.bg nếu cần)
                 <div key={stat.title} className={`p-6 rounded-xl shadow-sm border transition-transform hover:-translate-y-1 dark:bg-[#22272b] dark:border-white/10 ${stat.bg} ${stat.border}`}>
                     <div className="flex justify-between items-start">
                         <div>
-                            {/* SỬA: Chữ #9fadbc */}
                             <span className="text-sm font-medium text-gray-500 dark:text-[#9fadbc]">{stat.title}</span>
                             <p className={`text-3xl font-bold mt-2 ${stat.color}`}>{stat.value}</p>
                         </div>
-                        {/* Icon nền tối nhẹ */}
+
                         <div className={`p-2 rounded-lg bg-white/60 dark:bg-[#1d2125] ${stat.color}`}>
                             <stat.icon className="w-6 h-6" />
                         </div>
@@ -164,11 +160,9 @@ function DashboardPage() {
             <div className="xl:col-span-2 space-y-6">
                 
                 {/* Create Board Input */}
-                {/* SỬA: Nền #22272b, Viền white/10 */}
                 <div className="bg-white dark:bg-[#22272b] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/10">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-[#b6c2cf] mb-4">Tạo Bảng Mới</h3>
                     <form onSubmit={handleCreateBoard} className="flex gap-3">
-                        {/* SỬA: Input nền #1d2125 */}
                         <input
                             type="text"
                             value={newBoardTitle}
@@ -181,7 +175,7 @@ function DashboardPage() {
                             disabled={isCreating}
                             className="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
-                            {isCreating ? '...' : <><Plus className="w-5 h-5" /> Tạo</>}
+                            {isCreating ? <Loader className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5" /> Tạo</>}
                         </button>
                     </form>
                     {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
@@ -206,15 +200,12 @@ function DashboardPage() {
                                     <Link
                                         key={board._id}
                                         to={`/board/${board._id}`} 
-                                        // SỬA: Card dự án nền #22272b, viền white/5
                                         className="group block p-5 bg-white dark:bg-[#22272b] rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-white/5 transition-all hover:border-indigo-300 dark:hover:border-blue-500/50"
                                     >
                                         <div className="flex justify-between items-start mb-4">
-                                            {/* SỬA: Tiêu đề #b6c2cf */}
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-[#b6c2cf] group-hover:text-indigo-600 dark:group-hover:text-blue-400 transition-colors truncate">
                                                 {board.title}
                                             </h3>
-                                            {/* SỬA: Icon nền tối #1d2125 */}
                                             <div className="p-2 bg-gray-100 dark:bg-[#1d2125] rounded-full group-hover:bg-indigo-50 dark:group-hover:bg-blue-900/20 transition-colors">
                                                 <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-blue-400" />
                                             </div>
@@ -226,7 +217,6 @@ function DashboardPage() {
                                                 <span>Tiến độ</span>
                                                 <span className="font-medium">{progress}%</span>
                                             </div>
-                                            {/* SỬA: Thanh progress nền tối #1d2125 */}
                                             <div className="w-full h-2 bg-gray-100 dark:bg-[#1d2125] rounded-full overflow-hidden">
                                                 <div 
                                                     className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-blue-600'}`} 
@@ -246,7 +236,6 @@ function DashboardPage() {
             </div>
 
             {/* --- RIGHT COLUMN: UPCOMING --- */}
-            {/* SỬA: Nền #22272b, Viền white/10 */}
             <div className="bg-white dark:bg-[#22272b] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/10 h-fit sticky top-24">
                 <div className="flex items-center gap-2 mb-6">
                     <Clock className="w-5 h-5 text-indigo-600 dark:text-blue-400" />
@@ -262,16 +251,13 @@ function DashboardPage() {
                         {stats.upcomingDeadlines.map((task) => {
                             const dateObj = new Date(task.deadline);
                             const now = new Date();
-                            const diffTime = dateObj - now;
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                            
+                            const diffDays = Math.ceil((dateObj - now) / (1000 * 60 * 60 * 24)); 
                             const isUrgent = diffDays <= 1;
 
                             return (
                                 <Link 
                                     key={task.taskId} 
                                     to={`/board/${task.boardId}?cardId=${task.taskId}`}
-                                    // SỬA: Hover nền #2c333a
                                     className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2c333a] transition-colors group"
                                 >
                                     <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex flex-col items-center justify-center border ${isUrgent ? 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100 dark:border-red-800' : 'bg-indigo-50 dark:bg-blue-900/20 text-indigo-600 dark:text-blue-400 border-indigo-100 dark:border-blue-800'}`}>
@@ -279,7 +265,6 @@ function DashboardPage() {
                                         <span className="text-lg font-bold leading-none">{dateObj.getDate()}</span>
                                     </div>
                                     <div className="overflow-hidden min-w-0 flex-1">
-                                        {/* SỬA: Title #b6c2cf */}
                                         <p className="font-medium text-sm text-gray-800 dark:text-[#b6c2cf] truncate group-hover:text-indigo-600 dark:group-hover:text-blue-400 transition-colors">
                                             {task.taskTitle}
                                         </p>

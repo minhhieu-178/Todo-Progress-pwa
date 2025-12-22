@@ -110,9 +110,7 @@ const handleFileChange = async (e) => {
                     <Camera className={`w-4 h-4 text-gray-600 dark:text-[#9fadbc] ${uploading ? 'animate-spin' : ''}`} />
                 </label>
             </div>
-            {/* SỬA: Màu chữ tiêu đề #b6c2cf */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf] mt-4">{user?.fullName}</h2>
-            {/* SỬA: Màu chữ phụ #9fadbc */}
             <p className="text-gray-500 dark:text-[#9fadbc]">{user?.email}</p>
           </div>
 
@@ -132,7 +130,6 @@ const handleFileChange = async (e) => {
                 id="fullName" 
                 value={formData.fullName}
                 onChange={handleChange}
-                // SỬA: Input nền tối inset #1d2125, chữ sáng #b6c2cf
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]"
                 required
               />
@@ -145,7 +142,6 @@ const handleFileChange = async (e) => {
                 type="email" 
                 id="email" 
                 value={email}
-                // SỬA: Input disabled nền tối hơn chút #161a1d
                 className="w-full px-4 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-[#161a1d] text-gray-500 dark:text-[#9fadbc] cursor-not-allowed"
                 disabled
               />

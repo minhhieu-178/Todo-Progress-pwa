@@ -95,21 +95,16 @@ function SettingPage() {
     <div className="flex flex-col h-full">
       <PageHeader title="Cài đặt" showSearch={false} />
 
-      {/* SỬA: Nền chính #1d2125 */}
       <div className="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
         <div className="max-w-3xl mx-auto space-y-6">
           
           {/* --- GIAO DIỆN --- */}
-          {/* SỬA: Card nền #22272b, Viền white/10 */}
           <div className="bg-white dark:bg-[#22272b] p-6 rounded-lg shadow-sm border border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between">
               <div>
-                {/* SỬA: Màu chữ tiêu đề #b6c2cf */}
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-[#b6c2cf]">Giao diện</h3>
-                {/* SỬA: Màu chữ phụ #9fadbc */}
                 <p className="text-sm text-gray-500 dark:text-[#9fadbc]">Chuyển đổi giữa giao diện sáng và tối.</p>
               </div>
-              {/* SỬA: Nút toggle nền #1d2125 */}
               <button onClick={toggleTheme} className="p-2 rounded-full bg-gray-100 dark:bg-[#1d2125] hover:bg-gray-200 dark:hover:bg-[#2c333a] transition-colors">
                 {theme === 'light' ? <Moon className="w-6 h-6 text-gray-600" /> : <Sun className="w-6 h-6 text-yellow-400" />}
               </button>
@@ -136,7 +131,6 @@ function SettingPage() {
                 <form onSubmit={handleRequestOtp} className="space-y-4 max-w-md">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Mật khẩu hiện tại</label>
-                        {/* SỬA: Input nền #1d2125 */}
                         <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] focus:ring-2 focus:ring-pro-blue" required />
                     </div>
                     <button type="submit" disabled={loadingPwd} className="px-4 py-2 bg-pro-blue hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
@@ -203,7 +197,6 @@ function SettingPage() {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                {/* SỬA: Modal Delete nền #22272b */}
                 <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#22272b] p-6 text-left align-middle shadow-xl transition-all border border-red-200 dark:border-red-900/50">
                   
                   <div className="flex items-center justify-between mb-4">
