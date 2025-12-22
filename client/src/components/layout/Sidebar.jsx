@@ -22,8 +22,6 @@ function Sidebar() {
     
             <div className="p-6">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-[#b6c2cf]">Task Manager</h1>
-        
-            <input className="mt-4 w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#22272b] text-gray-900 dark:text-[#b6c2cf] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="Search" />
         </div>
 
             <nav className="flex-1 px-4 py-2 space-y-1">

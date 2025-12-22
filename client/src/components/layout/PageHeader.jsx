@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, Fragment, useCallback } from 'react'; 
-import { Search, Clock, Bell, Loader, CheckCheck, MessageSquare, Calendar, UserPlus, Trash2 } from 'lucide-react'; 
+import React, { useState, useEffect, useRef } from 'react'; 
+import { Search, Bell, Loader, CheckCheck, MessageSquare, Calendar, UserPlus, Trash2 } from 'lucide-react'; 
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { searchUsersApi } from '../../services/searchApi';
@@ -11,7 +11,7 @@ function PageHeader({ title, showSearch = true }) {
     const { user } = useAuth();
     const navigate = useNavigate();
     
-    const socket = useSocket(); 
+    const { socket } = useSocket();
 
     // --- STATE TÌM KIẾM ---
     const [searchTerm, setSearchTerm] = useState('');
@@ -51,14 +51,15 @@ function PageHeader({ title, showSearch = true }) {
     useEffect(() => {
         if (!socket) return;
 
-        socket.on('NEW_NOTIFICATION', (newNoti) => {
+        const handleNewNotification = (newNoti) => {
             console.log("Đã nhận thông báo mới từ Socket:", newNoti); 
-
             setNotifications((prevNotifications) => [newNoti, ...prevNotifications]);
             setUnreadCount((prevCount) => prevCount + 1);
-        });
+        };
 
-        return () => socket.off('NEW_NOTIFICATION');
+        socket.on('NEW_NOTIFICATION', handleNewNotification);
+
+        return () => socket.off('NEW_NOTIFICATION', handleNewNotification);
     }, [socket]);
 
     useEffect(() => {
@@ -106,7 +107,7 @@ function PageHeader({ title, showSearch = true }) {
         try {
             if (!noti.read) {
                 await markNotificationRead(noti._id);
-                // Cập nhật state cục bộ để giao diện phản hồi ngay
+                // Cập nhật state cục bộ
                 const newNotis = notifications.map(n => 
                     n._id === noti._id ? { ...n, read: true } : n
                 );
@@ -168,7 +169,7 @@ function PageHeader({ title, showSearch = true }) {
 
     return (
     <>
-        <header className="flex items-center justify-between p-6 bg-white dark:bg-[#1d2125] shadow-sm border-b border-gray-100 dark:border-white/10 sticky top-0 z-10 transition-colors duration-200">
+        <header className="flex items-center justify-between p-6 bg-white dark:bg-[#161a1d] shadow-sm border-b border-gray-100 dark:border-white/10 sticky top-0 z-10 transition-colors duration-200">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-[#b6c2cf]">{title}</h1>
             
             <div className="flex items-center space-x-6">
@@ -231,13 +232,13 @@ function PageHeader({ title, showSearch = true }) {
                         >
                             <Bell className="w-6 h-6" />
                             {unreadCount > 0 && (
-                                <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#1d2125] animate-pulse" />
+                                <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#161a1d] animate-pulse" />
                             )}
                         </button>
 
                         {showNotiDropdown && (
                             <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-[#22272b] rounded-xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden z-50">
-                                <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-[#1d2125]">
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-[#161a1d]">
                                     <h3 className="font-semibold text-gray-900 dark:text-[#b6c2cf]">Thông báo</h3>
                                     {unreadCount > 0 && (
                                         <button 
@@ -294,10 +295,10 @@ function PageHeader({ title, showSearch = true }) {
                             <img 
                                 src={user.avatar} 
                                 alt="Avatar" 
-                                className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-white dark:ring-[#22272b] shadow hover:ring-indigo-300 transition-all"
+                                className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-white dark:ring-[#161a1d] shadow hover:ring-indigo-300 transition-all"
                             />
                         ) : (
-                            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white dark:ring-[#22272b] shadow hover:ring-indigo-300 transition-all">
+                            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer ring-2 ring-white dark:ring-[#161a1d] shadow hover:ring-indigo-300 transition-all">
                                 {user?.fullName?.charAt(0).toUpperCase()}
                             </div>
                         )}
@@ -312,7 +313,7 @@ function PageHeader({ title, showSearch = true }) {
             user={selectedUser} 
         />
     </>
-);
+    );
 }
 
 export default PageHeader;
