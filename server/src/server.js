@@ -85,7 +85,7 @@ io.on('connection', (socket) => {
 
 app.get('/', (req, res) => res.send('API đang chạy...'));
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes); // <--- Đăng ký /api/users
+app.use('/api/users', userRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api', cardRoutes);
 app.use('/api/comments', commentRoutes);
