@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMyBoards, createBoard, getDashboardStats, getBoardById } from '../services/boardApi';
+import { getMyBoards, createBoard, getDashboardStats } from '../services/boardApi';
 import { Link } from 'react-router-dom'; 
 import PageHeader from '../components/layout/PageHeader';
 import ScheduleModal from '../components/board/ScheduleModal';
 import { 
-  Layout, CheckCircle, Clock, AlertCircle, 
-  Plus, ArrowRight, Calendar, Activity 
+    Layout, CheckCircle, Clock, AlertCircle, 
+    Plus, ArrowRight, Calendar, Activity 
 } from 'lucide-react';
 
 function DashboardPage() {
@@ -18,7 +18,6 @@ function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   
-  // State chứa thống kê
   const [stats, setStats] = useState({
     totalTasks: 0,
     inProgressTasks: 0,
@@ -35,25 +34,12 @@ function DashboardPage() {
           getMyBoards(),
           getDashboardStats()
         ]);
-        
         setBoards(boardsData);
         setStats(statsData); 
         setError('');
-
-        if (navigator.onLine && boardsData.length > 0) {
-            setSyncing(true);
-            
-            await Promise.allSettled(
-                boardsData.map(board => getBoardById(board._id))
-            );
-            
-            setSyncing(false);
-            console.log('Đã cache xong toàn bộ dữ liệu Board!');
-        }
-
       } catch (err) {
         console.error(err);
-        if (boards.length === 0) setError('Không thể tải dữ liệu dashboard.');
+        setError('Không thể tải dữ liệu dashboard.');
       } finally {
         setLoading(false);
       }
@@ -74,10 +60,6 @@ function DashboardPage() {
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
         setError('');
-
-        if (navigator.onLine) {
-            getBoardById(newBoard._id).catch(console.error);
-        }
     } catch (err) {
         setError(err.toString());
     } finally {
@@ -138,8 +120,7 @@ function DashboardPage() {
   ];
 
   return (
-    // SỬA: Nền chính #1d2125
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       <PageHeader title="Tổng quan" showSearch={true} />
       
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
@@ -333,5 +314,6 @@ function DashboardPage() {
     </div>
   );
 }
+
 
 export default DashboardPage;

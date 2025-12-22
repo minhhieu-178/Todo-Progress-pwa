@@ -1,13 +1,5 @@
 import api from './api';
 
-export const logoutUser = async () => {
-  try {
-    const { data } = await api.get('/auth/logout');
-    return data;
-  } catch (error) {
-    throw error.response?.data?.message || error.message;
-  }
-};
 export const registerUser = async (fullName, email, password, age, phone, address) => {
   try {
     const { data } = await api.post('/auth/register', { fullName, email, password, age, phone, address});
@@ -26,8 +18,10 @@ export const loginUser = async (email, password) => {
   }
 };
 
+// --- ĐÃ SỬA URL ---
 export const updateProfile = async (userData) => {
   try {
+    // Đổi từ /auth/profile -> /users/profile
     const { data } = await api.put('/users/profile', userData );
     return data;
   } catch (error) {
@@ -44,8 +38,10 @@ export const forgotPassword = async (email) => {
   }
 };
 
+// --- ĐÃ SỬA URL ---
 export const deleteAccount = async (password) => {
   try {
+    // Đổi từ /auth/profile -> /users/profile
     const { data } = await api.delete('/users/profile', { 
       data: { password } 
     });
