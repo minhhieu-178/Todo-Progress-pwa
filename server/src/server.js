@@ -2,6 +2,13 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cron from 'node-cron';
+import cookieParser from 'cookie-parser'; //Doc cookie
+import helmet from 'helmet'; //Bao mat header
+import mongoSanitize from 'express-mongo-sanitize'; //NoSQL Injection
+import xss from 'xss-clean'; //Xss input
+import hpp from 'hpp'; //Spam tham so
+import rateLimit from 'express-rate-limit'; //Gioi han request
+
 import { createServer } from 'http'; 
 import { Server } from 'socket.io';
 import connectDB from './config/db.js';
@@ -12,16 +19,37 @@ import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
-import { checkDeadlines } from './services/checkDeadline.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import { checkDeadlines } from './services/checkDeadline.js';
 import searchRoutes from './routes/searchRoutes.js';
 
 dotenv.config();
 connectDB();
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+
+
+app.use(helmet());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:4173'], 
+  credentials: true, // Cho phép nhận cookie/token
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  message: 'Quá nhiều request từ IP này, vui lòng thử lại sau.'
+});
+app.use('/api', limiter);
+
+app.use(express.json({ limit: '10kb' })); 
+app.use(cookieParser()); 
+app.use(mongoSanitize());
+app.use(xss());
+app.use(hpp());
+
 
 const httpServer = createServer(app); 
 const io = new Server(httpServer, {   
@@ -66,6 +94,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes)
 app.use('/api/upload', uploadRoutes);
 app.use('/api/search', searchRoutes);
+
 
 cron.schedule('*/10 * * * *', async () => {
   console.log('Running cron job: check deadlines');

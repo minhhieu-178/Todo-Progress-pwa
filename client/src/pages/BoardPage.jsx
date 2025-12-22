@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList } from '../services/listApi';
@@ -10,7 +10,6 @@ import { useAuth } from '../context/AuthContext';
 import { Users } from 'lucide-react'; 
 import { moveCard } from '../services/cardApi';
 import { useSocket } from '../context/SocketContext';
-import { useNavigate } from 'react-router-dom';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -67,7 +66,6 @@ function BoardPage() {
     setBoard(newBoard);
   };
 
-  // --- LOGIC QUẢN LÝ THÀNH VIÊN (Được gọi từ MembersModal) ---
   const handleInvite = async (email) => {
     try {
       const updatedBoard = await addMemberToBoard(board._id, email);
@@ -277,7 +275,6 @@ const onDragEnd = async (result) => {
       {/* SỬA: Header nền #1d2125, Viền white/10 */}
       <header className="p-4 bg-white dark:bg-[#1d2125] shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-white/10 transition-colors">
         
-        {/* Bên trái */}
         <div>
           {/* SỬA: Màu link quay lại #9fadbc */}
           <Link to="/boards" className="text-sm text-gray-500 dark:text-[#9fadbc] hover:underline mb-1 block">
@@ -290,10 +287,8 @@ const onDragEnd = async (result) => {
           </div>
         </div>
 
-        {/* Bên phải: Nút quản lý thành viên */}
         <div className="flex items-center gap-4">
             
-            {/* Avatar Stack (Preview) */}
             <div 
                 className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setIsMembersModalOpen(true)}
@@ -340,7 +335,6 @@ const onDragEnd = async (result) => {
         </div>
       </header>
 
-      {/* CONTENT */}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
           {(provided) => (
@@ -382,7 +376,6 @@ const onDragEnd = async (result) => {
         </Droppable>
       </DragDropContext>
 
-      {/* MODALS */}
       {selectedCard && (
         <CardDetailModal 
             key={selectedCard._id}
@@ -397,7 +390,6 @@ const onDragEnd = async (result) => {
         />
       )}
 
-      {/* MODAL THÀNH VIÊN MỚI */}
       <MembersModal 
         isOpen={isMembersModalOpen}
         onClose={() => setIsMembersModalOpen(false)}
