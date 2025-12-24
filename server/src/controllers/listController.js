@@ -111,26 +111,28 @@ export const deleteList = async (req, res) => {
   }
 };
 
-
 export const moveList = async (req, res) => {
   try {
-    const { boardId } = req.params;
-    const { listId, newPosition } = req.body;
+    const { boardId, listId } = req.params;
+    const { newPosition } = req.body;
 
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
 
-    
-    const listIndex = board.lists.findIndex(l => l._id.toString() === listId);
-    if (listIndex === -1) return res.status(404).json({ message: 'Không tìm thấy List' });
-    
-    const [movedList] = board.lists.splice(listIndex, 1);
+    if (!board.members.includes(req.user._id)) {
+        return res.status(403).json({ message: 'Không có quyền truy cập' });
+    }
 
+    board.lists.sort((a, b) => a.position - b.position);
+
+    const currentIndex = board.lists.findIndex(l => l._id.toString() === listId);
+    if (currentIndex === -1) return res.status(404).json({ message: 'Không tìm thấy List cần chuyển' });
+
+    const [movedList] = board.lists.splice(currentIndex, 1);
     board.lists.splice(newPosition, 0, movedList);
 
-  
     board.lists.forEach((list, index) => {
-      list.position = index; 
+      list.position = index;
     });
 
     await board.save();
@@ -139,7 +141,7 @@ export const moveList = async (req, res) => {
     if (io) {
       io.to(boardId).emit('BOARD_UPDATED', { 
         action: 'MOVE_LIST',
-        message: 'Vị trí danh sách đã thay đổi'
+        message: 'Thứ tự danh sách đã thay đổi'
       });
     }
 

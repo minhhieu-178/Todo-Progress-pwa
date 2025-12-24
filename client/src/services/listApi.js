@@ -29,10 +29,7 @@ export const deleteList = async (boardId, listId) => {
 
 export const moveList = async (boardId, listId, newPosition) => {
   try {
-    const { data } = await api.put(`/boards/${boardId}/lists/move`, { 
-        listId, 
-        newPosition 
-    });
+    const { data } = await api.put(`/boards/${boardId}/lists/${listId}/move`, { newPosition });
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;

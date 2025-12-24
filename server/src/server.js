@@ -15,6 +15,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import { checkDeadlines } from './services/checkDeadline.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -66,6 +67,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes)
 app.use('/api/upload', uploadRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 cron.schedule('*/10 * * * *', async () => {
   console.log('Running cron job: check deadlines');

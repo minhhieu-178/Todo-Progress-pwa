@@ -3,79 +3,35 @@ import Board from '../models/Board.js';
 import NotificationService from '../services/notificationService.js';
 import { createLog } from '../services/logService.js'; 
 
+// Hàm xử lý Mention
 const handleMentions = async (content, boardId, cardId, senderId, senderName, io) => {
-    let mentionedUserIds = [];
     try {
-        const board = await Board.findById(boardId).populate('members', 'fullName _id email avatar');
-        if (!board) return [];
-
-        const normalizedContent = content.replace(/\u00A0/g, ' ');
+        const board = await Board.findById(boardId).populate('members.user', 'fullName _id');
+        if (!board) return;
 
         const mentionedMembers = board.members.filter(m => 
-            m && m.fullName &&
-            normalizedContent.includes(`@${m.fullName}`) && 
-            m._id.toString() !== senderId.toString()
+            content.includes(`@${m.user.fullName}`) && m.user._id.toString() !== senderId.toString()
         );
 
         const notiPromises = mentionedMembers.map(async (m) => {
-            mentionedUserIds.push(m._id.toString()); 
-
             const newNoti = await NotificationService.create({
-                recipientId: m._id,
+                recipientId: m.user._id,
                 senderId: senderId,
                 type: 'MENTION',
-                title: 'Bạn được nhắc tên',
-                message: `${senderName} đã nhắc đến bạn trong một bình luận`,
+                title: 'Bạn được nhắc đến',
+                message: `${senderName} đã nhắc đến bạn trong comment: "${content.substring(0, 50)}..."`,
                 targetUrl: `/board/${boardId}?cardId=${cardId}`,
                 metadata: { boardId, cardId }
             });
 
-            if (io) io.to(m._id.toString()).emit('NEW_NOTIFICATION', newNoti);
+            if (io) {
+                io.to(m.user._id.toString()).emit('NEW_NOTIFICATION', newNoti);
+            }
         });
 
         await Promise.all(notiPromises);
     } catch (error) {
-        console.error("Lỗi handleMentions:", error);
-    }
-    return mentionedUserIds; 
-};
-
-const handleCardNotifications = async (boardId, cardId, senderId, senderName, content, excludeIds, io) => {
-    try {
-        const board = await Board.findById(boardId);
-        if (!board) return;
-
-        let targetCard = null;
-        for (const list of board.lists) {
-            const found = list.cards.find(c => c._id.toString() === cardId.toString());
-            if (found) { targetCard = found; break; }
-        }
-
-        if (!targetCard || !targetCard.members) return;
-
-        const recipients = targetCard.members.filter(memberId => 
-            memberId.toString() !== senderId.toString() && 
-            !excludeIds.includes(memberId.toString())
-        );
-
-        const notiPromises = recipients.map(async (recipientId) => {
-            const newNoti = await NotificationService.create({
-                recipientId: recipientId,
-                senderId: senderId,
-                type: 'COMMENT',
-                title: 'Bình luận mới',
-                message: `${senderName} đã thêm 1 bình luận vào thẻ "${targetCard.title}"`,
-                targetUrl: `/board/${boardId}?cardId=${cardId}`,
-                metadata: { boardId, cardId }
-            });
-
-            if (io) io.to(recipientId.toString()).emit('NEW_NOTIFICATION', newNoti);
-        });
-
-        await Promise.all(notiPromises);
-
-    } catch (error) {
-        console.error("Lỗi handleCardNotifications:", error);
+        console.error("Lỗi mention:", error);
     }
 };
 
@@ -88,20 +44,21 @@ export const createComment = async (req, res) => {
 
   try {
     const comment = await Comment.create({ userId, boardId, cardId, content });
-    const populatedComment = await comment.populate('userId', 'fullName email avatar');
-    
+    const populatedComment = await comment.populate('userId', 'fullName email');
+
+    // Real-time: Gửi comment mới cho mọi người trong board
     if (io) io.to(boardId).emit('NEW_COMMENT', populatedComment); 
 
+    // Log hoạt động
     await createLog({
         userId, boardId,
-        entityId: cardId, entityType: 'COMMENT',
+        entityId: cardId, entityType: 'Card',
         action: 'COMMENT_CREATE',
         content: `đã bình luận: "${content.substring(0, 30)}..."`
     });
 
-    const mentionedIds = await handleMentions(content, boardId, cardId, userId, req.user.fullName, io);
-    
-    await handleCardNotifications(boardId, cardId, userId, req.user.fullName, content, mentionedIds, io);
+    // Xử lý mention
+    await handleMentions(content, boardId, cardId, userId, req.user.fullName, io);
 
     res.status(201).json(populatedComment);
   } catch (error) { res.status(500).json({ message: error.message }); }
@@ -120,14 +77,14 @@ export const updateComment = async (req, res) => {
 
     comment.content = content;
     await comment.save();
-    const updatedComment = await comment.populate('userId', 'fullName email avatar');
+    const updatedComment = await comment.populate('userId', 'fullName email');
 
     if (io) io.to(comment.boardId.toString()).emit('UPDATE_COMMENT', updatedComment);
 
     // Log
     await createLog({
         userId, boardId: comment.boardId,
-        entityId: comment.cardId, entityType: 'COMMENT',
+        entityId: comment.cardId, entityType: 'Card',
         action: 'COMMENT_UPDATE',
         content: `đã chỉnh sửa bình luận`
     });
@@ -154,7 +111,7 @@ export const deleteComment = async (req, res) => {
     //Log
     await createLog({
         userId, boardId,
-        entityId: cardId, entityType: 'COMMENT',
+        entityId: cardId, entityType: 'Card',
         action: 'COMMENT_DELETE',
         content: `đã xóa bình luận`
     });

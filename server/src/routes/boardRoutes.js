@@ -11,7 +11,6 @@ import {
   removeMember
 } from '../controllers/boardController.js';
 
-// --- Import mới từ listController ---
 import { createList, updateList, deleteList, moveList } from '../controllers/listController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -40,6 +39,6 @@ router.post('/:boardId/lists', protect, createList);
 router.put('/:boardId/lists/move', protect, moveList);
 router.put('/:boardId/lists/:listId', protect, updateList);
 router.delete('/:boardId/lists/:listId', protect, deleteList); 
-
+router.put('/:boardId/lists/:listId/move', protect, moveList);
 
 export default router;
