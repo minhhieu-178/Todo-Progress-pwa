@@ -109,31 +109,15 @@ function BoardListPage() {
   );
 
   return (
-<<<<<<< Updated upstream
-    // SỬA: Nền chính #1d2125
-    <div className="flex flex-col h-full bg-white dark:bg-[#1d2125] transition-colors duration-200">
-      <PageHeader title="Danh sách Bảng" showSearch={false} />
-=======
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
       <PageHeader title="Không gian làm việc" showSearch={false} />
->>>>>>> Stashed changes
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           
-<<<<<<< Updated upstream
-          {/* --- THANH CÔNG CỤ: TÌM KIẾM & TẠO MỚI --- */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
-            
-            {/* Ô Tìm kiếm Bảng */}
-            <div className="relative w-full md:w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-[#9fadbc]" />
-                {/* SỬA: Input nền #22272b */}
-=======
           {/* --- SEARCH BAR --- */}
           <div className="relative max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#9fadbc]" />
->>>>>>> Stashed changes
                 <input 
                     type="text" 
                     placeholder="Tìm kiếm dự án..." 
@@ -141,29 +125,6 @@ function BoardListPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#22272b] text-sm text-gray-900 dark:text-[#b6c2cf] focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all shadow-sm"
                 />
-<<<<<<< Updated upstream
-            </div>
-
-            {/* Form Tạo Bảng */}
-            <form onSubmit={handleCreateBoard} className="flex gap-2 w-full md:w-auto">
-                {/* SỬA: Input nền #22272b */}
-                <input
-                    type="text"
-                    placeholder="Tên bảng mới..."
-                    value={newBoardTitle}
-                    onChange={(e) => setNewBoardTitle(e.target.value)}
-                    className="flex-1 md:w-64 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#22272b] text-gray-900 dark:text-[#b6c2cf] focus:ring-2 focus:ring-pro-blue outline-none dark:placeholder-[#9fadbc]"
-                />
-                <button 
-                    type="submit" 
-                    disabled={isCreating || !newBoardTitle}
-                    className="px-6 py-3 bg-pro-blue hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm disabled:opacity-50 whitespace-nowrap"
-                >
-                    {isCreating ? <Loader className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                </button>
-            </form>
-=======
->>>>>>> Stashed changes
           </div>
 
           {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{error}</p>}
@@ -214,13 +175,6 @@ function BoardListPage() {
               {filteredBoards.map((board) => (
                   <div key={board._id} className="relative group h-32 md:h-40">
                     {editingId === board._id ? (
-<<<<<<< Updated upstream
-                        // Form sửa (Edit Mode)
-                        // SỬA: Nền edit form #22272b
-                        <div className="p-6 bg-white dark:bg-[#22272b] border-2 border-pro-blue rounded-xl shadow-lg">
-                            {/* SỬA: Input bên trong edit mode nền #1d2125 */}
-                            <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full mb-4 p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]" autoFocus />
-=======
                         // Form Sửa Nhanh
                         <div className="absolute inset-0 p-4 bg-white dark:bg-[#22272b] border-2 border-indigo-500 rounded-xl shadow-xl z-10 flex flex-col justify-center">
                             <input 
@@ -230,28 +184,12 @@ function BoardListPage() {
                                 className="w-full p-2 text-sm border-b border-gray-200 dark:border-gray-700 bg-transparent text-gray-900 dark:text-[#b6c2cf] focus:outline-none mb-3 font-semibold" 
                                 autoFocus 
                             />
->>>>>>> Stashed changes
                             <div className="flex justify-end gap-2">
                                 <button onClick={(e) => { e.preventDefault(); setEditingId(null); }} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 dark:bg-white/10 dark:text-[#9fadbc]">Hủy</button>
                                 <button onClick={saveTitle} className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 shadow-sm">Lưu</button>
                             </div>
                         </div>
                     ) : (
-<<<<<<< Updated upstream
-                        // Card hiển thị
-                        // SỬA: Nền card #22272b, Viền white/10
-                        <Link to={`/board/${board._id}`} className="block h-full p-6 bg-gray-50 dark:bg-[#22272b] border border-gray-200 dark:border-white/10 rounded-xl hover:shadow-lg hover:border-pro-blue transition-all duration-200">
-                            {/* SỬA: Tiêu đề #b6c2cf */}
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-[#b6c2cf] mb-2 truncate pr-8">{board.title}</h3>
-                            {/* SỬA: Chữ phụ #9fadbc */}
-                            <p className="text-sm text-gray-500 dark:text-[#9fadbc]">{board.lists?.length || 0} danh sách</p>
-                            
-                            {/* Nút thao tác (Hiện khi hover) */}
-                            {/* SỬA: Nền nút thao tác #1d2125 để nổi lên trên nền card */}
-                            <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-[#1d2125] p-1 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-                                <button onClick={(e) => startEditing(e, board)} className="p-1.5 text-gray-500 dark:text-[#9fadbc] hover:text-pro-blue rounded-md"><Edit2 className="w-4 h-4" /></button>
-                                <button onClick={(e) => handleDeleteBoard(e, board._id)} className="p-1.5 text-gray-500 dark:text-[#9fadbc] hover:text-red-600 rounded-md"><Trash2 className="w-4 h-4" /></button>
-=======
                         // Card Hiển Thị
                         <Link 
                             to={`/board/${board._id}`} 
@@ -286,7 +224,6 @@ function BoardListPage() {
                                         <span>Gần đây</span>
                                     </div>
                                 </div>
->>>>>>> Stashed changes
                             </div>
                         </Link>
                     )}

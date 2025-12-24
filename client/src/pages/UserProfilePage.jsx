@@ -59,15 +59,8 @@ function UserProfilePage() {
                     <Camera className={`w-3.5 h-3.5 md:w-4 md:h-4 text-gray-600 dark:text-[#9fadbc] ${uploading ? 'animate-spin' : ''}`} />
                 </label>
             </div>
-<<<<<<< Updated upstream
-            {/* SỬA: Màu chữ tiêu đề #b6c2cf */}
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf] mt-4">{user?.fullName}</h2>
-            {/* SỬA: Màu chữ phụ #9fadbc */}
-            <p className="text-gray-500 dark:text-[#9fadbc]">{user?.email}</p>
-=======
             <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#b6c2cf] mt-3">{user?.fullName}</h2>
             <p className="text-xs md:text-sm text-gray-500 dark:text-[#9fadbc]">{user?.email}</p>
->>>>>>> Stashed changes
           </div>
 
           {message.text && <div className={`p-3 mb-4 text-sm rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{message.text}</div>}
@@ -80,41 +73,11 @@ function UserProfilePage() {
             </div>
             
             <div>
-<<<<<<< Updated upstream
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Họ và tên</label>
-              <input 
-                type="text" 
-                id="fullName" 
-                value={formData.fullName}
-                onChange={handleChange}
-                // SỬA: Input nền tối inset #1d2125, chữ sáng #b6c2cf
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]"
-                required
-              />
-            </div>
-
-            {/* Email (Read-only) */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Email (Không thể thay đổi)</label>
-              <input 
-                type="email" 
-                id="email" 
-                value={email}
-                // SỬA: Input disabled nền tối hơn chút #161a1d
-                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-[#161a1d] text-gray-500 dark:text-[#9fadbc] cursor-not-allowed"
-                disabled
-              />
-            </div>
-
-            {/* Tuổi & Số điện thoại */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-=======
               <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Email</label>
               <input type="email" value={email} className="w-full px-3 py-2 md:py-2.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-[#161a1d] text-gray-500 dark:text-[#9fadbc] cursor-not-allowed text-sm" disabled />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
->>>>>>> Stashed changes
                 <div>
                     <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Tuổi</label>
                     <input type="text" id="age" value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value.replace(/\D/g, '') })} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] text-sm" />

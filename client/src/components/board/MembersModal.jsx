@@ -75,7 +75,6 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              {/* Nền Modal #323940 */}
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#323940] p-6 text-left align-middle shadow-xl transition-all border border-gray-100 dark:border-white/10 overflow-visible">
                 
                 <div className="flex justify-between items-center mb-6">
@@ -98,7 +97,7 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
                     </label>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#9fadbc]" />
-                        {/* Input tìm kiếm nền #22272b */}
+                        {/* Input tìm kiếm*/}
                         <input
                             type="text"
                             value={searchTerm}
@@ -109,7 +108,7 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
                         {isSearching && <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-500" />}
                     </div>
 
-                    {/* Dropdown Kết quả tìm kiếm - Nền #22272b */}
+                    {/* Dropdown Kết quả tìm kiếm */}
                     {showResults && (
                         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#22272b] border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
                             {searchResults.length > 0 ? (
@@ -117,7 +116,6 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
                                     <div 
                                         key={user._id} 
                                         onClick={() => handleSelectUser(user)}
-                                        // Item hover nền #2c333a
                                         className="p-3 hover:bg-indigo-50 dark:hover:bg-[#2c333a] cursor-pointer transition-colors flex items-center gap-3 border-b border-gray-50 dark:border-white/5 last:border-0"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-[#1d2125] text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold border border-indigo-200 dark:border-white/10 overflow-hidden flex-shrink-0">
@@ -150,7 +148,6 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
                         const isMemberOwner = (member._id === ownerIdString);
                         
                         return (
-                            // Item thành viên nền #22272b
                             <div key={member._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#22272b] rounded-xl border border-gray-100 dark:border-white/5 transition-colors group hover:border-indigo-200 dark:hover:border-indigo-500/30">
                                 <div className="flex items-center gap-3 overflow-hidden">
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-[#1d2125] text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm border-2 border-white dark:border-[#323940] shadow-sm flex-shrink-0 overflow-hidden">

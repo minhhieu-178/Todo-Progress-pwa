@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-import { createList, updateList, deleteList } from '../services/listApi';
+import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal'; 
@@ -113,13 +113,6 @@ function BoardPage() {
   const onDragEnd = async (result) => {
     // (Giữ nguyên logic Drag & Drop cũ)
     const { source, destination, draggableId, type } = result;
-<<<<<<< Updated upstream
-    
-    // Kiểm tra điểm đến hợp lệ
-    if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-
-=======
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
@@ -131,7 +124,6 @@ function BoardPage() {
       try { await moveList(board._id, draggableId, destination.index); } catch (error) { console.error(error); }
       return;
     }
->>>>>>> Stashed changes
     if (type === 'CARD') {
         // Logic Card drag (giữ nguyên)
         const newLists = [...board.lists];
@@ -145,35 +137,12 @@ function BoardPage() {
         const [movedCard] = sourceList.cards.splice(source.index, 1);
         destList.cards.splice(destination.index, 0, movedCard);
 
-<<<<<<< Updated upstream
-      const [movedCard] = sourceList.cards.splice(source.index, 1);
-      destList.cards.splice(destination.index, 0, movedCard);
-
-      newLists[sourceListIndex] = sourceList;
-      if (sourceListIndex !== destListIndex) newLists[destListIndex] = destList;
-
-      setBoard({ ...board, lists: newLists });
-      
-      try {
-        await moveCard(draggableId, {
-          boardId: board._id,
-          sourceListId: source.droppableId,
-          destListId: destination.droppableId,
-          newPosition: destination.index,
-        });
-      } catch (error) {
-        console.error('Lỗi di chuyển thẻ:', error);
-        fetchBoard();
-        alert("Có lỗi khi di chuyển thẻ, vui lòng thử lại.");
-      }
-=======
         newLists[sourceListIndex] = sourceList;
         if (sourceListIndex !== destListIndex) newLists[destListIndex] = destList;
         setBoard({ ...board, lists: newLists });
         
         try { await moveCard(draggableId, { boardId: board._id, sourceListId: source.droppableId, destListId: destination.droppableId, newPosition: destination.index }); } 
         catch (error) { console.error(error); fetchBoard(); }
->>>>>>> Stashed changes
     }
   };
 
@@ -213,71 +182,8 @@ function BoardPage() {
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
-    // SỬA: Nền chính #1d2125
     <div className="flex flex-col h-screen bg-white dark:bg-[#1d2125] transition-colors duration-200">
       
-<<<<<<< Updated upstream
-      {/* HEADER */}
-      {/* SỬA: Header nền #1d2125, Viền white/10 */}
-      <header className="p-4 bg-white dark:bg-[#1d2125] shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-white/10 transition-colors">
-        
-        <div>
-          {/* SỬA: Màu link quay lại #9fadbc */}
-          <Link to="/boards" className="text-sm text-gray-500 dark:text-[#9fadbc] hover:underline mb-1 block">
-             &larr; Danh sách bảng
-          </Link>
-          <div className="flex items-center gap-3">
-            {/* SỬA: Tiêu đề bảng #b6c2cf */}
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#b6c2cf]">{board.title}</h1>
-            {isOwner && <span className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs px-2 py-1 rounded-full font-medium">Owner</span>}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-            
-            <div 
-                className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setIsMembersModalOpen(true)}
-                title="Quản lý thành viên"
-            >
-                {board.members?.slice(0, 5).map((member) => (
-                    <div 
-                        key={member._id} 
-                        // SỬA: Ring trùng màu nền header #1d2125
-                        className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-indigo-500 text-white text-xs font-bold uppercase overflow-hidden"
-                    >
-                        {member.avatar ? (
-                            <img 
-                                src={member.avatar} 
-                                alt="avatar" 
-                                className="w-full h-full object-cover" 
-                            />
-                        ) : (
-                            <span>
-                                {member.fullName ? member.fullName.charAt(0) : member.email?.charAt(0)}
-                            </span>
-                        )}
-                    </div>
-                ))}
-
-                {/* Bong bóng hiển thị số lượng còn lại (+3) */}
-                {board.members?.length > 5 && (
-                    // SỬA: Nền bong bóng #22272b, Ring #1d2125
-                    <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-gray-200 dark:bg-[#22272b] text-gray-600 dark:text-[#b6c2cf] text-xs font-bold z-10">
-                        +{board.members.length - 5}
-                    </div>
-                )}
-            </div>
-
-            {/* Nút Members */}
-            {/* SỬA: Nền nút #22272b, Hover #2c333a */}
-            <button 
-                onClick={() => setIsMembersModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#22272b] text-gray-700 dark:text-[#b6c2cf] rounded-md hover:bg-gray-200 dark:hover:bg-[#2c333a] text-sm transition-colors font-medium"
-            >
-                <Users className="w-4 h-4" />
-                <span>Thành viên</span>
-=======
       {/* HEADER: Responsive layout */}
       <header className="p-3 md:p-4 bg-white dark:bg-[#1d2125] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-gray-200 dark:border-white/10 shrink-0">
         
@@ -308,27 +214,18 @@ function BoardPage() {
             </div>
             <button onClick={() => setIsMembersModalOpen(true)} className="p-2 bg-gray-100 dark:bg-[#22272b] rounded-md hover:bg-gray-200 dark:hover:bg-[#2c333a] transition-colors">
                 <Users className="w-4 h-4 text-gray-700 dark:text-[#b6c2cf]" />
->>>>>>> Stashed changes
             </button>
         </div>
       </header>
 
-<<<<<<< Updated upstream
-=======
       {/* CONTENT: Cuộn ngang cho list */}
->>>>>>> Stashed changes
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
           {(provided) => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-<<<<<<< Updated upstream
-              // SỬA: Nền khu vực kéo thả #1d2125
-              className="flex flex-grow p-4 overflow-x-auto bg-gray-100 dark:bg-[#1d2125] transition-colors items-start"
-=======
               className="flex flex-grow p-3 md:p-4 overflow-x-auto bg-gray-100 dark:bg-[#1d2125] transition-colors items-start"
->>>>>>> Stashed changes
             >
               {board.lists.map((list, index) => (
                 <List
@@ -346,13 +243,7 @@ function BoardPage() {
 
               {/* Form Add List: Kích thước cố định nhưng không đè content */}
               <div className="flex-shrink-0 w-72 p-2">
-<<<<<<< Updated upstream
-                {/* SỬA: Form thêm list mới nền đen #101204 (giống List.jsx) */}
-                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-[#101204] rounded-xl border border-transparent dark:border-white/5 transition-colors">
-                  {/* SỬA: Input nền #22272b */}
-=======
                 <form onSubmit={handleCreateList} className="p-2 bg-white/50 dark:bg-[#22272b]/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-pro-blue transition-colors">
->>>>>>> Stashed changes
                   <input
                     type="text"
                     value={newListTitle}
@@ -367,10 +258,7 @@ function BoardPage() {
         </Droppable>
       </DragDropContext>
 
-<<<<<<< Updated upstream
-=======
       {/* MODALS GIỮ NGUYÊN */}
->>>>>>> Stashed changes
       {selectedCard && (
         <CardDetailModal 
             key={selectedCard._id}
@@ -384,10 +272,6 @@ function BoardPage() {
             onDeleteCard={handleDeleteCardInBoard}
         />
       )}
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
       <MembersModal 
         isOpen={isMembersModalOpen}
         onClose={() => setIsMembersModalOpen(false)}

@@ -1,11 +1,7 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-<<<<<<< Updated upstream
-import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList } from 'lucide-react'; 
-=======
 import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList, X } from 'lucide-react'; 
->>>>>>> Stashed changes
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -21,15 +17,6 @@ function Sidebar({ isOpen, onClose }) {
     const activeClasses = "bg-indigo-50 dark:bg-blue-500/10 text-indigo-700 dark:text-blue-400 font-semibold"; 
     
     return (
-<<<<<<< Updated upstream
-        <div className="flex flex-col h-screen w-60 bg-white dark:bg-[#161a1d] border-r border-gray-200 dark:border-white/10 transition-colors duration-200">
-    
-            <div className="p-6">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-[#b6c2cf]">Task Manager</h1>
-        
-            <input className="mt-4 w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#22272b] text-gray-900 dark:text-[#b6c2cf] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="Search" />
-        </div>
-=======
         <>
             {/* Overlay cho Mobile */}
             <div 
@@ -38,7 +25,6 @@ function Sidebar({ isOpen, onClose }) {
                 }`}
                 onClick={onClose}
             ></div>
->>>>>>> Stashed changes
 
             <div className={`
                 flex flex-col h-full bg-white dark:bg-[#161a1d] border-r border-gray-200 dark:border-white/10 transition-all duration-300

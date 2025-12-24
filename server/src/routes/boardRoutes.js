@@ -11,8 +11,7 @@ import {
   removeMember
 } from '../controllers/boardController.js';
 
-// --- Import mới từ listController ---
-import { createList, updateList, deleteList } from '../controllers/listController.js';
+import { createList, updateList, deleteList, moveList } from '../controllers/listController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -39,5 +38,6 @@ router.delete('/:id/members/:userId', protect, removeMember);
 router.post('/:boardId/lists', protect, createList);
 router.put('/:boardId/lists/:listId', protect, updateList);
 router.delete('/:boardId/lists/:listId', protect, deleteList); 
+router.put('/:boardId/lists/:listId/move', protect, moveList);
 
 export default router;

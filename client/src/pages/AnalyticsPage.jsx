@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
@@ -257,4 +255,3 @@ function StatCard({ title, value, icon: Icon, color }) {
 }
 
 export default AnalyticsPage;
->>>>>>> Stashed changes

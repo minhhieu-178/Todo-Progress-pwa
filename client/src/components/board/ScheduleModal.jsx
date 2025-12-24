@@ -64,7 +64,6 @@ function ScheduleModal({ isOpen, onClose }) {
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            {/* Nền Modal #323940 */}
                             <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-[#323940] p-6 text-left align-middle shadow-xl transition-all border border-gray-100 dark:border-white/10">
                                 
                                 <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-white/10 pb-4">
@@ -101,7 +100,6 @@ function ScheduleModal({ isOpen, onClose }) {
                                                                 key={task.taskId}
                                                                 to={`/board/${task.boardId}`}
                                                                 onClick={onClose} 
-                                                                // Item task nền #22272b
                                                                 className={`block p-3 rounded-lg border transition-all hover:bg-gray-50 dark:bg-[#22272b] dark:hover:bg-[#2c333a] ${task.isOverdue ? 'border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800' : 'border-gray-200 dark:border-white/5'}`}
                                                             >
                                                                 <div className="flex justify-between items-center">
