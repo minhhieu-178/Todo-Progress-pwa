@@ -118,19 +118,16 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
                                         onClick={() => handleSelectUser(user)}
                                         className="p-3 hover:bg-indigo-50 dark:hover:bg-[#2c333a] cursor-pointer transition-colors flex items-center gap-3 border-b border-gray-50 dark:border-white/5 last:border-0"
                                     >
-                                        {user.avatar ? (
-                                            <img 
-                                                src={user.avatar} 
-                                                alt={user.fullName} 
-                                                className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-500 flex-shrink-0"
-                                            />
-                                        ) : (
-                                        <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">                                                {user.fullName ? user.fullName.charAt(0).toUpperCase() : '?'}
-                                            </div>
-                                        )}
-                                        <div className="overflow-hidden">
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.fullName}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-[#1d2125] text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold border border-indigo-200 dark:border-white/10 overflow-hidden flex-shrink-0">
+                                            {user.avatar ? (
+                                                <img src={user.avatar} alt="" className="w-full h-full object-cover"/>
+                                            ) : (
+                                                user.fullName.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+                                        <div className="overflow-hidden flex-1">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-[#b6c2cf] truncate">{user.fullName}</p>
+                                            <p className="text-xs text-gray-500 dark:text-[#9fadbc] truncate">{user.email}</p>
                                         </div>
                                         <UserPlus className="w-4 h-4 text-gray-400 dark:text-[#9fadbc]" />
                                     </div>
@@ -144,49 +141,48 @@ const MembersModal = ({ isOpen, onClose, members, ownerId, currentUser, onInvite
                     )}
                 </div>
 
-                {/* Danh sách thành viên */}
-                <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Thành viên hiện tại</div>
-                  {members.map((member) => {
-                    const isMemberOwner = (member._id === (ownerId?._id || ownerId));
-                    return (
-                      <div key={member._id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                        <div className="flex items-center gap-3">
-                          {member.avatar ? (
-                            <img 
-                              src={member.avatar} 
-                              alt={member.fullName} 
-                              className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-700 text-white flex items-center justify-center font-bold text-sm border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0">
-                              {member.fullName?.charAt(0).toUpperCase()}
+                {/* Danh sách thành viên hiện tại */}
+                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                    <p className="text-xs font-bold text-gray-400 dark:text-[#9fadbc] uppercase mb-2">Thành viên hiện tại</p>
+                    {members && members.map((member) => {
+                        const isMemberOwner = (member._id === ownerIdString);
+                        
+                        return (
+                            <div key={member._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#22272b] rounded-xl border border-gray-100 dark:border-white/5 transition-colors group hover:border-indigo-200 dark:hover:border-indigo-500/30">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-[#1d2125] text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm border-2 border-white dark:border-[#323940] shadow-sm flex-shrink-0 overflow-hidden">
+                                        {member.avatar ? (
+                                            <img src={member.avatar} alt="" className="w-full h-full object-cover"/>
+                                        ) : (
+                                            member.fullName?.charAt(0).toUpperCase()
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-[#b6c2cf] flex items-center gap-2 truncate">
+                                            {member.fullName}
+                                            {isMemberOwner && (
+                                                <span className="flex-shrink-0 flex items-center gap-1 text-[10px] bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-200 dark:border-yellow-800">
+                                                    <Crown className="w-3 h-3" /> Owner
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-[#9fadbc] truncate">{member.email}</p>
+                                    </div>
+                                </div>
+
+                                {/* Nút xóa thành viên (Chỉ Owner thấy và không xóa chính mình) */}
+                                {isOwner && !isMemberOwner && (
+                                    <button 
+                                        onClick={() => onRemove(member._id, member.fullName)} 
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                        title="Xóa khỏi bảng"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
-                          )}
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                              {member.fullName}
-                              {isMemberOwner && <span className="flex items-center gap-1 text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-200"><Crown className="w-3 h-3" /> Owner</span>}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{member.email}</p>
-                            {/* Hiển thị thêm thông tin nếu có */}
-                            {(member.phone || member.age) && (
-                                <p className="text-[10px] text-gray-400 mt-0.5">
-                                    {member.age ? `${member.age} tuổi` : ''} 
-                                    {member.age && member.phone ? ' • ' : ''} 
-                                    {member.phone}
-                                </p>
-                            )}
-                          </div>
-                        </div>
-                        {isOwner && !isMemberOwner && (
-                          <button onClick={() => onRemove(member._id, member.fullName)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                    })}
                 </div>
 
               </Dialog.Panel>

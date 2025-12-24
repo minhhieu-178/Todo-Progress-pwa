@@ -123,9 +123,7 @@ export const deleteComment = async (req, res) => {
 export const getCommentsForCard = async (req, res) => {
   const { cardId } = req.query;
   try {
-    const comments = await Comment.find({ cardId })
-      .populate('userId', 'fullName email avatar') 
-      .sort({ createdAt: 'asc' })
+    const comments = await Comment.find({ cardId }).populate('userId', 'fullName email').sort({ createdAt: 'asc' });
     res.json(comments);
   } catch (error) { res.status(500).json({ message: error.message }); }
 };

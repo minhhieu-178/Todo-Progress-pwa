@@ -232,7 +232,6 @@ function BoardPage() {
                   key={list._id}
                   list={list}
                   boardId={board._id}
-                  boardMembers={board.members}
                   onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
                   onUpdateTitle={handleUpdateListTitle} 

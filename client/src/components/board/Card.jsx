@@ -15,7 +15,7 @@ const getInitials = (name) => {
   return name.charAt(0).toUpperCase();
 };
 
-function Card({ card, index, onClick, boardMembers = [] }) {
+function Card({ card, index, onClick }) {
   const overdue = isOverdue(card.dueDate, card.isCompleted);
   
   const formatDate = (dateString) => {

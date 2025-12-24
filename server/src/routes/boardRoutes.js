@@ -36,7 +36,6 @@ router.delete('/:id/members/:userId', protect, removeMember);
 
 // --- Route cho List (trỏ vào listController) ---
 router.post('/:boardId/lists', protect, createList);
-router.put('/:boardId/lists/move', protect, moveList);
 router.put('/:boardId/lists/:listId', protect, updateList);
 router.delete('/:boardId/lists/:listId', protect, deleteList); 
 router.put('/:boardId/lists/:listId/move', protect, moveList);

@@ -64,7 +64,6 @@ function DashboardPage() {
     return total === 0 ? 0 : Math.round((completed / total) * 100);
   };
 
-  // Cấu hình thẻ thống kê (Stat Cards)
   const statCards = [
     { 
         title: "Tổng Task", 

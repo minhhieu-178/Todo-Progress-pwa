@@ -512,12 +512,8 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                       </div>
                       
                       <div className="flex gap-4 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0 overflow-hidden">
-                          {user?.avatar ? (
-                            <img src={user.avatar} alt="Me" className="w-full h-full object-cover" />
-                          ) : (
-                            user?.fullName?.charAt(0).toUpperCase()
-                          )}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+                          {user?.fullName?.charAt(0).toUpperCase()}
                         </div>
                         <form onSubmit={handlePostComment} className="flex-1 relative group">
                           
@@ -749,7 +745,6 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                                                         m.fullName?.charAt(0).toUpperCase()
                                                                     )}
                                                                 </div>
-                                                                
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className="text-sm font-medium text-gray-700 dark:text-[#b6c2cf] group-hover:text-indigo-700 dark:group-hover:text-indigo-300 truncate">
                                                                         {m.fullName}
