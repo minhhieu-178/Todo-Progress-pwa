@@ -11,9 +11,15 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
     
+    // Update root classes for existing theme system
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
+
+    // Update body classes for background switching
+    body.classList.remove('light', 'dark');
+    body.classList.add(theme);
 
     localStorage.setItem('theme', theme);
   }, [theme]);

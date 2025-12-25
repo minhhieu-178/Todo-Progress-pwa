@@ -35,55 +35,76 @@ function Card({ card, index, onClick }) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={onClick}
-          className={`group p-3 mb-2 bg-white dark:bg-[#22272b] rounded-lg shadow-sm border border-transparent hover:border-indigo-500/30 ${
-            snapshot.isDragging ? 'shadow-lg ring-2 ring-indigo-500/50 rotate-2' : ''
-          } transition-all duration-200 cursor-pointer`}
+          className={`group p-4 mb-4 glass-effect rounded-xl shadow-sm adaptive-border border transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] ${
+            snapshot.isDragging ? 'shadow-xl ring-2 ring-blue-500/50 rotate-2 scale-105' : ''
+          }`}
         >
-          <p className="text-sm font-medium text-gray-800 dark:text-[#b6c2cf] line-clamp-2 mb-2">
+          {/* Card Title */}
+          <p className="text-sm font-semibold adaptive-text line-clamp-3 mb-4 leading-relaxed">
             {card.title}
           </p>
 
-          {/* Footer Card: Chứa Deadline và Members */}
-          <div className="flex justify-between items-end mt-2">
+          {/* Card Footer */}
+          <div className="flex justify-between items-end gap-2 sm:gap-3 lg:gap-4">
             
-            {/* Hiển thị Deadline */}
-            <div className="flex items-center gap-2">
+            {/* Due Date */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               {card.dueDate && (
-                <div className={`text-xs flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                <div className={`text-xs flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium ${
                     card.isCompleted 
-                        ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-500/30' 
                         : overdue 
-                            ? 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 font-medium' 
-                            : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30' 
+                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30'
                 }`}>
-                    <Clock className="w-3 h-3" />
-                    <span>{formatDate(card.dueDate)}</span>
+                    <Clock className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{formatDate(card.dueDate)}</span>
                 </div>
               )}
             </div>
 
-            {/* Hiển thị Members (Avatar Stack) */}
+            {/* Members */}
             {card.members && card.members.length > 0 && (
-              <div className="flex -space-x-1.5 overflow-hidden pl-1 py-0.5">
-                {card.members.slice(0, 3).map((member) => (
-                  <div 
-                    key={member._id} 
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-white dark:ring-slate-800 bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-200 text-[10px] font-bold"
-                    title={member.fullName || member.email}
+              <div className="flex items-center -space-x-2 flex-shrink-0">
+                {card.members.slice(0, 3).map((member, idx) => (
+                  <div
+                    key={member._id || idx}
+                    className="relative group/member"
+                    title={member.name || member.fullName || 'Unknown User'}
                   >
-                    {getInitials(member.fullName)}
+                    {member.avatar ? (
+                      <img 
+                        src={member.avatar} 
+                        alt={member.name || 'User'} 
+                        className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-md hover:scale-110 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-md hover:scale-110 transition-transform">
+                        {getInitials(member.name || member.fullName)}
+                      </div>
+                    )}
                   </div>
                 ))}
                 
-                {/* Nếu có nhiều hơn 3 người thì hiện số dư */}
+                {/* Show count if more than 3 members */}
                 {card.members.length > 3 && (
-                  <div className="inline-flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-white dark:ring-slate-800 bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                  <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-200 border-2 border-white dark:border-gray-700 shadow-md">
                     +{card.members.length - 3}
                   </div>
                 )}
               </div>
             )}
           </div>
+
+          {/* Completion Status Indicator */}
+          {card.isCompleted && (
+            <div className="mt-3 pt-3 border-t adaptive-border">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+                <span className="text-xs font-semibold">Hoàn thành</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Draggable>
