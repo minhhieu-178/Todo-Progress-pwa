@@ -86,48 +86,48 @@ function AnalyticsPage() {
     pieInner: isDesktop ? 80 : 50,
     pieOuter: isDesktop ? 110 : 70,
     barSize: isDesktop ? 40 : 16,
-    chartHeight: isDesktop ? 350 : 220
+    chartHeight: Math.max(isDesktop ? 350 : 220, 200) // Đảm bảo tối thiểu 200px
   };
 
-  if (loading && !data) return <div className="flex justify-center items-center h-full bg-gray-50 dark:bg-[#1d2125]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>;
-  if (!data) return <div className="p-8 text-center text-red-500">Không thể tải dữ liệu.</div>;
+  if (loading && !data) return <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div></div>;
+  if (!data) return <div className="p-8 text-center text-red-400">Không thể tải dữ liệu.</div>;
   
   const { summary, taskDistribution, memberPerformance } = data;
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
+    <div className="flex flex-col h-full transition-colors duration-200">
       <PageHeader title="Thống kê" showSearch={false} />
 
       <div className="flex-1 overflow-y-auto p-3 md:p-8">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6"> 
             
             {/* --- FILTER SECTION --- */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#22272b] p-4 md:p-5 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-effect p-4 md:p-5 rounded-xl border border-white/10 shadow-sm">
                 <div>
-                    <h2 className="text-base md:text-xl font-bold text-gray-900 dark:text-[#b6c2cf]">
+                    <h2 className="text-base md:text-xl font-bold adaptive-text">
                         {selectedBoard === 'all' ? 'Tổng quan dự án' : summary.boardName}
                     </h2>
-                    <p className="text-xs text-gray-500 dark:text-[#9fadbc] mt-1 flex items-center gap-1">
-                        <TrendingUp className="w-3.5 h-3.5 text-green-500" /> Cập nhật dữ liệu thời gian thực
+                    <p className="text-xs adaptive-text-muted mt-1 flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-green-400" /> Cập nhật dữ liệu thời gian thực
                     </p>
                 </div>
 
                 <div className="relative w-full md:w-64">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Filter className="h-4 w-4 text-indigo-500" /></div>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Filter className="h-4 w-4 text-blue-400" /></div>
                     <select
                         value={selectedBoard}
                         onChange={handleBoardChange}
-                        className="w-full appearance-none pl-10 pr-8 py-2 bg-gray-50 dark:bg-[#1d2125] border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-[#b6c2cf] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer"
+                        className="w-full appearance-none pl-10 pr-8 py-2 bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-lg text-sm font-medium adaptive-text focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all cursor-pointer backdrop-blur-sm"
                     >
-                        <option value="all">Tất cả dự án</option>
-                        {boardsList.map(board => <option key={board._id} value={board._id}>{board.title}</option>)}
+                        <option value="all" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Tất cả dự án</option>
+                        {boardsList.map(board => <option key={board._id} value={board._id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">{board.title}</option>)}
                     </select>
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"><ChevronDown className="h-4 w-4 text-gray-400" /></div>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"><ChevronDown className="h-4 w-4 adaptive-text-muted" /></div>
                 </div>
             </div>
 
-            {/* --- STAT CARDS (GRID 4x1 ALWAYS) --- */}
-            <div className="grid grid-cols-4 gap-2 md:gap-6">
+            {/* --- STAT CARDS (GRID 2x2 ALWAYS) --- */}
+            <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-6">
                 <StatCard title="Tổng Task" value={summary.totalTasks} icon={Layout} color="indigo" />
                 <StatCard title="Đang làm" value={summary.activeTasks} icon={Activity} color="blue" />
                 <StatCard title="Hoàn thành" value={summary.completedTasks} icon={CheckCircle} color="emerald" />
@@ -135,11 +135,11 @@ function AnalyticsPage() {
             </div>
 
             {/* --- CHART TABS (MOBILE ONLY) --- */}
-            <div className="lg:hidden flex p-1 bg-gray-200 dark:bg-[#22272b] rounded-lg mb-2">
+            <div className="lg:hidden flex p-1 glass-effect rounded-lg mb-2 border border-white/20 dark:border-white/10">
                 <button 
                     onClick={() => setChartTab('status')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase rounded-md transition-all ${
-                        chartTab === 'status' ? 'bg-white dark:bg-[#1d2125] text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-[#9fadbc]'
+                        chartTab === 'status' ? 'bg-white/20 text-blue-300 dark:text-blue-400 shadow-sm' : 'adaptive-text-muted'
                     }`}
                 >
                     <PieIcon className="w-4 h-4" /> Trạng thái
@@ -147,7 +147,7 @@ function AnalyticsPage() {
                 <button 
                     onClick={() => setChartTab('performance')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase rounded-md transition-all ${
-                        chartTab === 'performance' ? 'bg-white dark:bg-[#1d2125] text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-[#9fadbc]'
+                        chartTab === 'performance' ? 'bg-white/20 text-blue-300 dark:text-blue-400 shadow-sm' : 'adaptive-text-muted'
                     }`}
                 >
                     <BarChart3 className="w-4 h-4" /> Hiệu suất
@@ -158,14 +158,14 @@ function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                 
                 {/* STATUS CHART */}
-                <div className={`bg-white dark:bg-[#22272b] p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/5 lg:col-span-1 flex flex-col justify-between ${chartTab === 'status' ? 'flex' : 'hidden lg:flex'}`}>
+                <div className={`glass-effect p-4 md:p-6 rounded-xl shadow-sm border border-white/10 lg:col-span-1 flex flex-col justify-between ${chartTab === 'status' ? 'flex' : 'hidden lg:flex'}`}>
                     <div className="mb-2">
-                        <h3 className="font-bold text-gray-800 dark:text-[#b6c2cf] text-base">Trạng thái</h3>
-                        <p className="text-xs text-gray-500 dark:text-[#9fadbc]">Tỉ lệ phân bố công việc</p>
+                        <h3 className="font-bold adaptive-text text-base">Trạng thái</h3>
+                        <p className="text-xs adaptive-text-muted">Tỉ lệ phân bố công việc</p>
                     </div>
                     
-                    <div style={{ height: chartConfig.chartHeight }} className="w-full relative flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
+                    <div style={{ height: chartConfig.chartHeight, minHeight: '200px' }} className="w-full relative flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                             <PieChart>
                                 <Pie
                                     activeIndex={activeIndex}
@@ -189,22 +189,22 @@ function AnalyticsPage() {
                 </div>
 
                 {/* PERFORMANCE CHART */}
-                <div className={`bg-white dark:bg-[#22272b] p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/5 lg:col-span-2 flex flex-col justify-between ${chartTab === 'performance' ? 'flex' : 'hidden lg:flex'}`}>
+                <div className={`glass-effect p-4 md:p-6 rounded-xl shadow-sm border border-white/10 lg:col-span-2 flex flex-col justify-between ${chartTab === 'performance' ? 'flex' : 'hidden lg:flex'}`}>
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="font-bold text-gray-800 dark:text-[#b6c2cf] text-base">Hiệu suất thành viên</h3>
-                            <p className="text-xs text-gray-500 dark:text-[#9fadbc]">Thống kê theo từng cá nhân</p>
+                            <h3 className="font-bold adaptive-text text-base">Hiệu suất thành viên</h3>
+                            <p className="text-xs adaptive-text-muted">Thống kê theo từng cá nhân</p>
                         </div>
                         {/* Legend giả lập cho đẹp trên Desktop */}
                         <div className="hidden md:flex gap-3 text-xs">
-                           <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Đã xong</div>
-                           <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500"></span> Đang làm</div>
-                           <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Quá hạn</div>
+                           <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> <span className="adaptive-text-muted">Đã xong</span></div>
+                           <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500"></span> <span className="adaptive-text-muted">Đang làm</span></div>
+                           <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span> <span className="adaptive-text-muted">Quá hạn</span></div>
                         </div>
                     </div>
                     
-                    <div style={{ height: chartConfig.chartHeight }} className="w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                    <div style={{ height: chartConfig.chartHeight, minHeight: '200px' }} className="w-full">
+                        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                             <BarChart data={memberPerformance} margin={{ top: 10, right: 0, left: -20, bottom: 0 }} barGap={isDesktop ? 8 : 4}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.3} />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} />
@@ -230,26 +230,28 @@ function AnalyticsPage() {
 
 function StatCard({ title, value, icon: Icon, color }) {
     const colorStyles = {
-        indigo: { text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-500/10', border: 'border-indigo-100 dark:border-indigo-500/20' },
-        emerald: { text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-100 dark:border-emerald-500/20' },
-        rose: { text: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-500/10', border: 'border-rose-100 dark:border-rose-500/20' },
-        blue: { text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10', border: 'border-blue-100 dark:border-blue-500/20' },
+        indigo: { text: 'text-indigo-400', bg: 'bg-indigo-500/20', border: 'border-indigo-500/30' },
+        emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/30' },
+        rose: { text: 'text-rose-400', bg: 'bg-rose-500/20', border: 'border-rose-500/30' },
+        blue: { text: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30' },
     };
     const style = colorStyles[color] || colorStyles.indigo;
 
     return (
-        <div className={`p-2 md:p-3 rounded-xl bg-white dark:bg-[#22272b] border ${style.border} shadow-sm flex flex-col justify-between`}>
-            <div className="flex justify-between items-start mb-1">
+        <div className={`p-3 md:p-4 lg:p-6 rounded-xl glass-effect border ${style.border} shadow-sm flex flex-col justify-between`}>
+            <div className="flex justify-between items-start mb-2 md:mb-3">
+                <span className="text-xs md:text-sm font-medium adaptive-text-muted uppercase tracking-wide">
+                    {title}
+                </span>
                 <div className={`p-1 md:p-1.5 rounded-lg ${style.bg} ${style.text}`}>
-                    <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
             </div>
-            <h3 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-                {value}
-            </h3>
-            <p className="text-[10px] md:text-xs font-medium text-gray-500 dark:text-[#9fadbc] mt-0.5 truncate leading-tight">
-                {title}
-            </p>
+            <div>
+                <h3 className="text-xl md:text-2xl lg:text-3xl font-bold adaptive-text leading-tight">
+                    {value}
+                </h3>
+            </div>
         </div>
     );
 }

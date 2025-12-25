@@ -7,7 +7,7 @@ import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal'; 
 import { useAuth } from '../context/AuthContext';
-import { Users, ChevronLeft } from 'lucide-react'; // Thêm ChevronLeft
+import { Users, ChevronLeft, X } from 'lucide-react';
 import { moveCard } from '../services/cardApi';
 import { useSocket } from '../context/SocketContext';
 
@@ -182,50 +182,138 @@ function BoardPage() {
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-[#1d2125] transition-colors duration-200">
+    <div className="flex flex-col h-screen transition-colors duration-200 relative">
       
-      {/* HEADER: Responsive layout */}
-      <header className="p-3 md:p-4 bg-white dark:bg-[#1d2125] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-gray-200 dark:border-white/10 shrink-0">
+      {/* Header - Responsive Layout */}
+      <header className="responsive-px py-3 glass-effect shadow-sm border-b border-white/10 shrink-0 relative z-20">
         
-        <div className="flex items-center gap-2">
-          <Link to="/boards" className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#2c333a] text-gray-500 dark:text-[#9fadbc]">
-             <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div className="flex flex-col">
-            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-[#b6c2cf] leading-tight">{board.title}</h1>
-            <div className="flex items-center gap-2">
-                {isOwner && <span className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px] px-1.5 py-0.5 rounded font-medium">Owner</span>}
-                <span className="text-xs text-gray-500">{board.lists.length} lists</span>
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between md:hidden mb-3">
+          <div className="flex items-center responsive-gap">
+            <Link 
+              to="/boards" 
+              className="touch-target p-2 -ml-2 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              aria-label="Quay lại danh sách board"
+            >
+               <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <h1 className="responsive-text-lg font-bold text-white truncate">
+                {board.title}
+              </h1>
+              <div className="flex items-center responsive-gap">
+                  {isOwner && (
+                    <span className="bg-yellow-500/20 text-yellow-300 text-xs px-2 py-0.5 rounded-full font-medium border border-yellow-500/30">
+                      Owner
+                    </span>
+                  )}
+                  <span className="responsive-text-sm text-white/70">
+                    {board.lists.length} danh sách
+                  </span>
+              </div>
             </div>
+          </div>
+          
+          {/* Mobile Member Controls */}
+          <div className="flex items-center responsive-gap flex-shrink-0">
+              <div className="flex -space-x-2" onClick={() => setIsMembersModalOpen(true)}>
+                  {board.members?.slice(0, 3).map((member) => (
+                      <div key={member._id} className="w-8 h-8 rounded-full ring-2 ring-white/20 bg-indigo-500 text-white flex items-center justify-center text-xs font-bold overflow-hidden cursor-pointer">
+                          {member.avatar ? (
+                            <img src={member.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            member.fullName?.charAt(0) || '?'
+                          )}
+                      </div>
+                  ))}
+                  {board.members?.length > 3 && (
+                      <div className="w-8 h-8 rounded-full ring-2 ring-white/20 bg-white/20 flex items-center justify-center text-xs font-bold cursor-pointer">
+                        +{board.members.length - 3}
+                      </div>
+                  )}
+              </div>
+              <button 
+                onClick={() => setIsMembersModalOpen(true)} 
+                className="touch-target p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                aria-label="Quản lý thành viên"
+              >
+                  <Users className="w-5 h-5 text-white" />
+              </button>
           </div>
         </div>
 
-        {/* Member Controls */}
-        <div className="flex items-center gap-3 self-end md:self-auto">
-            <div className="flex -space-x-2" onClick={() => setIsMembersModalOpen(true)}>
-                {board.members?.slice(0, 4).map((member) => (
-                    <div key={member._id} className="w-7 h-7 md:w-8 md:h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
-                        {member.avatar ? <img src={member.avatar} alt="avt" className="w-full h-full object-cover" /> : member.fullName?.charAt(0)}
-                    </div>
-                ))}
-                {board.members?.length > 4 && (
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full ring-2 ring-white dark:ring-[#1d2125] bg-gray-200 dark:bg-[#22272b] flex items-center justify-center text-[10px] font-bold">+{board.members.length - 4}</div>
-                )}
+        {/* Desktop Header */}
+        <div className="hidden md:flex justify-between items-center">
+          <div className="flex items-center responsive-gap min-w-0 flex-1">
+            <Link 
+              to="/boards" 
+              className="touch-target p-2 -ml-2 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              aria-label="Quay lại danh sách board"
+            >
+               <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <h1 className="responsive-text-2xl font-bold text-white truncate">
+                {board.title}
+              </h1>
+              <div className="flex items-center responsive-gap mt-1">
+                  {isOwner && (
+                    <span className="bg-yellow-500/20 text-yellow-300 responsive-text-sm px-2 py-1 rounded-full font-medium border border-yellow-500/30">
+                      Owner
+                    </span>
+                  )}
+                  <span className="responsive-text-sm text-white/70">
+                    {board.lists.length} danh sách • {board.lists.reduce((acc, list) => acc + (list.cards?.length || 0), 0)} thẻ
+                  </span>
+              </div>
             </div>
-            <button onClick={() => setIsMembersModalOpen(true)} className="p-2 bg-gray-100 dark:bg-[#22272b] rounded-md hover:bg-gray-200 dark:hover:bg-[#2c333a] transition-colors">
-                <Users className="w-4 h-4 text-gray-700 dark:text-[#b6c2cf]" />
-            </button>
+          </div>
+
+          {/* Desktop Member Controls */}
+          <div className="flex items-center responsive-gap flex-shrink-0">
+              <div className="flex -space-x-2" onClick={() => setIsMembersModalOpen(true)}>
+                  {board.members?.slice(0, 5).map((member) => (
+                      <div 
+                        key={member._id} 
+                        className="w-9 h-9 rounded-full ring-2 ring-white/20 bg-indigo-500 text-white flex items-center justify-center responsive-text-sm font-bold overflow-hidden cursor-pointer hover:scale-110 transition-transform"
+                        title={member.fullName || member.name || 'Unknown User'}
+                      >
+                          {member.avatar ? (
+                            <img src={member.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            member.fullName?.charAt(0) || member.name?.charAt(0) || '?'
+                          )}
+                      </div>
+                  ))}
+                  {board.members?.length > 5 && (
+                      <div className="w-9 h-9 rounded-full ring-2 ring-white/20 bg-white/20 flex items-center justify-center responsive-text-sm font-bold cursor-pointer hover:scale-110 transition-transform">
+                        +{board.members.length - 5}
+                      </div>
+                  )}
+              </div>
+              <button 
+                onClick={() => setIsMembersModalOpen(true)} 
+                className="touch-target responsive-p bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                aria-label="Quản lý thành viên"
+              >
+                  <Users className="w-5 h-5 text-white" />
+              </button>
+          </div>
         </div>
       </header>
 
-      {/* CONTENT: Cuộn ngang cho list */}
+      {/* Board Content - Horizontal Scrolling Lists */}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
           {(provided) => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex flex-grow p-3 md:p-4 overflow-x-auto bg-gray-100 dark:bg-[#1d2125] transition-colors items-start"
+              className="flex flex-grow px-6 pt-6 pb-4 overflow-x-auto custom-scrollbar transition-colors items-start gap-4 safe-area-bottom relative z-10"
+              style={{ 
+                minHeight: 'calc(100vh - 120px)',
+                paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
+              }}
             >
               {board.lists.map((list, index) => (
                 <List
@@ -241,16 +329,34 @@ function BoardPage() {
               ))}
               {provided.placeholder}
 
-              {/* Form Add List: Kích thước cố định nhưng không đè content */}
-              <div className="flex-shrink-0 w-72 p-2">
-                <form onSubmit={handleCreateList} className="p-2 bg-white/50 dark:bg-[#22272b]/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-pro-blue transition-colors">
+              {/* Add New List Form */}
+              <div className="flex-shrink-0 w-80 px-3">
+                <form onSubmit={handleCreateList} className="p-4 glass-effect rounded-xl border-2 border-dashed border-white/30 hover:border-blue-400/50 transition-all duration-200 group">
                   <input
                     type="text"
                     value={newListTitle}
                     onChange={(e) => setNewListTitle(e.target.value)}
-                    placeholder="+ Thêm danh sách"
-                    className="w-full px-3 py-2 text-sm bg-transparent text-gray-900 dark:text-[#b6c2cf] focus:outline-none placeholder-gray-500 font-medium"
+                    placeholder="+ Thêm danh sách mới"
+                    className="w-full p-3 text-sm bg-transparent text-white focus:outline-none placeholder-white/60 font-medium group-hover:placeholder-blue-300 transition-colors"
                   />
+                  {newListTitle.trim() && (
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/20">
+                      <button 
+                        type="submit"
+                        className="bg-blue-600/80 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors backdrop-blur-sm"
+                      >
+                        Thêm danh sách
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setNewListTitle('')}
+                        className="p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                        aria-label="Hủy"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </form>
               </div>
             </div>
@@ -258,7 +364,7 @@ function BoardPage() {
         </Droppable>
       </DragDropContext>
 
-      {/* MODALS GIỮ NGUYÊN */}
+      {/* Modals */}
       {selectedCard && (
         <CardDetailModal 
             key={selectedCard._id}
@@ -272,6 +378,7 @@ function BoardPage() {
             onDeleteCard={handleDeleteCardInBoard}
         />
       )}
+      
       <MembersModal 
         isOpen={isMembersModalOpen}
         onClose={() => setIsMembersModalOpen(false)}

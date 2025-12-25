@@ -715,22 +715,22 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                             leaveFrom="opacity-100 translate-y-0"
                                             leaveTo="opacity-0 translate-y-1"
                                         >
-                                            <Popover.Panel className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-[#323940] rounded-xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50 overflow-hidden">
+                                            <Popover.Panel className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-3 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-[#323940] rounded-xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50 overflow-hidden">
                                                 <div className="p-3 border-b border-gray-100 dark:border-gray-600 bg-gray-50 dark:bg-[#22272b]">
                                                     <div className="relative">
-                                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                                                         <input 
                                                             ref={searchInputRef}
                                                             type="text"
                                                             placeholder="Tìm thành viên..."
                                                             value={memberSearch}
                                                             onChange={(e) => setMemberSearch(e.target.value)}
-                                                            className="w-full pl-9 pr-3 py-1.5 text-sm bg-white dark:bg-[#1d2125] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-[#b6c2cf] placeholder-gray-400"
+                                                            className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-[#1d2125] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none text-gray-900 dark:text-[#b6c2cf] placeholder-gray-400 dark:placeholder-gray-500"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="max-h-60 overflow-y-auto custom-scrollbar p-1">
-                                                    <p className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Thành viên bảng</p>
+                                                    <p className="px-3 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Thành viên bảng</p>
                                                     {availableMembers.length > 0 ? (
                                                         availableMembers.map((m) => (
                                                             <button
@@ -738,7 +738,7 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                                                 onClick={() => handleAddMember(m._id)}
                                                                 className="flex items-center gap-3 w-full p-2 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 rounded-lg transition-colors group text-left"
                                                             >
-                                                                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#1d2125] text-gray-600 dark:text-[#b6c2cf] flex items-center justify-center text-xs font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                                                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#1d2125] text-gray-600 dark:text-[#b6c2cf] flex items-center justify-center text-xs font-bold group-hover:bg-indigo-100 dark:group-hover:bg-indigo-600/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors flex-shrink-0">
                                                                     {m.avatar ? (
                                                                         <img src={m.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                                                                     ) : (
@@ -749,13 +749,13 @@ function CardDetailModal({ isOpen, onClose, card, listId, boardId, boardMembers 
                                                                     <p className="text-sm font-medium text-gray-700 dark:text-[#b6c2cf] group-hover:text-indigo-700 dark:group-hover:text-indigo-300 truncate">
                                                                         {m.fullName}
                                                                     </p>
-                                                                    <p className="text-xs text-gray-400 truncate">{m.email}</p>
+                                                                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{m.email}</p>
                                                                 </div>
                                                             </button>
                                                         ))
                                                     ) : (
                                                         <div className="py-6 text-center">
-                                                            <p className="text-sm text-gray-500">
+                                                            <p className="text-sm text-gray-500 dark:text-gray-400">
                                                                 {memberSearch ? 'Không tìm thấy kết quả.' : 'Tất cả thành viên đã được thêm.'}
                                                             </p>
                                                         </div>
