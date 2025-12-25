@@ -1,0 +1,27 @@
+import mongoose from 'mongoose';
+
+const CardSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    dueDate: { type: Date },
+    position: { type: Number, required: true },
+    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    isCompleted: { type: Boolean, default: false },
+    labels: [{ type: String }],
+    
+    attachments: [{
+      name: String,       
+      url: String,        
+      publicId: String,  
+      
+      type: { type: String },       
+      
+      uploadedAt: { type: Date, default: Date.now }
+    }],
+    
+  },
+  { timestamps: true }
+);
+
+export default CardSchema;
