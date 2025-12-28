@@ -1,18 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import api from '../services/api';
 import { registerUser } from '../services/authApi'; 
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('userInfo');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem('userInfo');
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Lỗi parse userInfo:", error);
+      return null;
     }
-  }, []);
+  });
+
 
   const login = async (email, password) => {
     try {
@@ -28,6 +30,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const logout = async () => {
+    try {
+      await api.get('/auth/logout'); 
+    } catch (error) {
+      console.error('Lỗi logout server:', error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('userInfo');
+      window.location.href = '/login'; 
+    }
+  };
+
   const register = async (fullName, email, password, age, phone, address) => {
     try {
       await registerUser(fullName, email, password, age, phone, address); 
@@ -35,11 +49,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error.response?.data?.message || error.message; 
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('userInfo');
   };
 
   const updateUser = (updatedUserData) => {

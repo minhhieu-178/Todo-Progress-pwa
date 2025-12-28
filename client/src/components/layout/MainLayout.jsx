@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import ProtectedRoute from '../../router/ProtectedRoute';
+import NetworkStatus from '../NetworkStatus';
 import { Menu } from 'lucide-react';
 
 function MainLayout({ children }) {
@@ -98,6 +99,7 @@ function MainLayout({ children }) {
           </main>
         </div>
 
+        <NetworkStatus />
       </div>
     </ProtectedRoute>
   );

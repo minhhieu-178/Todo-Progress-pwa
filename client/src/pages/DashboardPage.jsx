@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMyBoards, getDashboardStats } from '../services/boardApi';
+import { getMyBoards, createBoard, getDashboardStats, getBoardById } from '../services/boardApi';
 import { Link } from 'react-router-dom'; 
 import PageHeader from '../components/layout/PageHeader';
 import ScheduleModal from '../components/board/ScheduleModal';
 import { 
     Layout, CheckCircle, Clock, AlertCircle, 
-    ArrowRight, Calendar, Activity, Plus, BarChart3, Clock4
+    ArrowRight, Calendar, Activity,
+    Wifi, Plus, BarChart3, Clock4
 } from 'lucide-react'; 
 
 function DashboardPage() {
@@ -18,6 +19,9 @@ function DashboardPage() {
   
   // State quản lý Tab trên mobile
   const [activeTab, setActiveTab] = useState('projects'); 
+
+  
+  const [syncing, setSyncing] = useState(false);
 
   const [stats, setStats] = useState({
     totalTasks: 0,
@@ -35,12 +39,25 @@ function DashboardPage() {
           getMyBoards(),
           getDashboardStats()
         ]);
+        
         setBoards(boardsData);
         setStats(statsData); 
         setError('');
+
+        if (navigator.onLine && boardsData.length > 0) {
+            setSyncing(true);
+            
+            await Promise.allSettled(
+                boardsData.map(board => getBoardById(board._id))
+            );
+            
+            setSyncing(false);
+            console.log('Đã cache xong toàn bộ dữ liệu Board!');
+        }
+
       } catch (err) {
         console.error(err);
-        setError('Không thể tải dữ liệu dashboard.');
+        if (boards.length === 0) setError('Không thể tải dữ liệu dashboard.');
       } finally {
         setLoading(false);
       }
@@ -48,6 +65,30 @@ function DashboardPage() {
     fetchData();
   }, []);
 
+  const handleCreateBoard = async (e) => {
+    e.preventDefault();
+    if (!newBoardTitle.trim()) {
+        setError('Vui lòng nhập tiêu đề Bảng');
+        return;
+    }
+    setIsCreating(true);
+    try {
+        const newBoard = await createBoard(newBoardTitle);
+        setBoards([newBoard, ...boards]);
+        setNewBoardTitle('');
+        setError('');
+
+        if (navigator.onLine) {
+            getBoardById(newBoard._id).catch(console.error);
+        }
+    } catch (err) {
+        setError(err.toString());
+    } finally {
+        setIsCreating(false);
+    }
+  };
+
+  // Tính toán phần trăm hoàn thành cho mỗi Board
   const calculateProgress = (board) => {
     if (!board.lists || board.lists.length === 0) return 0;
     let total = 0;
@@ -103,7 +144,15 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full transition-colors duration-200">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 relative">
+      
+      {syncing && (
+        <div className="bg-indigo-500 text-white px-4 py-1 text-xs text-center flex items-center justify-center gap-2 transition-all">
+           <Wifi className="w-3 h-3 animate-pulse" /> 
+           Đang đồng bộ dữ liệu offline...
+        </div>
+      )}
+
       <PageHeader title="Tổng quan" showSearch={true} />
       
       <div className="flex-1 overflow-y-auto custom-scrollbar">
