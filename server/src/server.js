@@ -22,6 +22,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import { checkDeadlines } from './services/checkDeadline.js';
 import searchRoutes from './routes/searchRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -85,6 +86,7 @@ io.on('connection', (socket) => {
 
 app.get('/', (req, res) => res.send('API đang chạy...'));
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes); // <--- Đăng ký /api/users
 app.use('/api/boards', boardRoutes);
 app.use('/api', cardRoutes);
 app.use('/api/comments', commentRoutes);
@@ -93,6 +95,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes)
 app.use('/api/upload', uploadRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 
 cron.schedule('*/10 * * * *', async () => {
