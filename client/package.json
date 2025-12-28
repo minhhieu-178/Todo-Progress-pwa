@@ -23,6 +23,7 @@
     "react-router-dom": "^7.9.5",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.16",
+    "uuid": "^13.0.0",
     "vite-plugin-pwa": "^1.2.0",
     "workbox-background-sync": "^7.4.0",
     "workbox-core": "^7.4.0",

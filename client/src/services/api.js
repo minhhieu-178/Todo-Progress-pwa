@@ -21,6 +21,12 @@ api.interceptors.request.use(
         console.error("Lỗi parse userInfo", e);
       }
     }
+    // if (['post', 'put', 'delete', 'patch'].includes(config.method)) {
+    //     if (!config.headers['X-Request-Id']) {
+    //         config.headers['X-Request-Id'] = uuidv4();
+    //     }
+    // }
+    
     return config; 
   },
   (error) => {
@@ -43,5 +49,22 @@ export const uploadImage = async (file) => {
     throw error.response?.data?.message || error.message;
   }
 };
-
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Nếu gặp lỗi 401 (Unauthorized) -> Token sai hoặc hết hạn
+    if (error.response && error.response.status === 401) {
+      // Xóa thông tin user cũ
+      localStorage.removeItem('userInfo');
+      
+      // Chuyển hướng về trang login (Dùng window.location vì đây không phải React Component)
+      // Kiểm tra để tránh reload loop nếu đang ở trang login
+      if (window.location.pathname !== '/login') {
+          alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+          window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 export default api;

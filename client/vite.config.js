@@ -20,7 +20,7 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api'), 
             handler: 'NetworkFirst',
-            
+            globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
             options: {
               cacheName: 'api-data-cache',
               expiration: {
