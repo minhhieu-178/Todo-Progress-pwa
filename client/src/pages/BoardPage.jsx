@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { Users, ChevronLeft } from 'lucide-react';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
@@ -9,7 +10,6 @@ import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { Users, ChevronLeft, X } from 'lucide-react';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -28,10 +28,6 @@ function BoardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
-  const isOwner =
-    board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
-
-  /* ================== HELPERS ================== */
   const findCardInBoard = (boardData, cardId) => {
     if (!boardData?.lists) return null;
     for (const list of boardData.lists) {
@@ -47,22 +43,46 @@ function BoardPage() {
     setIsModalOpen(true);
   };
 
-  /* ================== FETCH ================== */
-  const fetchBoard = async (bg = false) => {
+  const handleUpdateCardInBoard = (listId, updatedCard) => {
+    setBoard(prev => {
+      const newLists = prev.lists.map(l => {
+        if (l._id === listId) {
+          return {
+            ...l,
+            cards: l.cards.map(c => c._id === updatedCard._id ? updatedCard : c)
+          };
+        }
+        return l;
+      });
+      return { ...prev, lists: newLists };
+    });
+  };
+
+  const handleDeleteCardInBoard = (listId, cardId) => {
+    setBoard(prev => {
+      const newLists = prev.lists.map(l => {
+        if (l._id === listId) {
+          return { ...l, cards: l.cards.filter(c => c._id !== cardId) };
+        }
+        return l;
+      });
+      return { ...prev, lists: newLists };
+    });
+  };
+
+  const fetchBoard = async (isBackground = false) => {
     try {
-      if (!bg) setLoading(true);
+      if (!isBackground) setLoading(true);
       const data = await getBoardById(id);
-
-      data.lists?.sort((a, b) => a.position - b.position);
-      data.lists?.forEach(l =>
-        l.cards?.sort((a, b) => a.position - b.position)
-      );
-
+      if (data.lists) {
+        data.lists.sort((a, b) => a.position - b.position);
+        data.lists.forEach(l => l.cards?.sort((a, b) => a.position - b.position));
+      }
       setBoard(data);
-    } catch (e) {
-      setError(e.toString());
+    } catch (err) {
+      setError(err.toString());
     } finally {
-      if (!bg) setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
@@ -72,174 +92,227 @@ function BoardPage() {
 
   useEffect(() => {
     if (!socket || !id) return;
-
     socket.emit('join_board_room', id);
     socket.on('BOARD_UPDATED', () => fetchBoard(true));
-    socket.on('BOARD_DELETED', d => {
-      alert(d.message);
+    socket.on('BOARD_DELETED', (data) => {
+      alert(data.message);
       navigate('/');
     });
-
     return () => {
       socket.emit('leave_board_room', id);
       socket.off('BOARD_UPDATED');
       socket.off('BOARD_DELETED');
     };
-  }, [socket, id, navigate]);
+  }, [socket, id]);
 
   useEffect(() => {
     if (board && activeCardId) {
       const card = findCardInBoard(board, activeCardId);
-      if (!card) return;
-      const list = board.lists.find(l =>
-        l.cards.some(c => c._id === activeCardId)
-      );
-      if (list) handleCardClick(card, list._id);
+      if (card) {
+        const list = board.lists.find(l => l.cards.some(c => c._id === activeCardId));
+        handleCardClick(card, list?._id);
+      }
     }
   }, [board, activeCardId]);
 
-  /* ================== DND ================== */
-  const onDragEnd = async ({ source, destination, draggableId, type }) => {
+  const onDragEnd = async (result) => {
+    const { source, destination, draggableId, type } = result;
     if (!destination) return;
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    )
-      return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     if (type === 'LIST') {
-      const lists = [...board.lists];
-      const [moved] = lists.splice(source.index, 1);
-      lists.splice(destination.index, 0, moved);
-      setBoard({ ...board, lists });
-      await moveList(board._id, draggableId, destination.index);
+      const newLists = [...board.lists];
+      const [moved] = newLists.splice(source.index, 1);
+      newLists.splice(destination.index, 0, moved);
+      setBoard({ ...board, lists: newLists });
+      try {
+        await moveList(board._id, draggableId, destination.index);
+      } catch (err) {
+        fetchBoard(true);
+      }
       return;
     }
 
-    const lists = [...board.lists];
-    const srcIdx = lists.findIndex(l => l._id === source.droppableId);
-    const dstIdx = lists.findIndex(l => l._id === destination.droppableId);
-    const src = { ...lists[srcIdx], cards: [...lists[srcIdx].cards] };
-    const dst =
-      srcIdx === dstIdx
-        ? src
-        : { ...lists[dstIdx], cards: [...lists[dstIdx].cards] };
+    const newLists = [...board.lists];
+    const sIdx = newLists.findIndex(l => l._id === source.droppableId);
+    const dIdx = newLists.findIndex(l => l._id === destination.droppableId);
+    
+    const sourceList = { ...newLists[sIdx], cards: [...newLists[sIdx].cards] };
+    const destList = sIdx === dIdx ? sourceList : { ...newLists[dIdx], cards: [...newLists[dIdx].cards] };
 
-    const [card] = src.cards.splice(source.index, 1);
-    dst.cards.splice(destination.index, 0, card);
+    const [card] = sourceList.cards.splice(source.index, 1);
+    destList.cards.splice(destination.index, 0, card);
 
-    lists[srcIdx] = src;
-    lists[dstIdx] = dst;
-    setBoard({ ...board, lists });
+    newLists[sIdx] = sourceList;
+    if (sIdx !== dIdx) newLists[dIdx] = destList;
+    setBoard({ ...board, lists: newLists });
 
-    await moveCard(draggableId, {
-      boardId: board._id,
-      sourceListId: source.droppableId,
-      destListId: destination.droppableId,
-      newPosition: destination.index
+    try {
+      await moveCard(draggableId, {
+        boardId: board._id,
+        sourceListId: source.droppableId,
+        destListId: destination.droppableId,
+        newPosition: destination.index,
+      });
+    } catch (err) {
+      fetchBoard(true);
+    }
+  };
+
+  const handleCardCreated = (listId, newCard) => {
+    setBoard(prev => {
+      const newLists = prev.lists.map(l => {
+        if (l._id === listId) {
+          return { ...l, cards: [...l.cards, newCard] };
+        }
+        return l;
+      });
+      return { ...prev, lists: newLists };
     });
   };
 
-  /* ================== CRUD ================== */
-  const handleCreateList = async e => {
+  const handleCreateList = async (e) => {
     e.preventDefault();
     if (!newListTitle.trim()) return;
-    const list = await createList(newListTitle, id);
-    setBoard({ ...board, lists: [...board.lists, list] });
-    setNewListTitle('');
+    try {
+      const newList = await createList(newListTitle, id);
+      setBoard({ ...board, lists: [...board.lists, newList] });
+      setNewListTitle('');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleInvite = async email => {
-    const updated = await addMemberToBoard(board._id, email);
-    setBoard(updated);
+  const handleUpdateListTitle = async (listId, newTitle) => {
+    setBoard(prev => ({
+      ...prev,
+      lists: prev.lists.map(l => l._id === listId ? { ...l, title: newTitle } : l)
+    }));
+    try {
+      await updateList(board._id, listId, { title: newTitle });
+    } catch (err) {
+      fetchBoard(true);
+    }
   };
 
-  const handleRemoveMember = async id => {
-    const updated = await removeMemberFromBoard(board._id, id);
-    setBoard(updated);
+  const handleDeleteList = async (listId) => {
+    if (!window.confirm("Bạn chắc chắn muốn xóa danh sách này?")) return;
+    setBoard(prev => ({ ...prev, lists: prev.lists.filter(l => l._id !== listId) }));
+    try {
+      await deleteList(board._id, listId);
+    } catch (err) {
+      fetchBoard(true);
+    }
   };
 
-  /* ================== RENDER ================== */
-  if (loading) return <div className="p-8 text-center">Đang tải…</div>;
-  if (error) return <div className="p-8 text-red-500">{error}</div>;
-  if (!board) return null;
+  const handleInvite = async (email) => {
+    try {
+      const updated = await addMemberToBoard(board._id, email);
+      setBoard(updated);
+      alert('Thêm thành viên thành công!');
+    } catch (err) {
+      alert(err);
+    }
+  };
+
+  const handleRemoveMember = async (mId, mName) => {
+    if (window.confirm(`Xóa ${mName} khỏi bảng?`)) {
+      try {
+        const updated = await removeMemberFromBoard(board._id, mId);
+        setBoard(updated);
+      } catch (err) {
+        alert(err);
+      }
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
+  if (!board) return <div className="p-8 text-center dark:text-white">Không tìm thấy Bảng.</div>;
+
+  const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* HEADER */}
-      <header className="flex items-center justify-between px-4 py-3 border-b">
-        <div className="flex items-center gap-3">
-          <Link to="/boards">
-            <ChevronLeft />
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+      <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700">
+        <div>
+          <Link to="/boards" className="text-sm text-gray-500 hover:underline mb-1 block">
+             &larr; Danh sách bảng
           </Link>
-          <h1 className="text-xl font-bold">{board.title}</h1>
-          {isOwner && (
-            <span className="text-xs px-2 py-1 bg-yellow-200 rounded">
-              Owner
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{board.title}</h1>
+            {isOwner && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Owner</span>}
+          </div>
         </div>
 
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => setIsMembersModalOpen(true)}
-        >
-          {board.members?.slice(0, 5).map(m => (
-            <div
-              key={m._id}
-              className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm"
-            >
-              {m.fullName?.charAt(0) || '?'}
-            </div>
-          ))}
-          <Users />
+        <div className="flex items-center gap-4">
+          <div className="flex -space-x-2 cursor-pointer" onClick={() => setIsMembersModalOpen(true)}>
+            {board.members?.slice(0, 5).map((m) => (
+              <div key={m._id} className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-indigo-500 text-white flex items-center justify-center text-xs font-bold uppercase overflow-hidden">
+                {m.avatar ? <img src={m.avatar} alt="avt" className="w-full h-full object-cover" /> : <span>{m.fullName?.charAt(0)}</span>}
+              </div>
+            ))}
+            {board.members?.length > 5 && (
+              <div className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">
+                +{board.members.length - 5}
+              </div>
+            )}
+          </div>
+          <button onClick={() => setIsMembersModalOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium">
+            <Users className="w-4 h-4" />
+            <span>Thành viên</span>
+          </button>
         </div>
       </header>
 
-      {/* BOARD */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="lists" direction="horizontal" type="LIST">
-          {p => (
-            <div
-              ref={p.innerRef}
-              {...p.droppableProps}
-              className="flex gap-4 p-4 overflow-x-auto"
-            >
-              {board.lists.map((l, i) => (
+        <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps} className="flex grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900">
+              {board.lists.map((list, index) => (
                 <List
-                  key={l._id}
-                  list={l}
-                  index={i}
+                  key={list._id}
+                  list={list}
                   boardId={board._id}
+                  index={index}
+                  onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
+                  onUpdateTitle={handleUpdateListTitle}
+                  onDeleteList={handleDeleteList}
                 />
               ))}
-              {p.placeholder}
-
-              <form onSubmit={handleCreateList} className="w-72">
-                <input
-                  value={newListTitle}
-                  onChange={e => setNewListTitle(e.target.value)}
-                  placeholder="+ Thêm danh sách"
-                  className="w-full p-3 border rounded"
-                />
-              </form>
+              {provided.placeholder}
+              <div className="shrink-0 w-72 p-2">
+                <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md">
+                  <input
+                    type="text"
+                    value={newListTitle}
+                    onChange={(e) => setNewListTitle(e.target.value)}
+                    placeholder="+ Thêm danh sách mới"
+                    className="w-full px-2 py-1 text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </form>
+              </div>
             </div>
           )}
         </Droppable>
       </DragDropContext>
 
       {selectedCard && (
-        <CardDetailModal
+        <CardDetailModal 
+          key={selectedCard._id}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           card={selectedCard}
           listId={selectedListId}
           boardId={board._id}
+          boardMembers={board.members}
+          onUpdateCard={handleUpdateCardInBoard}
+          onDeleteCard={handleDeleteCardInBoard}
         />
       )}
 
-      <MembersModal
+      <MembersModal 
         isOpen={isMembersModalOpen}
         onClose={() => setIsMembersModalOpen(false)}
         members={board.members}

@@ -5,6 +5,7 @@ import { registerUser } from '../services/authApi';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+
   const [user, setUser] = useState(() => {
     try {
       const storedUser = localStorage.getItem('userInfo');
@@ -15,21 +16,27 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-
+  // ---LOGIN ---
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       
-      setUser(data);
-      localStorage.setItem('userInfo', JSON.stringify(data));
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+
+      setUser(data.user);
+      localStorage.setItem('userInfo', JSON.stringify(data.user));
       
       return true;
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error.response?.data?.message || error.message);
-      return false;
+      const msg = error.response?.data?.message || error.message;
+      console.error('Lỗi đăng nhập:', msg);
+      throw msg; 
     }
   };
 
+  // LOG OUT
   const logout = async () => {
     try {
       await api.get('/auth/logout'); 
@@ -38,22 +45,44 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       localStorage.removeItem('userInfo');
+      localStorage.removeItem('accessToken');
       window.location.href = '/login'; 
     }
   };
 
+  // ---  REGISTER ---
   const register = async (fullName, email, password, age, phone, address) => {
     try {
-      await registerUser(fullName, email, password, age, phone, address); 
+
+      const data = await registerUser(fullName, email, password, age, phone, address); 
+      
+      if (data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+      }
+      if (data.user) {
+          setUser(data.user);
+          localStorage.setItem('userInfo', JSON.stringify(data.user));
+      }
+
       return true; 
     } catch (error) {
-      throw error.response?.data?.message || error.message; 
+      throw error; 
     }
   };
 
-  const updateUser = (updatedUserData) => {
-    setUser(updatedUserData);
-    localStorage.setItem('userInfo', JSON.stringify(updatedUserData));
+  const updateUser = (updatedData) => {
+    
+    const { token, ...userData } = updatedData;
+
+    if (token) {
+        localStorage.setItem('accessToken', token);
+    }
+
+    setUser((prevUser) => {
+        const newUserState = { ...prevUser, ...userData };
+        localStorage.setItem('userInfo', JSON.stringify(newUserState));
+        return newUserState;
+    });
   };
 
   return (

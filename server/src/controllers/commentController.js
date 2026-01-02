@@ -6,16 +6,27 @@ import { createLog } from '../services/logService.js';
 // Hàm xử lý Mention
 const handleMentions = async (content, boardId, cardId, senderId, senderName, io) => {
     try {
-        const board = await Board.findById(boardId).populate('members.user', 'fullName _id');
+        //co the se co loi mention o day
+        const board = await Board.findById(boardId).populate({
+            path: 'members.user',
+            select: 'fullName _id'
+        });
+        
         if (!board) return;
 
-        const mentionedMembers = board.members.filter(m => 
-            content.includes(`@${m.user.fullName}`) && m.user._id.toString() !== senderId.toString()
-        );
+        const mentionedMembers = board.members.filter(m => {
+            const memberUser = m.user || m; 
+            return memberUser && 
+                   memberUser.fullName && 
+                   content.includes(`@${memberUser.fullName}`) && 
+                   memberUser._id.toString() !== senderId.toString();
+        });
 
         const notiPromises = mentionedMembers.map(async (m) => {
+            const recipient = m.user || m;
+            
             const newNoti = await NotificationService.create({
-                recipientId: m.user._id,
+                recipientId: recipient._id,
                 senderId: senderId,
                 type: 'MENTION',
                 title: 'Bạn được nhắc đến',
@@ -25,7 +36,7 @@ const handleMentions = async (content, boardId, cardId, senderId, senderName, io
             });
 
             if (io) {
-                io.to(m.user._id.toString()).emit('NEW_NOTIFICATION', newNoti);
+                io.to(recipient._id.toString()).emit('NEW_NOTIFICATION', newNoti);
             }
         });
 
@@ -46,14 +57,14 @@ export const createComment = async (req, res) => {
     const comment = await Comment.create({ userId, boardId, cardId, content });
     const populatedComment = await comment.populate('userId', 'fullName email');
 
-    // Real-time: Gửi comment mới cho mọi người trong board
     if (io) io.to(boardId).emit('NEW_COMMENT', populatedComment); 
 
-    // Log hoạt động
     await createLog({
-        userId, boardId,
-        entityId: cardId, entityType: 'Card',
-        action: 'COMMENT_CREATE',
+        userId, 
+        boardId,
+        entityId: cardId, 
+        entityType: 'COMMENT', 
+        action: 'CREATE',   
         content: `đã bình luận: "${content.substring(0, 30)}..."`
     });
 
@@ -61,7 +72,10 @@ export const createComment = async (req, res) => {
     await handleMentions(content, boardId, cardId, userId, req.user.fullName, io);
 
     res.status(201).json(populatedComment);
-  } catch (error) { res.status(500).json({ message: error.message }); }
+  } catch (error) { 
+      console.error(error);
+      res.status(500).json({ message: error.message }); 
+  }
 };
 
 export const updateComment = async (req, res) => {
@@ -81,11 +95,12 @@ export const updateComment = async (req, res) => {
 
     if (io) io.to(comment.boardId.toString()).emit('UPDATE_COMMENT', updatedComment);
 
-    // Log
     await createLog({
-        userId, boardId: comment.boardId,
-        entityId: comment.cardId, entityType: 'Card',
-        action: 'COMMENT_UPDATE',
+        userId, 
+        boardId: comment.boardId,
+        entityId: comment.cardId, 
+        entityType: 'COMMENT', 
+        action: 'UPDATE',      
         content: `đã chỉnh sửa bình luận`
     });
 
@@ -108,11 +123,12 @@ export const deleteComment = async (req, res) => {
 
     if (io) io.to(boardId.toString()).emit('DELETE_COMMENT', { commentId: id, cardId });
 
-    //Log
     await createLog({
-        userId, boardId,
-        entityId: cardId, entityType: 'Card',
-        action: 'COMMENT_DELETE',
+        userId, 
+        boardId,
+        entityId: cardId, 
+        entityType: 'COMMENT', 
+        action: 'DELETE',      
         content: `đã xóa bình luận`
     });
 

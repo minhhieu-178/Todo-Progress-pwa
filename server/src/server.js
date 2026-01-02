@@ -40,7 +40,7 @@ app.use(cors({
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 100, 
+  max: 1000, 
   message: 'Quá nhiều request từ IP này, vui lòng thử lại sau.'
 });
 app.use('/api', limiter);
@@ -55,7 +55,7 @@ app.use(hpp());
 const httpServer = createServer(app); 
 const io = new Server(httpServer, {   
   cors: {
-    origin: "http://localhost:5173", 
+    origin: ['http://localhost:5173', 'http://localhost:4173'], 
     methods: ["GET", "POST"]
   }
 });
@@ -86,7 +86,7 @@ io.on('connection', (socket) => {
 
 app.get('/', (req, res) => res.send('API đang chạy...'));
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes); // <--- Đăng ký /api/users
+app.use('/api/users', userRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api', cardRoutes);
 app.use('/api/comments', commentRoutes);
@@ -98,7 +98,8 @@ app.use('/api/search', searchRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 
-cron.schedule('*/10 * * * *', async () => {
+
+cron.schedule('*/50 * * * *', async () => {
   console.log('Running cron job: check deadlines');
   try {
     const notifications = await checkDeadlines(io); 

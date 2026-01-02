@@ -5,35 +5,6 @@ import nodemailer from 'nodemailer';
 
 dotenv.config();
 
-const sendTokenResponse = (user, statusCode, res) => {
-  const accessToken = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
-  const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    httpOnly: true, 
-    secure: false,
-    //secure: process.env.NODE_ENV === 'production', 
-    sameSite: 'strict', 
-    path: '/' 
-  };
-
-  res.status(statusCode)
-    .cookie('refreshToken', refreshToken, cookieOptions) 
-    .json({
-      accessToken, 
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        age: user.age,
-        phone: user.phone,
-        address: user.address,
-        avatar: user.avatar,
-      }
-    });
-};
-
-
 const generateAccessToken = (id) => {
   return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
 };
@@ -42,39 +13,51 @@ const generateRefreshToken = (id) => {
   return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 };
 
-export const refreshAccessToken = async (req, res) => {
-  const cookieRefreshToken = req.cookies.refreshToken;
+const sendTokenResponse = (user, statusCode, res) => {
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
 
-  if (!cookieRefreshToken) {
-    return res.status(401).json({ message: 'Bạn chưa đăng nhập (Không tìm thấy Refresh Token)' });
-  }
+  const cookieOptions = {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/'
+  };
 
-  try {
-    const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ message: 'User không tồn tại' });
-    const newAccessToken = generateAccessToken(user._id);
-    res.json({ accessToken: newAccessToken });
-  } catch (error) {
-    return res.status(403).json({ message: 'Refresh Token không hợp lệ hoặc đã hết hạn' });
-  }
+  res.status(statusCode)
+    .cookie('refreshToken', refreshToken, cookieOptions)
+    .json({
+      accessToken,
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        avatar: user.avatar,
+        age: user.age,
+        phone: user.phone,
+        address: user.address,
+      }
+    });
 };
+
 export const registerUser = async (req, res) => {
   const { fullName, email, password, age, phone, address } = req.body;
   try {
-    if (!fullName || !email || !password) return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin' });
+    if (!fullName || !email || !password) return res.status(400).json({ message: 'Thiếu thông tin' });
+
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: 'Email đã được sử dụng' });
-    
+    if (userExists) return res.status(400).json({ message: 'Email đã tồn tại' });
+
     const user = await User.create({ fullName, email, password, age, phone, address });
-    
+
     if (user) {
       sendTokenResponse(user, 201, res);
     } else {
       res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -85,22 +68,42 @@ export const loginUser = async (req, res) => {
     if (user && (await user.matchPassword(password))) {
       sendTokenResponse(user, 200, res);
     } else {
-      res.status(401).json({ message: 'Email hoặc mật khẩu không hợp lệ' });
+      res.status(401).json({ message: 'Email hoặc mật khẩu sai' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: error.message });
   }
 };
 
 export const logoutUser = (req, res) => {
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    expires: new Date(0) 
+    expires: new Date(0)
   });
   res.status(200).json({ message: 'Đăng xuất thành công' });
 };
 
-// 3. Quên mật khẩu
+export const refreshAccessToken = async (req, res) => {
+  const cookieRefreshToken = req.cookies.refreshToken;
+
+  if (!cookieRefreshToken) {
+    return res.status(401).json({ message: 'Bạn chưa đăng nhập' });
+  }
+
+  try {
+    const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(401).json({ message: 'User không tồn tại' });
+
+    sendTokenResponse(user, 200, res);
+
+  } catch (error) {
+    console.log(error);
+    return res.status(403).json({ message: 'Refresh Token hết hạn hoặc không hợp lệ', code: 'REFRESH_EXPIRED' });
+  }
+};
+
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
