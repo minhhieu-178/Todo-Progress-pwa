@@ -40,7 +40,7 @@ app.use(cors({
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 100, 
+  max: 1000, 
   message: 'Quá nhiều request từ IP này, vui lòng thử lại sau.'
 });
 app.use('/api', limiter);
@@ -55,7 +55,7 @@ app.use(hpp());
 const httpServer = createServer(app); 
 const io = new Server(httpServer, {   
   cors: {
-    origin: "http://localhost:5173", 
+    origin: ['http://localhost:5173', 'http://localhost:4173'], 
     methods: ["GET", "POST"]
   }
 });

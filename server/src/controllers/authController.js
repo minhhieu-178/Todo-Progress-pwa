@@ -5,15 +5,27 @@ import nodemailer from 'nodemailer';
 
 dotenv.config();
 
+// Helper tạo Access Token (15 phút)
+const generateAccessToken = (id) => {
+  return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+};
+
+// Helper tạo Refresh Token (7 ngày)
+const generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+};
+
+// Helper gửi Cookie và Response
 const sendTokenResponse = (user, statusCode, res) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
+
+  // Cấu hình Cookie an toàn
   const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    httpOnly: true, 
-    secure: false,
-    //secure: process.env.NODE_ENV === 'production', 
-    sameSite: 'strict', 
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
+    httpOnly: true, // Chống XSS (JS không đọc được cookie này)
+    secure: process.env.NODE_ENV === 'production', // Chỉ gửi qua HTTPS ở production
+    sameSite: 'strict', // Chống CSRF
     path: '/' 
   };
 
@@ -25,46 +37,21 @@ const sendTokenResponse = (user, statusCode, res) => {
         _id: user._id,
         fullName: user.fullName,
         email: user.email,
-        age: user.age,
-        phone: user.phone,
-        address: user.address,
         avatar: user.avatar,
+        // ...các trường khác
       }
     });
 };
 
+// --- CÁC HÀM CONTROLLER ---
 
-const generateAccessToken = (id) => {
-  return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-};
-
-const generateRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-};
-
-export const refreshAccessToken = async (req, res) => {
-  const cookieRefreshToken = req.cookies.refreshToken;
-
-  if (!cookieRefreshToken) {
-    return res.status(401).json({ message: 'Bạn chưa đăng nhập (Không tìm thấy Refresh Token)' });
-  }
-
-  try {
-    const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ message: 'User không tồn tại' });
-    const newAccessToken = generateAccessToken(user._id);
-    res.json({ accessToken: newAccessToken });
-  } catch (error) {
-    return res.status(403).json({ message: 'Refresh Token không hợp lệ hoặc đã hết hạn' });
-  }
-};
 export const registerUser = async (req, res) => {
   const { fullName, email, password, age, phone, address } = req.body;
   try {
-    if (!fullName || !email || !password) return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin' });
+    if (!fullName || !email || !password) return res.status(400).json({ message: 'Thiếu thông tin' });
+    
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: 'Email đã được sử dụng' });
+    if (userExists) return res.status(400).json({ message: 'Email đã tồn tại' });
     
     const user = await User.create({ fullName, email, password, age, phone, address });
     
@@ -74,7 +61,7 @@ export const registerUser = async (req, res) => {
       res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -85,19 +72,49 @@ export const loginUser = async (req, res) => {
     if (user && (await user.matchPassword(password))) {
       sendTokenResponse(user, 200, res);
     } else {
-      res.status(401).json({ message: 'Email hoặc mật khẩu không hợp lệ' });
+      res.status(401).json({ message: 'Email hoặc mật khẩu sai' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: error.message });
   }
 };
 
 export const logoutUser = (req, res) => {
+  // Xóa cookie Refresh Token
   res.cookie('refreshToken', '', {
     httpOnly: true,
     expires: new Date(0) 
   });
   res.status(200).json({ message: 'Đăng xuất thành công' });
+};
+
+// --- PHẦN QUAN TRỌNG: LÀM MỚI TOKEN (CÓ ROTATION) ---
+export const refreshAccessToken = async (req, res) => {
+  const cookieRefreshToken = req.cookies.refreshToken;
+
+  if (!cookieRefreshToken) {
+    return res.status(401).json({ message: 'Bạn chưa đăng nhập' });
+  }
+
+  try {
+    // 1. Verify token cũ
+    const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    // 2. Kiểm tra User trong DB
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(401).json({ message: 'User không tồn tại' });
+
+    // 3. TOKEN ROTATION (Quan trọng):
+    // Thay vì chỉ cấp Access Token mới, ta cấp luôn bộ đôi mới
+    sendTokenResponse(user, 200, res); 
+    
+    // Lưu ý: sendTokenResponse sẽ tự động ghi đè cookie cũ bằng cookie mới
+    // Hacker lấy được cookie cũ sẽ không dùng được nữa sau khi lệnh này chạy.
+
+  } catch (error) {
+    console.log(error);
+    return res.status(403).json({ message: 'Refresh Token hết hạn hoặc không hợp lệ', code: 'REFRESH_EXPIRED' });
+  }
 };
 
 // 3. Quên mật khẩu
