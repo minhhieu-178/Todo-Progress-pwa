@@ -9,13 +9,6 @@ import xss from 'xss-clean'; //Xss input
 import hpp from 'hpp'; //Spam tham so
 import rateLimit from 'express-rate-limit'; //Gioi han request
 
-import cookieParser from 'cookie-parser'; //Doc cookie
-import helmet from 'helmet'; //Bao mat header
-import mongoSanitize from 'express-mongo-sanitize'; //NoSQL Injection
-import xss from 'xss-clean'; //Xss input
-import hpp from 'hpp'; //Spam tham so
-import rateLimit from 'express-rate-limit'; //Gioi han request
-
 import { createServer } from 'http'; 
 import { Server } from 'socket.io';
 import connectDB from './config/db.js';
@@ -26,7 +19,6 @@ import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import { checkDeadlines } from './services/checkDeadline.js';
 import searchRoutes from './routes/searchRoutes.js';
@@ -94,7 +86,7 @@ io.on('connection', (socket) => {
 
 app.get('/', (req, res) => res.send('API đang chạy...'));
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes); // <--- Đăng ký /api/users
+app.use('/api/users', userRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api', cardRoutes);
 app.use('/api/comments', commentRoutes);
@@ -107,7 +99,7 @@ app.use('/api/analytics', analyticsRoutes);
 
 
 
-cron.schedule('*/10 * * * *', async () => {
+cron.schedule('*/50 * * * *', async () => {
   console.log('Running cron job: check deadlines');
   try {
     const notifications = await checkDeadlines(io); 

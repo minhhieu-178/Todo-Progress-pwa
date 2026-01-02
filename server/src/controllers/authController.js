@@ -17,44 +17,41 @@ const sendTokenResponse = (user, statusCode, res) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-
   const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
-    httpOnly: true, // Chống XSS (JS không đọc được cookie này)
-    secure: process.env.NODE_ENV === 'production', // Chỉ gửi qua HTTPS ở production
-    sameSite: 'strict', // Chống CSRF
-    path: '/' 
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/'
   };
 
   res.status(statusCode)
-    .cookie('refreshToken', refreshToken, cookieOptions) 
+    .cookie('refreshToken', refreshToken, cookieOptions)
     .json({
-      accessToken, 
+      accessToken,
       user: {
         _id: user._id,
         fullName: user.fullName,
         email: user.email,
         avatar: user.avatar,
-        // ...các trường khác
+        age: user.age,
+        phone: user.phone,
+        address: user.address,
       }
     });
 };
-
-// --- CÁC HÀM CONTROLLER ---
 
 export const registerUser = async (req, res) => {
   const { fullName, email, password, age, phone, address } = req.body;
   try {
     if (!fullName || !email || !password) return res.status(400).json({ message: 'Thiếu thông tin' });
-    
+
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'Email đã tồn tại' });
-    
+
     const user = await User.create({ fullName, email, password, age, phone, address });
-    
-    
+
     if (user) {
-      sendTokenResponse(user, 201, res);
       sendTokenResponse(user, 201, res);
     } else {
       res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
@@ -70,7 +67,6 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (user && (await user.matchPassword(password))) {
       sendTokenResponse(user, 200, res);
-      sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Email hoặc mật khẩu sai' });
     }
@@ -82,7 +78,7 @@ export const loginUser = async (req, res) => {
 export const logoutUser = (req, res) => {
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    expires: new Date(0) 
+    expires: new Date(0)
   });
   res.status(200).json({ message: 'Đăng xuất thành công' });
 };
@@ -96,22 +92,11 @@ export const refreshAccessToken = async (req, res) => {
 
   try {
     const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    
+
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ message: 'User không tồn tại' });
-    sendTokenResponse(user, 200, res); 
 
-  } catch (error) {
-    console.log(error);
-    return res.status(403).json({ message: 'Refresh Token hết hạn hoặc không hợp lệ', code: 'REFRESH_EXPIRED' });
-  }
-
-  try {
-    const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ message: 'User không tồn tại' });
-    sendTokenResponse(user, 200, res); 
+    sendTokenResponse(user, 200, res);
 
   } catch (error) {
     console.log(error);
@@ -119,15 +104,6 @@ export const refreshAccessToken = async (req, res) => {
   }
 };
 
-export const logoutUser = (req, res) => {
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    expires: new Date(0) 
-  });
-  res.status(200).json({ message: 'Đăng xuất thành công' });
-};
-
-// 3. Quên mật khẩu
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
