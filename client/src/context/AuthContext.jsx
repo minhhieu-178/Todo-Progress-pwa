@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api'; 
+import api from '../services/api';
 import { registerUser } from '../services/authApi'; 
 
 const AuthContext = createContext();
@@ -16,16 +16,14 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // --- HÀM LOGIN ---
+  // ---LOGIN ---
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       
-
       if (data.accessToken) {
         localStorage.setItem('accessToken', data.accessToken);
       }
-
 
       setUser(data.user);
       localStorage.setItem('userInfo', JSON.stringify(data.user));
@@ -34,11 +32,11 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const msg = error.response?.data?.message || error.message;
       console.error('Lỗi đăng nhập:', msg);
-      throw msg;
+      throw msg; 
     }
   };
 
-  // --- HÀM LOGOUT ---
+  // LOG OUT
   const logout = async () => {
     try {
       await api.get('/auth/logout'); 
@@ -47,16 +45,17 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       localStorage.removeItem('userInfo');
-      localStorage.removeItem('accessToken'); 
+      localStorage.removeItem('accessToken');
       window.location.href = '/login'; 
     }
   };
 
-
+  // ---  REGISTER ---
   const register = async (fullName, email, password, age, phone, address) => {
     try {
 
       const data = await registerUser(fullName, email, password, age, phone, address); 
+      
       if (data.accessToken) {
           localStorage.setItem('accessToken', data.accessToken);
       }
@@ -70,7 +69,6 @@ export const AuthProvider = ({ children }) => {
       throw error; 
     }
   };
-
 
   const updateUser = (updatedData) => {
     
