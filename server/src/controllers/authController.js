@@ -5,22 +5,19 @@ import nodemailer from 'nodemailer';
 
 dotenv.config();
 
-// Helper tạo Access Token (15 phút)
 const generateAccessToken = (id) => {
   return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
 };
 
-// Helper tạo Refresh Token (7 ngày)
 const generateRefreshToken = (id) => {
   return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 };
 
-// Helper gửi Cookie và Response
 const sendTokenResponse = (user, statusCode, res) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-  // Cấu hình Cookie an toàn
+
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
     httpOnly: true, // Chống XSS (JS không đọc được cookie này)
@@ -80,7 +77,6 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = (req, res) => {
-  // Xóa cookie Refresh Token
   res.cookie('refreshToken', '', {
     httpOnly: true,
     expires: new Date(0) 
@@ -88,7 +84,6 @@ export const logoutUser = (req, res) => {
   res.status(200).json({ message: 'Đăng xuất thành công' });
 };
 
-// --- PHẦN QUAN TRỌNG: LÀM MỚI TOKEN (CÓ ROTATION) ---
 export const refreshAccessToken = async (req, res) => {
   const cookieRefreshToken = req.cookies.refreshToken;
 
@@ -97,19 +92,11 @@ export const refreshAccessToken = async (req, res) => {
   }
 
   try {
-    // 1. Verify token cũ
     const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
     
-    // 2. Kiểm tra User trong DB
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ message: 'User không tồn tại' });
-
-    // 3. TOKEN ROTATION (Quan trọng):
-    // Thay vì chỉ cấp Access Token mới, ta cấp luôn bộ đôi mới
     sendTokenResponse(user, 200, res); 
-    
-    // Lưu ý: sendTokenResponse sẽ tự động ghi đè cookie cũ bằng cookie mới
-    // Hacker lấy được cookie cũ sẽ không dùng được nữa sau khi lệnh này chạy.
 
   } catch (error) {
     console.log(error);

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
-// Bổ sung import moveList
 import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
