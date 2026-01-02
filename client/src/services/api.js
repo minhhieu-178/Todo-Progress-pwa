@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -100,5 +101,22 @@ export const uploadImage = async (file) => {
     throw error.response?.data?.message || error.message;
   }
 };
-
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Nếu gặp lỗi 401 (Unauthorized) -> Token sai hoặc hết hạn
+    if (error.response && error.response.status === 401) {
+      // Xóa thông tin user cũ
+      localStorage.removeItem('userInfo');
+      
+      // Chuyển hướng về trang login (Dùng window.location vì đây không phải React Component)
+      // Kiểm tra để tránh reload loop nếu đang ở trang login
+      if (window.location.pathname !== '/login') {
+          alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+          window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 export default api;

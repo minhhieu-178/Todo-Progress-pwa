@@ -84,6 +84,7 @@ export const subscribePush = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user._id, {
       $addToSet: { pushSubscriptions: subscription }
+      $addToSet: { pushSubscriptions: subscription }
     });
     res.status(201).json({});
   } catch (error) {

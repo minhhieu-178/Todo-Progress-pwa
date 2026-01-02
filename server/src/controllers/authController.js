@@ -52,7 +52,9 @@ export const registerUser = async (req, res) => {
     
     const user = await User.create({ fullName, email, password, age, phone, address });
     
+    
     if (user) {
+      sendTokenResponse(user, 201, res);
       sendTokenResponse(user, 201, res);
     } else {
       res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
@@ -67,6 +69,7 @@ export const loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (user && (await user.matchPassword(password))) {
+      sendTokenResponse(user, 200, res);
       sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Email hoặc mật khẩu sai' });
@@ -102,6 +105,26 @@ export const refreshAccessToken = async (req, res) => {
     console.log(error);
     return res.status(403).json({ message: 'Refresh Token hết hạn hoặc không hợp lệ', code: 'REFRESH_EXPIRED' });
   }
+
+  try {
+    const decoded = jwt.verify(cookieRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(401).json({ message: 'User không tồn tại' });
+    sendTokenResponse(user, 200, res); 
+
+  } catch (error) {
+    console.log(error);
+    return res.status(403).json({ message: 'Refresh Token hết hạn hoặc không hợp lệ', code: 'REFRESH_EXPIRED' });
+  }
+};
+
+export const logoutUser = (req, res) => {
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    expires: new Date(0) 
+  });
+  res.status(200).json({ message: 'Đăng xuất thành công' });
 };
 
 // 3. Quên mật khẩu

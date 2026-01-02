@@ -4,9 +4,10 @@ import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
+import { moveCard } from '../services/cardApi';
 import List from '../components/board/List';
 import CardDetailModal from '../components/board/CardDetailModal';
-import MembersModal from '../components/board/MembersModal'; 
+import MembersModal from '../components/board/MembersModal';
 import { useAuth } from '../context/AuthContext';
 import { Users } from 'lucide-react'; 
 import { useSocket } from '../context/SocketContext';
@@ -172,7 +173,11 @@ function BoardPage() {
     
     // Kiểm tra điểm đến hợp lệ
     if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    )
+      return;
 
     // 1. KÉO THẢ DANH SÁCH (LIST)
     if (type === 'LIST') {
@@ -357,26 +362,23 @@ function BoardPage() {
 
       {/* BOARD CONTENT */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
-          {(provided) => (
+        <Droppable droppableId="lists" direction="horizontal" type="LIST">
+          {p => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
               className="flex grow p-4 overflow-x-auto bg-gray-100 dark:bg-gray-900 transition-colors"
             >
-              {board.lists.map((list, index) => (
+              {board.lists.map((l, i) => (
                 <List
-                  key={list._id}
-                  list={list}
+                  key={l._id}
+                  list={l}
+                  index={i}
                   boardId={board._id}
-                  onCardCreated={handleCardCreated}
                   onCardClick={handleCardClick}
-                  onUpdateTitle={handleUpdateListTitle} 
-                  onDeleteList={handleDeleteList}  
-                  index={index}    
                 />
               ))}
-              {provided.placeholder}
+              {p.placeholder}
 
               <div className="shrink-0 w-72 p-2">
                 <form onSubmit={handleCreateList} className="p-2 bg-gray-200 dark:bg-gray-800 rounded-md border border-transparent dark:border-gray-700 transition-colors">
@@ -396,16 +398,12 @@ function BoardPage() {
 
       {/* MODALS */}
       {selectedCard && (
-        <CardDetailModal 
-            key={selectedCard._id}
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            card={selectedCard}
-            listId={selectedListId}
-            boardId={board._id}
-            boardMembers={board.members}
-            onUpdateCard={handleUpdateCardInBoard}
-            onDeleteCard={handleDeleteCardInBoard}
+        <CardDetailModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          card={selectedCard}
+          listId={selectedListId}
+          boardId={board._id}
         />
       )}
 
