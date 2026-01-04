@@ -1,11 +1,14 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList, X, User } from 'lucide-react'; 
+// 1. Import thêm LayoutTemplate
+import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList, X, User, LayoutTemplate } from 'lucide-react'; 
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-    { name: 'Board', icon: ClipboardList, path: '/boards' }, 
+    { name: 'Board', icon: ClipboardList, path: '/boards' },
+    // 2. Mục Templates đã thêm vào đây
+    { name: 'Mẫu', icon: LayoutTemplate, path: '/templates' }, 
     { name: 'Analytics', icon: BarChart3, path: '/analytics' },
     { name: 'Settings', icon: Settings, path: '/settings' },
 ];
@@ -21,7 +24,7 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
         }
     };
     
-    // Mobile Sidebar - Simplified
+    // --- GIAO DIỆN MOBILE (Đã sửa lại để tự động cập nhật) ---
     if (isMobile) {
         return (
             <>
@@ -39,7 +42,7 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                     ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                     flex flex-col h-full shadow-xl
                 `}>
-                    {/* Header */}
+                    {/* Header Mobile */}
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                         <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                             Task Manager
@@ -47,12 +50,17 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                         
                         <button 
                             onClick={onClose} 
+<<<<<<< Updated upstream
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+=======
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+>>>>>>> Stashed changes
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
+<<<<<<< Updated upstream
                     {/* Navigation */}
                     <nav className="flex-1 p-6 space-y-2">
                         <button
@@ -86,11 +94,24 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                             <Settings className="w-5 h-5 mr-3" />
                             <span>Settings</span>
                         </button>
+=======
+                    {/* Navigation Mobile - Dùng .map() để hiển thị đủ icon */}
+                    <nav className="flex-1 p-6 space-y-2 overflow-y-auto">
+                        {navItems.map((item) => (
+                            <button
+                                key={item.path}
+                                onClick={() => handleNavigation(item.path)}
+                                className="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-left"
+                            >
+                                <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                                <span>{item.name}</span>
+                            </button>
+                        ))}
+>>>>>>> Stashed changes
                     </nav>
 
-                    {/* User Profile Section */}
-                    <div className="p-6 border-t border-gray-200 dark:border-gray-700">
-                        {/* Profile Link */}
+                    {/* User Profile Section Mobile */}
+                    <div className="p-6 border-t border-gray-200 dark:border-gray-700 mt-auto">
                         <button 
                             onClick={() => handleNavigation('/profile')}
                             className="w-full flex items-center gap-4 mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-3 -mx-4 rounded-lg transition-colors text-left"
@@ -117,7 +138,6 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                             </div>
                         </button>
                         
-                        {/* Logout Button */}
                         <button
                             onClick={() => {
                                 logout();
@@ -134,17 +154,15 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
         );
     }
     
-    // Desktop Sidebar
+    // --- GIAO DIỆN DESKTOP (Giữ nguyên) ---
     return (
         <aside className="flex flex-col h-full glass-effect adaptive-border border-r w-64 lg:w-72">
-            {/* Header */}
             <div className="p-6">
                 <h1 className="text-xl font-bold adaptive-text truncate">
                     Task Manager
                 </h1>
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 px-6 py-6 space-y-2 overflow-y-auto custom-scrollbar">
                 {navItems.map((item) => (
                     <NavLink
@@ -160,9 +178,7 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                 ))}
             </nav>
 
-            {/* User Profile Section */}
             <div className="p-6 adaptive-border border-t mt-auto">
-                {/* Profile Link */}
                 <Link 
                     to="/profile" 
                     className="flex items-center gap-4 mb-4 hover:bg-white/20 px-4 py-3 -mx-4 rounded-lg transition-colors cursor-pointer group"
@@ -189,7 +205,6 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                     </div>
                 </Link>
                 
-                {/* Logout Button */}
                 <button
                     onClick={logout}
                     className="w-full flex items-center px-4 py-3 text-red-600 rounded-lg hover:bg-red-100 transition-colors group"

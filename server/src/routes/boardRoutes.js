@@ -3,6 +3,7 @@ import {
   createBoard,
   getMyBoards,
   getBoardById,
+  getTemplates,
   updateBoard,
   deleteBoard,
   getDashboardStats,
@@ -15,6 +16,8 @@ import { createList, updateList, deleteList, moveList } from '../controllers/lis
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.get('/templates', protect, getTemplates);
 
 // Route gốc: Tạo board, Lấy danh sách board
 router.route('/')

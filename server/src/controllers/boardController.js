@@ -1,23 +1,38 @@
 import Board from '../models/Board.js';
+import { BOARD_TEMPLATES } from '../constants/boardTemplates.js';
 import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js'
 import { createLog } from '../services/logService.js';
 
+export const getTemplates = (req, res) => {
+  const templateList = Object.values(BOARD_TEMPLATES);
+  res.json(templateList);
+}
+
 export const createBoard = async (req, res) => {
   const { title } = req.body;
+
   if (!title) return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
+
   try {
-    const defaultLists = [
-      { title: 'Việc cần làm', position: 0, isDefault: true }, 
-      { title: 'Đang làm', position: 1, isDefault: true },     
-      { title: 'Đã xong', position: 2, isDefault: true },      
-    ];
+    let initialLists = [];
+
+    if (type && BOARD_TEMPLATES[type]) {
+      initialLists = BOARD_TEMPLATES[type].lists.map(list => ({
+        ...list,
+        isDefault: true
+      }));
+    } else {
+      initialLists = BOARD_TEMPLATES['KANBAN'].lists;
+    }
+
     const board = await Board.create({
       title,
       ownerId: req.user._id,
       members: [req.user._id],
-      lists: defaultLists,
+      lists: initialLists,
     });
+    
     res.status(201).json(board);
   } catch (error) {
     res.status(500).json({ message: 'Lỗi máy chủ' });

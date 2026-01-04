@@ -21,6 +21,7 @@ function App() {
 
       <Route path="/" element={<MainLayout><DashboardPage /></MainLayout>} />
       <Route path="/board/:id" element={<MainLayout><BoardPage /></MainLayout>} />
+      <Route path="/templates" element={<MainLayout><TemplatesPage /></MainLayout>} />
       <Route path="/analytics" element={<MainLayout><AnalyticsPage /></MainLayout>} />
 
       <Route path="/settings" element={<MainLayout><SettingPage /></MainLayout>} />
