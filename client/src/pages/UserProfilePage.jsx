@@ -39,24 +39,24 @@ function UserProfilePage() {
       <PageHeader title="Hồ sơ" showSearch={false} />
 
       {/* Padding: p-3 cho mobile */}
-      <div className="flex-1 overflow-auto p-3 md:p-8 bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
+      <div className="flex-1 overflow-auto p-3 md:p-8 bg-gray-50 dark:bg-gray-900 transition-all duration-150">
         
         {/* Card: p-4 cho mobile */}
-        <div className="max-w-xl mx-auto bg-white dark:bg-[#22272b] p-4 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-white/10">
+        <div className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-4 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
 
           <div className="flex flex-col items-center mb-5 relative">
             <div className="relative">
                 {formData.avatar ? (
                     // Avatar: w-20 trên mobile
-                    <img src={formData.avatar} alt="Avatar" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover shadow-md border-4 border-white dark:border-[#22272b]" />
+                    <img src={formData.avatar} alt="Avatar" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover shadow-md border-4 border-white dark:border-gray-800" />
                 ) : (
-                    <div className="w-20 h-20 md:w-24 md:h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl font-bold border-4 border-white dark:border-[#22272b]">
+                    <div className="w-20 h-20 md:w-24 md:h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl font-bold border-4 border-white dark:border-gray-800">
                         {user?.fullName?.charAt(0).toUpperCase()}
                     </div>
                 )}
-                <label className="absolute bottom-0 right-0 p-2 bg-white dark:bg-[#1d2125] rounded-full shadow-lg cursor-pointer border border-gray-200 dark:border-gray-700 hover:bg-gray-50">
+                <label className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-700 rounded-full shadow-lg cursor-pointer border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={uploading} />
-                    <Camera className={`w-3.5 h-3.5 md:w-4 md:h-4 text-gray-600 dark:text-[#9fadbc] ${uploading ? 'animate-spin' : ''}`} />
+                    <Camera className={`w-3.5 h-3.5 md:w-4 md:h-4 text-gray-600 dark:text-gray-300 ${uploading ? 'animate-spin' : ''}`} />
                 </label>
             </div>
             <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#b6c2cf] mt-3">{user?.fullName}</h2>
@@ -68,29 +68,29 @@ function UserProfilePage() {
           {/* Form spacing: space-y-3 compact */}
           <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
             <div>
-              <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Họ và tên</label>
-              <input type="text" id="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] text-sm" required />
+              <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-white mb-1">Họ và tên</label>
+              <input type="text" id="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" required />
             </div>
             
             <div>
-              <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Email</label>
-              <input type="email" value={email} className="w-full px-3 py-2 md:py-2.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-[#161a1d] text-gray-500 dark:text-[#9fadbc] cursor-not-allowed text-sm" disabled />
+              <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-white mb-1">Email</label>
+              <input type="email" value={email} className="w-full px-3 py-2 md:py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm" disabled />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Tuổi</label>
-                    <input type="text" id="age" value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value.replace(/\D/g, '') })} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] text-sm" />
+                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-white mb-1">Tuổi</label>
+                    <input type="text" id="age" value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value.replace(/\D/g, '') })} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
                 </div>
                 <div>
-                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Số ĐT</label>
-                    <input type="text" id="phone" value={formData.phone} onChange={handleChange} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] text-sm" />
+                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-white mb-1">Số ĐT</label>
+                    <input type="text" id="phone" value={formData.phone} onChange={handleChange} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
                 </div>
             </div>
 
             <div>
-              <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-[#b6c2cf] mb-1">Địa chỉ</label>
-              <input type="text" id="address" value={formData.address} onChange={handleChange} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf] text-sm" />
+              <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-white mb-1">Địa chỉ</label>
+              <input type="text" id="address" value={formData.address} onChange={handleChange} className="w-full px-3 py-2 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
             </div>
 
             <button type="submit" disabled={loading} className="w-full mt-2 px-4 py-2.5 md:py-3 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 font-medium shadow-sm text-sm md:text-base transition-colors">

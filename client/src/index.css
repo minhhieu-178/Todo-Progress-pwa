@@ -23,7 +23,7 @@
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
-    transition: all 0.5s ease-in-out;
+    transition: all 0.15s ease-in-out;
   }
   
   /* Default Theme (Light - Sky Blue) */
@@ -42,7 +42,7 @@
     background: transparent;
     opacity: 0;
     z-index: -2;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
   }
 
   body::after {
@@ -57,7 +57,7 @@
       radial-gradient(ellipse at bottom, rgba(255,255,255,0.05) 0%, transparent 50%);
     opacity: 0.6;
     z-index: -1;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
   }
 
   /* Light Theme (Sky Blue) */
@@ -76,7 +76,7 @@
     background: transparent;
     opacity: 0;
     z-index: -2;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
   }
   
   body.light::after {
@@ -85,7 +85,7 @@
       radial-gradient(ellipse at bottom, rgba(255,255,255,0.05) 0%, transparent 50%);
     opacity: 0.6;
     z-index: -1;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
   }
 
   /* Dark Theme (Dark Blue/Gray) */
@@ -104,7 +104,7 @@
     background: transparent;
     opacity: 0;
     z-index: -2;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
   }
   
   body.dark::after {
@@ -113,7 +113,7 @@
       radial-gradient(ellipse at bottom, rgba(255,255,255,0.03) 0%, transparent 50%);
     opacity: 0.8;
     z-index: -1;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.15s ease-in-out;
   }
 }
 
@@ -128,11 +128,11 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow: 0 4px 20px rgba(135, 206, 235, 0.15);
-  transition: all 0.3s ease-in-out;
+  transition: all 0.15s ease-in-out;
 }
 
 .dark .glass-effect {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(17, 24, 39, 0.85);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -274,7 +274,7 @@ button {
 /* Utility classes for adaptive text colors */
 .adaptive-text {
   color: #1e3a8a !important;
-  transition: color 0.3s ease-in-out;
+  transition: color 0.15s ease-in-out;
 }
 
 .dark .adaptive-text {
@@ -283,7 +283,7 @@ button {
 
 .adaptive-text-muted {
   color: #3b82f6 !important;
-  transition: color 0.3s ease-in-out;
+  transition: color 0.15s ease-in-out;
 }
 
 .dark .adaptive-text-muted {
@@ -292,7 +292,7 @@ button {
 
 .adaptive-border {
   border-color: rgba(30, 58, 138, 0.2) !important;
-  transition: border-color 0.3s ease-in-out;
+  transition: border-color 0.15s ease-in-out;
 }
 
 .dark .adaptive-border {
