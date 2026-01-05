@@ -159,6 +159,11 @@ export const addMemberToCard = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy Bảng/Thẻ hoặc bạn không có quyền.' });
     }
 
+    await updatedBoard.populate({
+        path: 'lists.cards.members',
+        select: 'fullName email avatar'
+    });
+
     let targetCard = null;
     for (const list of updatedBoard.lists) {
       if (list._id.toString() === listId) {

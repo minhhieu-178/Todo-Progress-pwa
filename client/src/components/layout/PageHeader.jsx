@@ -12,8 +12,7 @@ function PageHeader({ title, showSearch = true }) {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
-    const socketContext = useSocket();
-    const socket = socketContext?.socket;
+    const socket = useSocket();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);

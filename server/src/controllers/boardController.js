@@ -119,6 +119,7 @@ export const deleteBoard = async (req, res) => {
 export const addMember = async (req, res) => {
   const { email } = req.body;
   const { id } = req.params;
+
   try {
     const board = await Board.findById(id);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
@@ -131,13 +132,12 @@ export const addMember = async (req, res) => {
     board.members.push(userYz._id);
     await board.save();
 
-    const io = req.app.get('socketio');
-    if (io) {
-      io.to(id).emit('BOARD_UPDATED', { 
-          action: 'ADD_MEMBER_BOARD',
-          message: 'Thành viên mới đã được thêm vào bảng'
-      });
-  }
+    const updatedBoard = await Board.findById(id)
+      .populate('members', 'fullName email avatar')
+      .populate('ownerId', 'fullName email avatar');
+
+    const io = req.app.get('socketio'); 
+    
     try {
       const newNoti = await NotificationService.create({
         recipientId: userYz._id,
@@ -148,9 +148,16 @@ export const addMember = async (req, res) => {
         targetUrl: `/board/${id}`,
       });
 
-      const io = req.app.get('socketio');
       if (io) {
+
           io.to(userYz._id.toString()).emit('NEW_NOTIFICATION', newNoti);
+          io.to(userYz._id.toString()).emit('ADDED_TO_BOARD', updatedBoard);
+
+
+          io.to(id).emit('BOARD_UPDATED', { 
+            action: 'ADD_MEMBER_BOARD',
+            board: updatedBoard 
+          });
       }
 
     } catch (err) {
@@ -166,9 +173,6 @@ export const addMember = async (req, res) => {
       content: `đã thêm thành viên "${userYz.fullName}" vào bảng`
     });
 
-    const updatedBoard = await Board.findById(id)
-      .populate('members', 'fullName email avatar') 
-      .populate('ownerId', 'fullName email avatar');
     res.json(updatedBoard);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -184,6 +188,21 @@ export const removeMember = async (req, res) => {
     if (userId === board.ownerId.toString()) return res.status(400).json({ message: 'Không thể xóa chủ sở hữu' });
 
     board.members = board.members.filter(memberId => memberId.toString() !== userId);
+
+    if (board.lists && board.lists.length > 0) {
+        board.lists.forEach(list => {
+            if (list.cards && list.cards.length > 0) {
+                list.cards.forEach(card => {
+                    if (card.members && card.members.includes(userId)) {
+                        card.members = card.members.filter(
+                            m => m.toString() !== userId
+                        );
+                    }
+                });
+            }
+        });
+    }
+
     await board.save();
 
     const io = req.app.get('socketio');

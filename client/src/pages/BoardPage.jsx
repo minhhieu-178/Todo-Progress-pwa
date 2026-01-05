@@ -106,6 +106,23 @@ function BoardPage() {
   }, [socket, id]);
 
   useEffect(() => {
+    if (selectedCard && board) {
+      const updatedCard = findCardInBoard(board, selectedCard._id);
+      
+      if (updatedCard) {
+
+        if (JSON.stringify(updatedCard) !== JSON.stringify(selectedCard)) {
+            setSelectedCard(updatedCard);
+        }
+      } else {
+        setIsModalOpen(false);
+        setSelectedCard(null);
+        alert("Thẻ này vừa bị xóa bởi thành viên khác.");
+      }
+    }
+  }, [board]); 
+
+  useEffect(() => {
     if (board && activeCardId) {
       const card = findCardInBoard(board, activeCardId);
       if (card) {
