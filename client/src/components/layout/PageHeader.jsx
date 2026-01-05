@@ -56,6 +56,8 @@ function PageHeader({ title, showSearch = true }) {
         return () => socket.off('NEW_NOTIFICATION', handleNewNotification);
     }, [socket]);
 
+    
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (searchRef.current && !searchRef.current.contains(event.target)) setShowDropdown(false);
