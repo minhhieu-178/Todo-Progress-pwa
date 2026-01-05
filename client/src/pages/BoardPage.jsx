@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Users, ChevronLeft } from 'lucide-react';
+import { Users, ChevronLeft, MoreHorizontal, Activity } from 'lucide-react';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
@@ -10,6 +10,7 @@ import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import ActivityLogSidebar from '../components/board/ActivityLogSidebar'; 
 
 function BoardPage() {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ function BoardPage() {
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [isLogOpen, setIsLogOpen] = useState(false);
 
   const findCardInBoard = (boardData, cardId) => {
     if (!boardData?.lists) return null;
@@ -59,6 +61,9 @@ function BoardPage() {
   };
 
   const handleDeleteCardInBoard = (listId, cardId) => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+
     setBoard(prev => {
       const newLists = prev.lists.map(l => {
         if (l._id === listId) {
@@ -104,6 +109,22 @@ function BoardPage() {
       socket.off('BOARD_DELETED');
     };
   }, [socket, id]);
+
+  useEffect(() => {
+    if (isModalOpen && selectedCard && board) {
+      const updatedCard = findCardInBoard(board, selectedCard._id);
+      
+      if (updatedCard) {
+        if (JSON.stringify(updatedCard) !== JSON.stringify(selectedCard)) {
+            setSelectedCard(updatedCard);
+        }
+      } else {
+        setIsModalOpen(false);
+        setSelectedCard(null);
+        alert("Thẻ này vừa bị xóa bởi thành viên khác.");
+      }
+    }
+  }, [board]);
 
   useEffect(() => {
     if (board && activeCardId) {
@@ -259,6 +280,14 @@ function BoardPage() {
               </div>
             )}
           </div>
+          <button 
+            onClick={() => setIsLogOpen(true)}
+            title="Xem lịch sử hoạt động"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            <Activity className="w-4 h-4" />
+            <span className="hidden sm:inline">Hoạt động</span>
+          </button>
           <button onClick={() => setIsMembersModalOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             <Users className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline">Thành viên</span>
@@ -321,6 +350,12 @@ function BoardPage() {
         currentUser={user}
         onInvite={handleInvite}
         onRemove={handleRemoveMember}
+      />
+
+      <ActivityLogSidebar 
+        isOpen={isLogOpen}
+        onClose={() => setIsLogOpen(false)}
+        boardId={board?._id}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { getLogsByBoard } from '../services/logService.js';
+import { getLogsByBoard, getLogsByUser } from '../services/logService.js';
 import Board from '../models/Board.js';
 
 export const getBoardLogs = async (req, res) => {
@@ -12,6 +12,16 @@ export const getBoardLogs = async (req, res) => {
     if (!isMember) return res.status(403).json({ message: 'Không có quyền xem log' });
 
     const logs = await getLogsByBoard(boardId);
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyLogs = async (req, res) => {
+  try {
+    const userId = req.user._id; 
+    const logs = await getLogsByUser(userId);
     res.json(logs);
   } catch (error) {
     res.status(500).json({ message: error.message });

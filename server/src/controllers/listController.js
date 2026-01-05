@@ -94,10 +94,20 @@ export const deleteList = async (req, res) => {
     const list = board.lists.id(listId);
     if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
     
+    const listTitle = list.title;
     // Xóa list khỏi mảng
     board.lists.pull(listId);
     
     await board.save();
+
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: listId,
+      entityType: 'LIST',
+      action: 'DELETE_LIST',
+      content: `đã xóa danh sách "${listTitle}"`
+    });
     const io = req.app.get('socketio');
     if (io) {
       io.to(boardId).emit('BOARD_UPDATED', { 
@@ -128,6 +138,8 @@ export const moveList = async (req, res) => {
     const currentIndex = board.lists.findIndex(l => l._id.toString() === listId);
     if (currentIndex === -1) return res.status(404).json({ message: 'Không tìm thấy List cần chuyển' });
 
+    const listTitle = board.lists[currentIndex].title;
+
     const [movedList] = board.lists.splice(currentIndex, 1);
     board.lists.splice(newPosition, 0, movedList);
 
@@ -136,6 +148,15 @@ export const moveList = async (req, res) => {
     });
 
     await board.save();
+
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: listId,
+      entityType: 'LIST',
+      action: 'MOVE_LIST',
+      content: `đã thay đổi vị trí danh sách "${listTitle}"`
+    });
 
     const io = req.app.get('socketio');
     if (io) {
