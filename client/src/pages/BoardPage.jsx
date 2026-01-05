@@ -61,6 +61,9 @@ function BoardPage() {
   };
 
   const handleDeleteCardInBoard = (listId, cardId) => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+
     setBoard(prev => {
       const newLists = prev.lists.map(l => {
         if (l._id === listId) {
@@ -108,11 +111,10 @@ function BoardPage() {
   }, [socket, id]);
 
   useEffect(() => {
-    if (selectedCard && board) {
+    if (isModalOpen && selectedCard && board) {
       const updatedCard = findCardInBoard(board, selectedCard._id);
       
       if (updatedCard) {
-
         if (JSON.stringify(updatedCard) !== JSON.stringify(selectedCard)) {
             setSelectedCard(updatedCard);
         }
@@ -122,7 +124,7 @@ function BoardPage() {
         alert("Thẻ này vừa bị xóa bởi thành viên khác.");
       }
     }
-  }, [board]); 
+  }, [board]);
 
   useEffect(() => {
     if (board && activeCardId) {

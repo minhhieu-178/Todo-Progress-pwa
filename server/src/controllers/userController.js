@@ -42,15 +42,6 @@ export const updateUserProfile = async (req, res) => {
 
     const updatedUser = await user.save();
 
-    await createLog({
-      userId: user._id,
-      boardId: null, 
-      entityId: user._id,
-      entityType: 'USER',
-      action: 'UPDATE_PROFILE',
-      content: 'đã cập nhật thông tin cá nhân'
-    });
-
     res.json({
       _id: updatedUser._id,
       fullName: updatedUser.fullName,

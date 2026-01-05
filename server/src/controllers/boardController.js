@@ -18,6 +18,16 @@ export const createBoard = async (req, res) => {
       members: [req.user._id],
       lists: defaultLists,
     });
+    
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: board._id,
+      entityType: 'BOARD',
+      action: 'CREATE_BOARD',
+      content: `đã tạo bảng dự án "${board.title}"`
+    });
+
     res.status(201).json(board);
   } catch (error) {
     res.status(500).json({ message: 'Lỗi máy chủ' });
@@ -108,7 +118,17 @@ export const deleteBoard = async (req, res) => {
         });
     }
 
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: board._id,
+      entityType: 'BOARD',
+      action: 'DELETE_BOARD',
+      content: `đã xóa bảng dự án "${board.title}"`
+    });
+
     await board.deleteOne();
+
 
     res.json({ message: 'Đã xóa Bảng thành công' });
   } catch (error) {
@@ -183,6 +203,7 @@ export const removeMember = async (req, res) => {
   const { id, userId } = req.params; 
   try {
     const board = await Board.findById(id);
+    const removedUser = await User.findById(userId).select('fullName email');
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Bảng' });
     if (board.ownerId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Bạn không phải chủ Bảng' });
     if (userId === board.ownerId.toString()) return res.status(400).json({ message: 'Không thể xóa chủ sở hữu' });
@@ -204,6 +225,15 @@ export const removeMember = async (req, res) => {
     }
 
     await board.save();
+
+    await createLog({
+    userId: req.user._id,          
+    boardId: board._id,
+    entityId: userId,             
+    entityType: 'USER',
+    action: 'REMOVE_MEMBER',
+    content: `xóa thành viên ${removedUser?.fullName || removedUser?.email || 'không xác định'} khỏi bảng "${board.title}"`
+  });
 
     const io = req.app.get('socketio');
     if (io) {

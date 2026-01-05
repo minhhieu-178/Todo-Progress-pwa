@@ -1,4 +1,4 @@
-import axiosClient from './api';
+import axiosClient from './api'; 
 
 export const getBoardLogs = async (boardId) => {
   try {
@@ -11,7 +11,7 @@ export const getBoardLogs = async (boardId) => {
 
 export const getMyActivities = async () => {
   try {
-    const response = await axiosClient.get('/logs/user/me');
+    const response = await axiosClient.get('/logs/me');
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

@@ -6,15 +6,17 @@ const ActivityLogSchema = new mongoose.Schema({
   entityId: { type: mongoose.Schema.Types.ObjectId, required: true },
   entityType: { 
     type: String, 
-    enum: ['BOARD', 'LIST', 'CARD', 'COMMENT', 'MEMBER'], 
+    enum: ['BOARD', 'LIST', 'CARD', 'USER', 'COMMENT', 'MEMBER'], 
     required: true 
   },
   action: { 
     type: String, 
     enum: [
       'CREATE', 'UPDATE', 'DELETE', 'MOVE', 
-      'ADD_MEMBER', 'REMOVE_MEMBER',
-      'CREATE_CARD', 'UPDATE_CARD', 'DELETE_CARD', 
+      'ADD_MEMBER', 'REMOVE_MEMBER', 'CREATE_BOARD', 'DELETE_BOARD',
+      'ADD_MEMBER_TO_CARD', 'REMOVE_MEMBER_FROM_CARD', 
+      'CREATE_CARD', 'UPDATE_CARD', 'DELETE_CARD', 'MOVE_LIST',
+      'UPLOAD_ATTACHMENT', 'DELETE_ATTACHMENT',
       'COMMENT_CREATE', 'COMMENT_UPDATE', 'COMMENT_DELETE',
       'MENTION'
     ],

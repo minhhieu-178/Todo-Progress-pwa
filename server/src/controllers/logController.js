@@ -1,4 +1,4 @@
-import { getLogsByBoard } from '../services/logService.js';
+import { getLogsByBoard, getLogsByUser } from '../services/logService.js';
 import Board from '../models/Board.js';
 
 export const getBoardLogs = async (req, res) => {
@@ -20,12 +20,8 @@ export const getBoardLogs = async (req, res) => {
 
 export const getMyLogs = async (req, res) => {
   try {
-    const logs = await ActivityLog.find({ userId: req.user._id }) 
-      .sort({ createdAt: -1 }) 
-      .limit(50) 
-      .populate('userId', 'fullName avatar') 
-      .populate('boardId', 'title');
-
+    const userId = req.user._id; 
+    const logs = await getLogsByUser(userId);
     res.json(logs);
   } catch (error) {
     res.status(500).json({ message: error.message });
