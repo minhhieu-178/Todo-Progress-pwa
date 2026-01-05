@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const ActivityLogSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  boardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Board', required: true },
+  boardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Board', required: false },
   entityId: { type: mongoose.Schema.Types.ObjectId, required: true },
   entityType: { 
     type: String, 

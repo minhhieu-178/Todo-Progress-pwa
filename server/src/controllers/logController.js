@@ -17,3 +17,17 @@ export const getBoardLogs = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getMyLogs = async (req, res) => {
+  try {
+    const logs = await ActivityLog.find({ userId: req.user._id }) 
+      .sort({ createdAt: -1 }) 
+      .limit(50) 
+      .populate('userId', 'fullName avatar') 
+      .populate('boardId', 'title');
+
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
