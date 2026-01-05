@@ -4,8 +4,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// SỬA: Đổi JWT_SECRET thành ACCESS_TOKEN_SECRET
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30d' });
 };
 
 // @desc    Lấy thông tin cá nhân
@@ -49,6 +50,7 @@ export const updateUserProfile = async (req, res) => {
       phone: updatedUser.phone,
       address: updatedUser.address,
       avatar: updatedUser.avatar,
+      // Token mới được tạo ra sẽ dùng đúng secret key mới
       token: generateToken(updatedUser._id),
     });
   } else {
@@ -80,12 +82,22 @@ export const deleteUser = async (req, res) => {
 export const subscribePush = async (req, res) => {
   const subscription = req.body;
   try {
-    // Lưu subscription vào mảng pushSubscriptions của user
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { pushSubscriptions: subscription } // $addToSet để tránh trùng lặp
+      $addToSet: { pushSubscriptions: subscription },
+      $addToSet: { pushSubscriptions: subscription }
     });
     res.status(201).json({});
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server' });
   }
+};
+
+export const unsubscribePush = async (req, res) => {
+  const subscription = req.body;
+
+  await User.findByIdAndUpdate(req.user._id, {
+    $pull: { pushSubscriptions: { endpoint: subscription.endpoint } }
+  });
+
+  res.sendStatus(200);
 };

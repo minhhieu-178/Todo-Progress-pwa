@@ -1,7 +1,7 @@
 import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList, X } from 'lucide-react'; 
+import { LayoutDashboard, BarChart3, Settings, LogOut, ClipboardList, X, User } from 'lucide-react'; 
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -10,91 +10,195 @@ const navItems = [
     { name: 'Settings', icon: Settings, path: '/settings' },
 ];
 
-function Sidebar({ isOpen, onClose }) {
+function Sidebar({ isOpen, onClose, isMobile = false }) {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     
-    const linkClasses = "flex items-center px-4 py-2 text-gray-700 dark:text-trello-text rounded-lg group transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-white/10";
-    const activeClasses = "bg-indigo-50 dark:bg-blue-500/10 text-indigo-700 dark:text-blue-400 font-semibold"; 
+    const handleNavigation = (path) => {
+        navigate(path);
+        if (isMobile) {
+            onClose();
+        }
+    };
     
-    return (
-        <>
-            {/* Overlay cho Mobile */}
-            <div 
-                className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ${
-                    isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-                onClick={onClose}
-            ></div>
+    // Mobile Sidebar - Simplified
+    if (isMobile) {
+        return (
+            <>
+                {/* Mobile Overlay */}
+                {isOpen && (
+                    <div 
+                        className="fixed inset-0 bg-black/50 z-40"
+                        onClick={onClose}
+                    />
+                )}
 
-            <div className={`
-                flex flex-col h-full bg-white dark:bg-[#161a1d] border-r border-gray-200 dark:border-white/10 transition-all duration-300
-                
-                /* Mobile Styles: Fixed, trượt từ trái sang */
-                fixed top-0 left-0 bottom-0 z-50 w-64 transform 
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                
-                /* Desktop Styles: Luôn hiện, không fixed, reset translate */
-                md:relative md:translate-x-0 md:flex md:w-60
-            `}>
-        
-                <div className="p-6 flex items-center justify-between">
-                    {/* --- ĐÃ SỬA: Giảm size và độ đậm --- */}
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-[#b6c2cf]">
-                        Task Manager
-                    </h1>
-                    
-                    <button 
-                        onClick={onClose} 
-                        className="md:hidden p-1 rounded-md hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto custom-scrollbar">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.name}
-                            to={item.path}
-                            onClick={() => {
-                                if (window.innerWidth < 768) onClose();
-                            }}
-                            className={({ isActive }) => 
-                                `${linkClasses} ${isActive ? activeClasses : ''}`
-                            }
+                {/* Mobile Sidebar */}
+                <div className={`
+                    fixed top-0 left-0 bottom-0 z-50 w-80 bg-white dark:bg-gray-900 transform transition-transform duration-300
+                    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                    flex flex-col h-full shadow-xl
+                `}>
+                    {/* Header */}
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Task Manager
+                        </h1>
+                        
+                        <button 
+                            onClick={onClose} 
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                         >
-                            <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                            {item.name}
-                        </NavLink>
-                    ))}
-                </nav>
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
 
-                <div className="p-6 border-t border-gray-200 dark:border-trello-border mt-auto">
-                    <Link to="/profile" className="flex items-center gap-3 mb-4 hover:bg-gray-100 dark:hover:bg-white/10 p-2 -mx-2 rounded-lg transition-colors cursor-pointer group">
-                        {user?.avatar ? (
-                            <img 
-                                src={user.avatar} 
-                                alt="Avatar" 
-                                className="w-8 h-8 rounded-full object-cover shadow-sm flex-shrink-0"
-                            />
-                        ) : (
-                            <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm flex-shrink-0">
-                                {user?.fullName?.charAt(0).toUpperCase()} 
+                    {/* Navigation */}
+                    <nav className="flex-1 p-6 space-y-2">
+                        <button
+                            onClick={() => handleNavigation('/')}
+                            className="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-left"
+                        >
+                            <LayoutDashboard className="w-5 h-5 mr-3 flex-shrink-0" />
+                            <span>Dashboard</span>
+                        </button>
+                        
+                        <button
+                            onClick={() => handleNavigation('/boards')}
+                            className="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-left"
+                        >
+                            <ClipboardList className="w-5 h-5 mr-3 flex-shrink-0" />
+                            <span>Board</span>
+                        </button>
+                        
+                        <button
+                            onClick={() => handleNavigation('/analytics')}
+                            className="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-left"
+                        >
+                            <BarChart3 className="w-5 h-5 mr-3 flex-shrink-0" />
+                            <span>Analytics</span>
+                        </button>
+                        
+                        <button
+                            onClick={() => handleNavigation('/settings')}
+                            className="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-left"
+                        >
+                            <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
+                            <span>Settings</span>
+                        </button>
+                    </nav>
+
+                    {/* User Profile Section */}
+                    <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+                        {/* Profile Link */}
+                        <button 
+                            onClick={() => handleNavigation('/profile')}
+                            className="w-full flex items-center gap-4 mb-4 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-3 -mx-4 rounded-lg transition-colors text-left"
+                        >
+                            {user?.avatar ? (
+                                <img 
+                                    src={user.avatar} 
+                                    alt="Avatar" 
+                                    className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0"
+                                />
+                            ) : (
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-sm flex-shrink-0">
+                                    <User className="w-5 h-5" />
+                                </div>
+                            )}
+                            
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {user?.name || user?.fullName || 'User'}
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                    {user?.email || 'user@example.com'}
+                                </p>
                             </div>
-                        )}                    
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-trello-subtext truncate">{user?.fullName}</p>
-                            <p className="text-xs text-gray-500 dark:text-trello-text truncate">{user?.email}</p>
-                        </div>
-                    </Link>
-                    
-                    <button onClick={logout} className="flex items-center text-red-600 hover:text-red-700 dark:text-red-400 transition-colors w-full px-2">
-                        <LogOut className="w-5 h-5 mr-2" />
-                        Log out
-                    </button>
+                        </button>
+                        
+                        {/* Logout Button */}
+                        <button
+                            onClick={() => {
+                                logout();
+                                onClose();
+                            }}
+                            className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                            <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+                            <span>Đăng xuất</span>
+                        </button>
+                    </div>
                 </div>
+            </>
+        );
+    }
+    
+    // Desktop Sidebar
+    return (
+        <aside className="flex flex-col h-full glass-effect adaptive-border border-r w-64 lg:w-72">
+            {/* Header */}
+            <div className="p-6">
+                <h1 className="text-xl font-bold adaptive-text truncate">
+                    Task Manager
+                </h1>
             </div>
-        </>
+
+            {/* Navigation */}
+            <nav className="flex-1 px-6 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+                {navItems.map((item) => (
+                    <NavLink
+                        key={item.name}
+                        to={item.path}
+                        className={({ isActive }) => 
+                            `flex items-center px-4 py-3 adaptive-text-muted hover:adaptive-text rounded-lg group transition-all duration-200 hover:bg-white/20 dark:hover:bg-white/10 ${isActive ? 'bg-white/30 dark:bg-white/10 adaptive-text font-semibold shadow-sm' : ''}`
+                        }
+                    >
+                        <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                        <span className="text-base truncate">{item.name}</span>
+                    </NavLink>
+                ))}
+            </nav>
+
+            {/* User Profile Section */}
+            <div className="p-6 adaptive-border border-t mt-auto">
+                {/* Profile Link */}
+                <Link 
+                    to="/profile" 
+                    className="flex items-center gap-4 mb-4 hover:bg-white/20 dark:hover:bg-white/10 px-4 py-3 -mx-4 rounded-lg transition-colors cursor-pointer group"
+                >
+                    {user?.avatar ? (
+                        <img 
+                            src={user.avatar} 
+                            alt="Avatar" 
+                            className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0 ring-2 ring-white/30"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-sm flex-shrink-0">
+                            <User className="w-5 h-5" />
+                        </div>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium adaptive-text truncate">
+                            {user?.name || user?.fullName || 'User'}
+                        </p>
+                        <p className="text-sm adaptive-text-muted truncate">
+                            {user?.email || 'user@example.com'}
+                        </p>
+                    </div>
+                </Link>
+                
+                {/* Logout Button */}
+                <button
+                    onClick={logout}
+                    className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors group"
+                >
+                    <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <span className="text-base">Đăng xuất</span>
+                </button>
+            </div>
+        </aside>
     );
 }
 
