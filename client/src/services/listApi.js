@@ -1,8 +1,8 @@
 import api from './api';
 
-export const createList = async (title, boardId) => {
+export const createList = async (title, boardId, listId) => {
   try {
-    const { data } = await api.post(`/boards/${boardId}/lists`, { title });
+    const { data } = await api.post(`/boards/${boardId}/lists`, { title, _id: listId });
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;

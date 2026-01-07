@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { v7 as uuidv7 } from 'uuid';
 import { Link } from 'react-router-dom';
 import { getMyBoards, createBoard, deleteBoard, updateBoard } from '../services/boardApi';
 import PageHeader from '../components/layout/PageHeader';
@@ -61,7 +62,8 @@ function BoardListPage() {
       setIsCreating(true); // Giữ loading state
       
       try {
-        const newBoard = await createBoard(newBoardTitle);
+        const newBoardId = uuidv7();
+        const newBoard = await createBoard(newBoardTitle, newBoardId);
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
         setIsCreating(false); // Tắt form tạo

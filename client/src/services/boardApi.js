@@ -9,9 +9,9 @@ export const getMyBoards = async () => {
   }
 };
 
-export const createBoard = async (title) => {
+export const createBoard = async (title, boardId) => {
   try {
-    const { data } = await api.post('/boards', { title });
+    const { data } = await api.post('/boards', { title, _id:boardId });
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;

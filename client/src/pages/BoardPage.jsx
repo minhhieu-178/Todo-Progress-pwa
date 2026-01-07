@@ -10,6 +10,7 @@ import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { v7 as uuidv7 } from 'uuid';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -175,6 +176,7 @@ function BoardPage() {
     e.preventDefault();
     if (!newListTitle.trim()) return;
     try {
+      const newListId = uuidv7();
       const newList = await createList(newListTitle, id);
       setBoard({ ...board, lists: [...board.lists, newList] });
       setNewListTitle('');

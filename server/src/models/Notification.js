@@ -22,8 +22,8 @@ const NotificationSchema = new mongoose.Schema(
     message: { type: String },
     read: { type: Boolean, default: false },
     metadata: { 
-      boardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Board' },
-      cardId: { type: mongoose.Schema.Types.ObjectId },
+      boardId: { type: String, ref: 'Board' },
+      cardId: { type: String },
     },
   },
   { timestamps: true }
