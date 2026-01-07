@@ -1,12 +1,10 @@
 import axios from 'axios';
 
 const api = axios.create({
- baseURL: '/api', // Dùng đường dẫn tương đối để đi qua Proxy của Vite
- adapter: 'fetch',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true, 
+  baseURL: import.meta.env.VITE_API_BASE_URL, // Giữ nguyên cái này cho chắc
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
+  adapter: 'fetch', // <--- Chỉ thêm đúng dòng này
 });
 
 

@@ -69,7 +69,7 @@ self.addEventListener('push', (event) => {
   
   const title = data.title || 'Thông báo mới';
   const options = {
-    body: data.body || 'Bạn có thông báo từ Task Management App',
+    body: data.body || 'Bạn có thông báo từ Pro Manage',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
     data: { url: data.url || '/' } 
