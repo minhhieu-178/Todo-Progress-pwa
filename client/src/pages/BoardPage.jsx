@@ -11,6 +11,7 @@ import MembersModal from '../components/board/MembersModal';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import ActivityLogSidebar from '../components/board/ActivityLogSidebar'; 
+import { v7 as uuidv7 } from 'uuid';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -196,6 +197,7 @@ function BoardPage() {
     e.preventDefault();
     if (!newListTitle.trim()) return;
     try {
+      const newListId = uuidv7();
       const newList = await createList(newListTitle, id);
       setBoard({ ...board, lists: [...board.lists, newList] });
       setNewListTitle('');
@@ -247,9 +249,9 @@ function BoardPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-900 dark:text-white">Đang tải dữ liệu...</div>;
-  if (error) return <div className="p-8 text-center text-red-500 dark:text-red-400">Lỗi: {error}</div>;
-  if (!board) return <div className="p-8 text-center text-gray-900 dark:text-white">Không tìm thấy Bảng.</div>;
+  if (loading) return <div className="p-8 text-center dark:text-white">Đang tải dữ liệu...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
+  if (!board) return <div className="p-8 text-center dark:text-white">Không tìm thấy Bảng.</div>;
 
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 

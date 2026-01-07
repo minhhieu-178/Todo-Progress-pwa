@@ -10,11 +10,14 @@ import { v2 as cloudinary } from 'cloudinary';
  * @access Protected
  */
 export const createCard = async (req, res) => {
-  const { title } = req.body;
+  const { title,_id } = req.body;
   const { boardId, listId } = req.params;
 
   if (!title) {
     return res.status(400).json({ message: 'Vui lòng nhập tiêu đề cho Card' });
+  }
+  if (!_id) {
+     return res.status(400).json({ message: 'Thiếu ID thẻ (Client generation required)' });
   }
 
   try {
@@ -31,7 +34,7 @@ export const createCard = async (req, res) => {
     if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
 
     const newCard = {
-      _id: new mongoose.Types.ObjectId(),
+      _id: _id,
       title,
       position: list.cards.length,
       members: [],

@@ -1,17 +1,19 @@
 import api from './api'; 
+import { mergeBoardDataWithOffline, mergeBoardsListWithOffline } from './offlineMerger'; 
 
 export const getMyBoards = async () => {
   try {
     const { data } = await api.get('/boards');
-    return data;
+    // Merge offline data
+    return await mergeBoardsListWithOffline(data);
   } catch (error) {
     throw error.response?.data?.message || error.message;
   }
 };
 
-export const createBoard = async (title) => {
+export const createBoard = async (title, boardId) => {
   try {
-    const { data } = await api.post('/boards', { title });
+    const { data } = await api.post('/boards', { title, _id: boardId });
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;
@@ -21,7 +23,8 @@ export const createBoard = async (title) => {
 export const getBoardById = async (boardId) => {
   try {
     const { data } = await api.get(`/boards/${boardId}`);
-    return data;
+    // Merge offline data
+    return await mergeBoardDataWithOffline(data);
   } catch (error) {
     throw error.response?.data?.message || error.message;
   }

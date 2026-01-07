@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const CardSchema = new mongoose.Schema(
   {
+    _id: { type: String, required: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     dueDate: { type: Date },
@@ -21,7 +22,7 @@ const CardSchema = new mongoose.Schema(
     }],
     
   },
-  { timestamps: true }
+  { timestamps: true, _id: false }
 );
 
 export default CardSchema;
