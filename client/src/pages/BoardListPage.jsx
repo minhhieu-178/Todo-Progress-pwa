@@ -13,25 +13,20 @@ function BoardListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // State tìm kiếm
   const [searchTerm, setSearchTerm] = useState('');
 
-  // State tạo bảng
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  // State chỉnh sửa & Menu
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
-  const [openMenuId, setOpenMenuId] = useState(null); // ID của bảng đang mở menu 3 chấm
+  const [openMenuId, setOpenMenuId] = useState(null); 
 
-  // Ref để click outside đóng menu
   const menuRef = useRef(null);
 
   useEffect(() => {
     fetchBoards();
     
-    // Event listener để đóng menu khi click ra ngoài
     const handleClickOutside = (event) => {
         if (menuRef.current && !menuRef.current.contains(event.target)) {
             setOpenMenuId(null);
@@ -57,16 +52,15 @@ function BoardListPage() {
       e.preventDefault();
       if (!newBoardTitle.trim()) return;
       
-      // Optimistic update hoặc loading local
       const tempId = Date.now(); 
-      setIsCreating(true); // Giữ loading state
+      setIsCreating(true); 
       
       try {
         const newBoardId = uuidv7();
         const newBoard = await createBoard(newBoardTitle, newBoardId);
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
-        setIsCreating(false); // Tắt form tạo
+        setIsCreating(false); 
       } catch (err) {
         alert(err.toString());
         setIsCreating(false);
@@ -88,7 +82,7 @@ function BoardListPage() {
       e.preventDefault(); e.stopPropagation();
       setEditingId(board._id);
       setEditTitle(board.title);
-      setOpenMenuId(null); // Đóng menu sau khi chọn sửa
+      setOpenMenuId(null); 
   };
 
   const saveTitle = async (e) => {

@@ -1,16 +1,17 @@
 import axios from 'axios';
+import { saveOfflineRequest } from './offlineStore';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // Giữ nguyên cái này cho chắc
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-  adapter: 'fetch', // <--- Chỉ thêm đúng dòng này
+  baseURL: import.meta.env.VITE_API_BASE_URL, 
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, 
 });
 
-
+// --- REQUEST INTERCEPTOR ---
 api.interceptors.request.use(
   (config) => {
-
     let token = localStorage.getItem('accessToken');
     if (!token) {
       const userInfo = localStorage.getItem('userInfo');
@@ -33,19 +34,15 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true; 
 
       try {
-
-
         const res = await axios.post(
             `${import.meta.env.VITE_API_BASE_URL}/auth/refresh-token`, 
             {}, 
@@ -54,7 +51,6 @@ api.interceptors.response.use(
 
         if (res.data.accessToken) {
             localStorage.setItem('accessToken', res.data.accessToken);
-
             const userInfo = localStorage.getItem('userInfo');
             if (userInfo) {
                 const parsedUser = JSON.parse(userInfo);
@@ -63,21 +59,65 @@ api.interceptors.response.use(
             }
 
             originalRequest.headers['Authorization'] = `Bearer ${res.data.accessToken}`;
-
             return api(originalRequest);
         }
       } catch (refreshError) {
         console.error("Phiên đăng nhập hết hạn:", refreshError);
-        
         localStorage.removeItem('userInfo');
         localStorage.removeItem('accessToken');
-        
         if (window.location.pathname !== '/login') {
             alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
             window.location.href = '/login';
         }
         return Promise.reject(refreshError);
       }
+    }
+
+    if (!error.response && !navigator.onLine) {
+        if (['post', 'put', 'delete', 'patch'].includes(originalRequest.method)) {
+            try {
+                const token = localStorage.getItem('accessToken');
+        
+                const fullUrl = originalRequest.url.startsWith('http') 
+                    ? originalRequest.url 
+                    : (api.defaults.baseURL + originalRequest.url);
+
+                await saveOfflineRequest(
+                    fullUrl, 
+                    originalRequest.method,
+                    originalRequest.data,
+                    token
+                );
+
+                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.sync.register('sync-offline-requests');
+                }
+
+                let mockData = {};
+                if (originalRequest.data) {
+                    try {
+                        mockData = JSON.parse(originalRequest.data);
+                    } catch (e) {
+                        mockData = {}; 
+                    }
+                }
+
+                return Promise.resolve({ 
+                    data: { 
+                        success: true, 
+                        message: 'Đang offline: Dữ liệu đã được lưu.',
+                        ...mockData, 
+                        _id: mockData._id || `offline-temp-${Date.now()}`
+                    } 
+                });
+
+
+                
+            } catch (saveError) {
+                console.error("Lỗi lưu offline request:", saveError);
+            }
+        }
     }
 
     return Promise.reject(error);
