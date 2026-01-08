@@ -198,7 +198,11 @@ function BoardPage() {
     if (!newListTitle.trim()) return;
     try {
       const newListId = uuidv7();
-      const newList = await createList(newListTitle, id);
+      const newList = await createList(newListTitle, id,newListId);
+      const safeNewList = {
+          ...newList,
+          cards: newList.cards || [] 
+      };
       setBoard({ ...board, lists: [...board.lists, newList] });
       setNewListTitle('');
     } catch (err) {
