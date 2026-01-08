@@ -24,13 +24,13 @@ function useWindowSize() {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-[#2c333a] p-3 border border-gray-100 dark:border-white/10 rounded-xl shadow-xl z-50">
-          <p className="font-semibold text-gray-800 dark:text-[#b6c2cf] mb-2 text-sm">{label}</p>
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50">
+          <p className="font-semibold text-gray-800 dark:text-white mb-2 text-sm">{label}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center gap-2 text-xs md:text-sm mb-1 last:mb-0">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }}></div>
-                <span className="text-gray-600 dark:text-[#9fadbc]">{entry.name}:</span>
-                <span className="font-bold dark:text-white">{entry.value}</span>
+                <span className="text-gray-600 dark:text-gray-400">{entry.name}:</span>
+                <span className="font-bold text-gray-900 dark:text-white">{entry.value}</span>
             </div>
           ))}
         </div>
@@ -95,7 +95,7 @@ function AnalyticsPage() {
   const { summary, taskDistribution, memberPerformance } = data;
 
   return (
-    <div className="flex flex-col h-full transition-colors duration-200">
+    <div className="flex flex-col h-full transition-all duration-150">
       <PageHeader title="Thống kê" showSearch={false} />
 
       <div className="flex-1 overflow-y-auto p-3 md:p-8">
@@ -206,9 +206,9 @@ function AnalyticsPage() {
                     <div style={{ height: chartConfig.chartHeight, minHeight: '200px' }} className="w-full">
                         <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                             <BarChart data={memberPerformance} margin={{ top: 10, right: 0, left: -20, bottom: 0 }} barGap={isDesktop ? 8 : 4}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.3} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} allowDecimals={false} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#9ca3af" opacity={0.5} className="dark:opacity-30" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} className="dark:fill-[#9ca3af]" />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} allowDecimals={false} className="dark:fill-[#9ca3af]" />
                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f3f4f6', opacity: 0.3 }} />
                                 {!isDesktop && <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />}
                                 

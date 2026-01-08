@@ -2,7 +2,7 @@ import axios from 'axios';
 import { saveOfflineRequest } from './offlineStore';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // Chỉ khai báo 1 lần
+  baseURL: import.meta.env.VITE_API_BASE_URL, 
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,13 +34,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// --- RESPONSE INTERCEPTOR (Duy nhất 1 cái) ---
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // 1. Xử lý Token hết hạn (Refresh Token)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true; 
 
@@ -53,7 +51,6 @@ api.interceptors.response.use(
 
         if (res.data.accessToken) {
             localStorage.setItem('accessToken', res.data.accessToken);
-            // Cập nhật cả userInfo để đồng bộ
             const userInfo = localStorage.getItem('userInfo');
             if (userInfo) {
                 const parsedUser = JSON.parse(userInfo);
@@ -76,21 +73,17 @@ api.interceptors.response.use(
       }
     }
 
-    // 2. Xử lý Offline (Mất mạng)
     if (!error.response && !navigator.onLine) {
-        // Chỉ lưu các request thay đổi dữ liệu
         if (['post', 'put', 'delete', 'patch'].includes(originalRequest.method)) {
             try {
                 const token = localStorage.getItem('accessToken');
-                
-                // QUAN TRỌNG: Phải lưu Full URL để Service Worker gọi đúng server
-                // Nếu config.url đã chứa http thì dùng luôn, nếu không thì nối với baseURL
+        
                 const fullUrl = originalRequest.url.startsWith('http') 
                     ? originalRequest.url 
                     : (api.defaults.baseURL + originalRequest.url);
 
                 await saveOfflineRequest(
-                    fullUrl, // Đã sửa thành Full URL
+                    fullUrl, 
                     originalRequest.method,
                     originalRequest.data,
                     token
@@ -101,13 +94,26 @@ api.interceptors.response.use(
                     await registration.sync.register('sync-offline-requests');
                 }
 
+                let mockData = {};
+                if (originalRequest.data) {
+                    try {
+                        mockData = JSON.parse(originalRequest.data);
+                    } catch (e) {
+                        mockData = {}; 
+                    }
+                }
+
                 return Promise.resolve({ 
                     data: { 
                         success: true, 
-                        message: 'Đang offline: Dữ liệu đã được lưu và sẽ tự động gửi khi có mạng.' 
+                        message: 'Đang offline: Dữ liệu đã được lưu.',
+                        ...mockData, 
+                        _id: mockData._id || `offline-temp-${Date.now()}`
                     } 
                 });
 
+
+                
             } catch (saveError) {
                 console.error("Lỗi lưu offline request:", saveError);
             }

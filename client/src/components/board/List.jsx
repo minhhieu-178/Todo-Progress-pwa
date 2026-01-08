@@ -3,8 +3,9 @@ import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { MoreHorizontal, Plus, Trash2, X, Check, Pencil } from 'lucide-react';
 import Card from './Card';
 import { createCard } from '../../services/cardApi';
+import { v7 as uuidv7 } from 'uuid';
 
-function List({ list, boardId, onCardCreated, onCardClick, index, onUpdateTitle, onDeleteList }) {
+function List({ list, boardId, boardMembers, onCardCreated, onCardClick, index, onUpdateTitle, onDeleteList }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
 
@@ -35,8 +36,9 @@ function List({ list, boardId, onCardCreated, onCardClick, index, onUpdateTitle,
   const handleAddCard = async (e) => {
     e.preventDefault();
     if (!cardTitle.trim()) return;
+    const newCardId = uuidv7();
     try {
-      const newCard = await createCard(cardTitle, boardId, list._id);
+      const newCard = await createCard(cardTitle, boardId, list._id, newCardId);
       onCardCreated(list._id, newCard);
       setCardTitle('');
       setShowAddCard(false);
@@ -124,7 +126,8 @@ function List({ list, boardId, onCardCreated, onCardClick, index, onUpdateTitle,
                     <Card 
                         key={card._id} 
                         card={card} 
-                        index={index} 
+                        index={index}
+                        boardMembers={boardMembers} 
                         onClick={() => onCardClick(card, list._id)} 
                     />
                   ))}

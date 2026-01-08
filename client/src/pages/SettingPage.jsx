@@ -45,28 +45,30 @@ function SettingPage() {
     <div className="flex flex-col h-full">
       <PageHeader title="Cài đặt" showSearch={false} />
 
-      <div className="flex-1 overflow-auto p-4 md:p-8 bg-gray-50 dark:bg-[#1d2125] transition-colors duration-200">
+      <div className="flex-1 overflow-auto p-4 md:p-8 bg-gray-50 dark:bg-gray-900 transition-all duration-150">
         <div className="max-w-2xl mx-auto space-y-4 md:space-y-6">
           
           {/* Theme */}
-          <div className="bg-white dark:bg-[#22272b] p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-white/10">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-[#b6c2cf]">Giao diện</h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-[#9fadbc]">Chuyển đổi Sáng / Tối.</p>
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">Giao diện</h3>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Chuyển đổi Sáng / Tối.</p>
               </div>
-              <button onClick={toggleTheme} className="p-2 rounded-full bg-gray-100 dark:bg-[#1d2125] hover:bg-gray-200 transition-colors">
-                {theme === 'light' ? <Moon className="w-5 h-5 text-gray-600" /> : <Sun className="w-5 h-5 text-yellow-400" />}
+              <button onClick={toggleTheme} className="p-3 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                {theme === 'light' ? <Moon className="w-5 h-5 text-gray-700" /> : <Sun className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />}
               </button>
             </div>
           </div>
 
           {/* Password */}
-          <div className="bg-white dark:bg-[#22272b] p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-white/10">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-start gap-3 mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400"><Lock className="w-5 h-5" /></div>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400 flex-shrink-0">
+                  <Lock className="w-5 h-5 drop-shadow-sm" />
+                </div>
                 <div>
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-[#b6c2cf]">Đổi mật khẩu</h3>
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">Đổi mật khẩu</h3>
                 </div>
             </div>
 
@@ -74,25 +76,25 @@ function SettingPage() {
 
             {step === 1 ? (
                 <form onSubmit={handleRequestOtp} className="space-y-4">
-                    <input type="password" placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]" required />
+                    <input type="password" placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required />
                     <button type="submit" disabled={loadingPwd} className="w-full md:w-auto px-4 py-2.5 bg-pro-blue hover:bg-blue-600 text-white rounded-lg text-sm font-medium">Tiếp tục</button>
                 </form>
             ) : (
                 <form onSubmit={handleConfirmChange} className="space-y-4">
-                    <input type="text" placeholder="Mã OTP (6 số)" value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]" required />
-                    <input type="password" placeholder="Mật khẩu mới" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1d2125] text-gray-900 dark:text-[#b6c2cf]" required />
+                    <input type="text" placeholder="Mã OTP (6 số)" value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required />
+                    <input type="password" placeholder="Mật khẩu mới" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required />
                     <div className="flex gap-3">
                         <button type="submit" disabled={loadingPwd} className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium">Xác nhận</button>
-                        <button type="button" onClick={() => { setStep(1); setPwdMessage({type:'', text:''}); }} className="px-4 py-2.5 bg-gray-100 dark:bg-[#1d2125] text-gray-700 dark:text-[#b6c2cf] rounded-lg text-sm">Hủy</button>
+                        <button type="button" onClick={() => { setStep(1); setPwdMessage({type:'', text:''}); }} className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg text-sm">Hủy</button>
                     </div>
                 </form>
             )}
           </div>
 
           {/* Danger Zone */}
-          <div className="bg-white dark:bg-[#22272b] p-4 md:p-6 rounded-xl shadow-sm border border-red-200 dark:border-red-900/30">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-red-200 dark:border-red-900/30">
             <h3 className="text-base md:text-lg font-semibold text-red-600 mb-2">Xóa tài khoản</h3>
-            <p className="text-xs md:text-sm text-gray-500 mb-4">Hành động này không thể hoàn tác.</p>
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-4">Hành động này không thể hoàn tác.</p>
             <button onClick={() => setIsDeleteModalOpen(true)} className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
               <Trash2 className="w-4 h-4" /> Xóa vĩnh viễn
             </button>

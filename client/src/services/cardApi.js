@@ -2,9 +2,9 @@
 import api from './api';
 
 // API tạo thẻ mới
-export const createCard = async (title, boardId, listId) => {
+export const createCard = async (title, boardId, listId,cardId) => {
   try {
-    const { data } = await api.post(`/boards/${boardId}/lists/${listId}/cards`, { title });
+    const { data } = await api.post(`/boards/${boardId}/lists/${listId}/cards`, { title,_id: cardId });
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;

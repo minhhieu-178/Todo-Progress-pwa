@@ -47,7 +47,7 @@ function MainLayout({ children }) {
 
   return (
     <ProtectedRoute>
-      <div className="flex w-full h-screen transition-colors duration-200 overflow-hidden relative">
+      <div className="flex w-full h-screen transition-all duration-150 overflow-hidden relative">
         
         {/* Desktop Sidebar */}
         {!isMobile && (
@@ -74,16 +74,16 @@ function MainLayout({ children }) {
             
           {/* Mobile Header */}
           {isMobile && (
-            <div className="flex items-center justify-between px-4 py-3 glass-effect shadow-sm z-20 border-b adaptive-border">
+            <div className="flex items-center justify-between px-4 py-3 glass-effect shadow-sm z-20 border-b border-gray-200 dark:border-gray-700">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="flex items-center justify-center p-2 rounded-lg adaptive-hover adaptive-text transition-colors"
+                className="flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white transition-colors"
                 aria-label="Mở menu"
               >
                 <Menu className="w-6 h-6" />
               </button>
               
-              <h1 className="text-lg font-bold adaptive-text absolute left-1/2 transform -translate-x-1/2">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white absolute left-1/2 transform -translate-x-1/2">
                 Task Manager
               </h1>
               

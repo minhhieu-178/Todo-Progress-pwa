@@ -5,8 +5,11 @@ import { createLog } from '../services/logService.js';
 export const createList = async (req, res) => {
   try {
     const { boardId } = req.params;
-    const { title, position } = req.body;
+    const { title, position,_id } = req.body;
     if (!title) return res.status(400).json({ message: 'Thiếu tiêu đề List' });
+    if (!_id) {
+     return res.status(400).json({ message: 'Thiếu ID list (Client generation required)' });
+    }
 
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
@@ -17,7 +20,7 @@ export const createList = async (req, res) => {
     }
 
     const newPosition = position ?? board.lists.length;
-    const newList = { title: title.trim(), position: newPosition, cards: [] };
+    const newList = { _id:_id,title: title.trim(), position: newPosition, cards: [] };
 
     board.lists.push(newList);
     await board.save();
@@ -94,10 +97,20 @@ export const deleteList = async (req, res) => {
     const list = board.lists.id(listId);
     if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
     
+    const listTitle = list.title;
     // Xóa list khỏi mảng
     board.lists.pull(listId);
     
     await board.save();
+
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: listId,
+      entityType: 'LIST',
+      action: 'DELETE_LIST',
+      content: `đã xóa danh sách "${listTitle}"`
+    });
     const io = req.app.get('socketio');
     if (io) {
       io.to(boardId).emit('BOARD_UPDATED', { 
@@ -128,6 +141,8 @@ export const moveList = async (req, res) => {
     const currentIndex = board.lists.findIndex(l => l._id.toString() === listId);
     if (currentIndex === -1) return res.status(404).json({ message: 'Không tìm thấy List cần chuyển' });
 
+    const listTitle = board.lists[currentIndex].title;
+
     const [movedList] = board.lists.splice(currentIndex, 1);
     board.lists.splice(newPosition, 0, movedList);
 
@@ -136,6 +151,15 @@ export const moveList = async (req, res) => {
     });
 
     await board.save();
+
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: listId,
+      entityType: 'LIST',
+      action: 'MOVE_LIST',
+      content: `đã thay đổi vị trí danh sách "${listTitle}"`
+    });
 
     const io = req.app.get('socketio');
     if (io) {

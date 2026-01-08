@@ -14,7 +14,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     type: { 
       type: String,
-      enum: ['COMMENT', 'ASSIGN', 'DEADLINE','ADDED_TO_BOARD','DELETED_FROM_BOARD','ADDED_TO_CARD', 'REMOVE_MEMBER_FROM_CARD', 'ATTACHMENT'],
+      enum: ['COMMENT', 'ASSIGN', 'DEADLINE','ADDED_TO_BOARD','DELETED_FROM_BOARD','ADDED_TO_CARD', 'REMOVE_MEMBER_FROM_CARD', 'ATTACHMENT', 'MENTION'],
       required: true,
     },
     targetUrl: { type: String },
@@ -22,8 +22,8 @@ const NotificationSchema = new mongoose.Schema(
     message: { type: String },
     read: { type: Boolean, default: false },
     metadata: { 
-      boardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Board' },
-      cardId: { type: mongoose.Schema.Types.ObjectId },
+      boardId: { type: String, ref: 'Board' },
+      cardId: { type: String },
     },
   },
   { timestamps: true }

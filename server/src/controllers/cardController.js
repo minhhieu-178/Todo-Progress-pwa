@@ -10,11 +10,14 @@ import { v2 as cloudinary } from 'cloudinary';
  * @access Protected
  */
 export const createCard = async (req, res) => {
-  const { title } = req.body;
+  const { title,_id } = req.body;
   const { boardId, listId } = req.params;
 
   if (!title) {
     return res.status(400).json({ message: 'Vui lòng nhập tiêu đề cho Card' });
+  }
+  if (!_id) {
+     return res.status(400).json({ message: 'Thiếu ID thẻ (Client generation required)' });
   }
 
   try {
@@ -31,7 +34,7 @@ export const createCard = async (req, res) => {
     if (!list) return res.status(404).json({ message: 'Không tìm thấy List' });
 
     const newCard = {
-      _id: new mongoose.Types.ObjectId(),
+      _id: _id,
       title,
       position: list.cards.length,
       members: [],
@@ -39,6 +42,15 @@ export const createCard = async (req, res) => {
 
     list.cards.push(newCard);
     await board.save();
+
+    await createLog({
+      userId: req.user._id,
+      boardId: board._id,
+      entityId: newCard._id,
+      entityType: 'CARD',
+      action: 'CREATE_CARD',
+      content: `đã tạo thẻ công việc "${title}" trong danh sách "${list.title}"`
+    });
 
     const io = req.app.get('socketio');
     if (io) {
@@ -59,6 +71,7 @@ export const createCard = async (req, res) => {
 export const removeMemberFromCard = async (req, res) => {
   const { boardId, listId, cardId } = req.params;
   const { userId } = req.body;
+  const removedUser = await User.findById(userId).select('fullName email');
 
   if (!userId) {
     return res.status(400).json({ message: "Thiếu userId" });
@@ -90,7 +103,16 @@ export const removeMemberFromCard = async (req, res) => {
     card.members = card.members.filter(
       (m) => m.toString() !== userId.toString()
     );
+
     await board.save();
+    await createLog({
+      userId: req.user._id,         
+      boardId: board._id,
+      entityId: card._id,
+      entityType: 'CARD',
+      action: 'REMOVE_MEMBER_FROM_CARD',
+      content: `xóa thành viên ${removedUser?.fullName || removedUser?.email} khỏi thẻ "${card.title}"`
+    });
 
     const io = req.app.get('socketio');
     if (io) {
@@ -133,6 +155,8 @@ export const removeMemberFromCard = async (req, res) => {
 export const addMemberToCard = async (req, res) => {
   const { boardId, listId, cardId } = req.params;
   const { userId } = req.body;
+  const targetUser = await User.findById(userId).select('fullName email');
+
 
   if (!userId) {
     return res.status(400).json({ message: 'Thiếu userId' });
@@ -159,6 +183,11 @@ export const addMemberToCard = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy Bảng/Thẻ hoặc bạn không có quyền.' });
     }
 
+    await updatedBoard.populate({
+        path: 'lists.cards.members',
+        select: 'fullName email avatar'
+    });
+
     let targetCard = null;
     for (const list of updatedBoard.lists) {
       if (list._id.toString() === listId) {
@@ -168,6 +197,15 @@ export const addMemberToCard = async (req, res) => {
     }
 
     if (targetCard) {
+
+      await createLog({
+        userId: req.user._id,          // người thực hiện
+        boardId: boardId,
+        entityId: targetCard._id,
+        entityType: 'CARD',
+        action: 'ADD_MEMBER_TO_CARD',
+        content: `thêm thành viên ${targetUser?.fullName || targetUser?.email} vào thẻ "${targetCard.title}"`
+      });
 
       const io = req.app.get('socketio');
       if (io) {
@@ -291,6 +329,14 @@ export const deleteCard = async (req, res) => {
     const card = list.cards.id(cardId);
     if (!card) return res.status(404).json({ message: 'Không tìm thấy Card' });
 
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: cardId,
+      entityType: 'CARD',
+      action: 'DELETE_CARD',
+      content: `đã xóa thẻ công việc "${card.title}" trong danh sách "${list.title}"`
+    });
     // Xóa card khỏi mảng cards
     card.deleteOne();
 
@@ -423,6 +469,15 @@ export const uploadAttachment = async (req, res) => {
     card.attachments.push(newAttachment);
     await board.save();
 
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: cardId,
+      entityType: 'CARD',
+      action: 'UPLOAD_ATTACHMENT',
+      content: `đã đính kèm tệp "${fixedName}" vào thẻ "${card.title}"`
+    });
+
     const savedAttachment = card.attachments[card.attachments.length - 1];
 
     const io = req.app.get('socketio');
@@ -482,6 +537,8 @@ export const deleteAttachment = async (req, res) => {
     const attachment = card.attachments.id(attachmentId);
     if (!attachment) return res.status(404).json({ message: 'Không tìm thấy tệp đính kèm' });
 
+    const fileName = attachment.name;
+
     if (attachment.publicId) {
        let resourceType = 'raw';
        if (attachment.type.startsWith('image/') || attachment.type === 'application/pdf') {
@@ -496,7 +553,25 @@ export const deleteAttachment = async (req, res) => {
     }
 
     card.attachments.pull(attachmentId);
-    await board.save();
+    await board.save(); 
+
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: cardId,
+      entityType: 'CARD',
+      action: 'DELETE_ATTACHMENT', 
+      content: `đã xóa tệp "${fileName}" khỏi thẻ "${card.title}"` 
+    });
+
+    await createLog({
+      userId: req.user._id,
+      boardId: boardId,
+      entityId: cardId,
+      entityType: 'CARD',
+      action: 'UPLOAD_ATTACHMENT',
+      content: `đã xóa tệp "${fixedName}" khỏi thẻ "${card.title}"`
+    });
 
     const io = req.app.get('socketio');
     if (io) {

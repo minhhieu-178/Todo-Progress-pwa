@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Users, ChevronLeft } from 'lucide-react';
+import { Users, ChevronLeft, MoreHorizontal, Activity } from 'lucide-react';
 import { getBoardById, addMemberToBoard, removeMemberFromBoard } from '../services/boardApi';
 import { createList, updateList, deleteList, moveList } from '../services/listApi';
 import { moveCard } from '../services/cardApi';
@@ -10,6 +10,8 @@ import CardDetailModal from '../components/board/CardDetailModal';
 import MembersModal from '../components/board/MembersModal';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import ActivityLogSidebar from '../components/board/ActivityLogSidebar'; 
+import { v7 as uuidv7 } from 'uuid';
 
 function BoardPage() {
   const { user } = useAuth();
@@ -27,6 +29,7 @@ function BoardPage() {
   const [selectedListId, setSelectedListId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [isLogOpen, setIsLogOpen] = useState(false);
 
   const findCardInBoard = (boardData, cardId) => {
     if (!boardData?.lists) return null;
@@ -59,6 +62,9 @@ function BoardPage() {
   };
 
   const handleDeleteCardInBoard = (listId, cardId) => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+
     setBoard(prev => {
       const newLists = prev.lists.map(l => {
         if (l._id === listId) {
@@ -104,6 +110,22 @@ function BoardPage() {
       socket.off('BOARD_DELETED');
     };
   }, [socket, id]);
+
+  useEffect(() => {
+    if (isModalOpen && selectedCard && board) {
+      const updatedCard = findCardInBoard(board, selectedCard._id);
+      
+      if (updatedCard) {
+        if (JSON.stringify(updatedCard) !== JSON.stringify(selectedCard)) {
+            setSelectedCard(updatedCard);
+        }
+      } else {
+        setIsModalOpen(false);
+        setSelectedCard(null);
+        alert("Thẻ này vừa bị xóa bởi thành viên khác.");
+      }
+    }
+  }, [board]);
 
   useEffect(() => {
     if (board && activeCardId) {
@@ -175,6 +197,7 @@ function BoardPage() {
     e.preventDefault();
     if (!newListTitle.trim()) return;
     try {
+      const newListId = uuidv7();
       const newList = await createList(newListTitle, id);
       setBoard({ ...board, lists: [...board.lists, newList] });
       setNewListTitle('');
@@ -233,19 +256,20 @@ function BoardPage() {
   const isOwner = board?.ownerId?._id === user?._id || board?.ownerId === user?._id;
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 transition-all duration-150">
       <header className="p-4 bg-white dark:bg-gray-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700">
         <div>
-          <Link to="/boards" className="text-sm text-gray-500 hover:underline mb-1 block">
-             &larr; Danh sách bảng
+          <Link to="/boards" className="text-sm text-gray-500 dark:text-gray-400 hover:underline mb-1 block flex items-center gap-1">
+            <ChevronLeft className="w-4 h-4" />
+            Danh sách bảng
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{board.title}</h1>
-            {isOwner && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Owner</span>}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white truncate">{board.title}</h1>
+            {isOwner && <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 text-xs px-2 py-1 rounded-full flex-shrink-0">Owner</span>}
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className="flex -space-x-2 cursor-pointer" onClick={() => setIsMembersModalOpen(true)}>
             {board.members?.slice(0, 5).map((m) => (
               <div key={m._id} className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-indigo-500 text-white flex items-center justify-center text-xs font-bold uppercase overflow-hidden">
@@ -253,14 +277,22 @@ function BoardPage() {
               </div>
             ))}
             {board.members?.length > 5 && (
-              <div className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">
+              <div className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center text-xs font-bold">
                 +{board.members.length - 5}
               </div>
             )}
           </div>
-          <button onClick={() => setIsMembersModalOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium">
-            <Users className="w-4 h-4" />
-            <span>Thành viên</span>
+          <button 
+            onClick={() => setIsLogOpen(true)}
+            title="Xem lịch sử hoạt động"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            <Activity className="w-4 h-4" />
+            <span className="hidden sm:inline">Hoạt động</span>
+          </button>
+          <button onClick={() => setIsMembersModalOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <Users className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Thành viên</span>
           </button>
         </div>
       </header>
@@ -289,7 +321,7 @@ function BoardPage() {
                     value={newListTitle}
                     onChange={(e) => setNewListTitle(e.target.value)}
                     placeholder="+ Thêm danh sách mới"
-                    className="w-full px-2 py-1 text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1 text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </form>
               </div>
@@ -320,6 +352,12 @@ function BoardPage() {
         currentUser={user}
         onInvite={handleInvite}
         onRemove={handleRemoveMember}
+      />
+
+      <ActivityLogSidebar 
+        isOpen={isLogOpen}
+        onClose={() => setIsLogOpen(false)}
+        boardId={board?._id}
       />
     </div>
   );

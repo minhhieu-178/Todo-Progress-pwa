@@ -12,8 +12,7 @@ function PageHeader({ title, showSearch = true }) {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
-    const socketContext = useSocket();
-    const socket = socketContext?.socket;
+    const socket = useSocket();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -56,6 +55,8 @@ function PageHeader({ title, showSearch = true }) {
         socket.on('NEW_NOTIFICATION', handleNewNotification);
         return () => socket.off('NEW_NOTIFICATION', handleNewNotification);
     }, [socket]);
+
+    
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -133,25 +134,25 @@ function PageHeader({ title, showSearch = true }) {
 
     return (
     <>
-        <header className="flex items-center justify-between px-0 py-6 glass-effect shadow-sm sticky top-0 z-10 transition-colors duration-200">
+        <header className="flex items-center justify-between px-0 py-6 glass-effect shadow-sm sticky top-0 z-10 transition-all duration-150">
             
             {/* Page Title - Hidden on mobile when search is active */}
-            <h1 className={`text-2xl md:text-3xl font-bold adaptive-text truncate px-8 ${showMobileSearch ? 'hidden md:block' : 'block'}`}>
+            <h1 className={`text-xl md:text-3xl font-bold adaptive-text px-4 md:px-8 min-w-0 flex-shrink ${showMobileSearch ? 'hidden md:block' : 'block'}`}>
                 {title}
             </h1>
             
             {/* Mobile Search Bar - Expandable */}
             {showMobileSearch && showSearch && (
-                <div className="flex-1 gap-3 md:hidden relative animate-fadeIn" ref={searchRef}>
+                <div className="flex-1 gap-3 md:hidden relative animate-fadeIn mx-2" ref={searchRef}>
                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 adaptive-text-muted" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-700 dark:text-gray-300" />
                         <input
                             type="text"
                             autoFocus
                             placeholder="Tìm thành viên..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-11 pr-12 py-3 adaptive-border border rounded-lg text-sm glass-effect adaptive-text focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
+                            className="w-full pl-11 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all shadow-sm"
                         />
                         <button 
                             onClick={() => {
@@ -159,7 +160,7 @@ function PageHeader({ title, showSearch = true }) {
                                 setSearchTerm('');
                                 setShowDropdown(false);
                             }} 
-                            className="absolute right-3 top-1/2 -translate-y-1/2 adaptive-text-muted hover:adaptive-text touch-target"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white touch-target"
                             aria-label="Đóng tìm kiếm"
                         >
                             <X className="w-5 h-5" />
@@ -203,20 +204,20 @@ function PageHeader({ title, showSearch = true }) {
             )}
 
             {/* Right Side Controls */}
-            <div className="flex items-center gap-6 px-8">
+            <div className="flex items-center gap-3 md:gap-6 px-4 md:px-8 flex-shrink-0">
                 
                 {/* Desktop Search */}
                 {showSearch && (
                     <div className="relative hidden md:block w-64 lg:w-80" ref={searchRef}> 
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 adaptive-text-muted" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-700 dark:text-gray-300" />
                             <input
                                 type="text"
                                 placeholder="Tìm thành viên..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
-                                className="w-full pl-11 pr-11 py-3 adaptive-border border rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 glass-effect adaptive-text outline-none transition-all"
+                                className="w-full pl-11 pr-11 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none transition-all shadow-sm"
                             />
                             {isSearching && (
                                 <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500" />
@@ -258,7 +259,7 @@ function PageHeader({ title, showSearch = true }) {
                 {showSearch && !showMobileSearch && (
                     <button 
                         onClick={() => setShowMobileSearch(true)} 
-                        className="md:hidden p-2 adaptive-text-muted hover:adaptive-text rounded-lg adaptive-hover transition-colors"
+                        className="md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg adaptive-hover transition-colors"
                         aria-label="Mở tìm kiếm"
                     >
                         <Search className="w-6 h-6" />
@@ -268,7 +269,7 @@ function PageHeader({ title, showSearch = true }) {
                 {/* Theme Toggle Button */}
                 <button 
                     onClick={toggleTheme}
-                    className="p-2 adaptive-text-muted hover:adaptive-text rounded-lg adaptive-hover transition-colors"
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg adaptive-hover transition-colors"
                     aria-label={theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
                 >
                     {theme === 'light' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
@@ -278,7 +279,7 @@ function PageHeader({ title, showSearch = true }) {
                 <div className="relative" ref={notiRef}>
                     <button 
                         onClick={() => setShowNotiDropdown(!showNotiDropdown)} 
-                        className="relative touch-target p-2 adaptive-text-muted hover:adaptive-text rounded-lg adaptive-hover transition-colors"
+                        className="relative touch-target p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg adaptive-hover transition-colors"
                         aria-label="Thông báo"
                     >
                         <Bell className="w-6 h-6" />
@@ -291,16 +292,16 @@ function PageHeader({ title, showSearch = true }) {
                     
                     {/* Notification Dropdown - Responsive */}
                     {showNotiDropdown && (
-                        <div className="absolute right-0 mt-3 w-80 sm:w-96 glass-effect rounded-xl shadow-xl adaptive-border border overflow-hidden z-50 
+                        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-[#22272b] rounded-xl shadow-xl border border-gray-200 dark:border-white/10 overflow-hidden z-50 
                                        fixed md:absolute top-16 md:top-auto right-4 md:right-0 left-4 md:left-auto max-w-[calc(100vw-2rem)] md:max-w-none">
                             
                             {/* Header */}
-                            <div className="p-4 adaptive-border border-b flex justify-between items-center bg-white/50">
-                                <h3 className="text-base font-bold adaptive-text">Thông báo</h3>
+                            <div className="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-[#1d2125]">
+                                <h3 className="text-base font-bold text-gray-900 dark:text-[#b6c2cf]">Thông báo</h3>
                                 {unreadCount > 0 && (
                                     <button 
                                         onClick={handleMarkAllRead} 
-                                        className="text-sm font-medium text-blue-600 flex items-center gap-2 hover:underline touch-target"
+                                        className="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-2 hover:underline touch-target"
                                     >
                                         <CheckCheck className="w-4 h-4" /> 
                                         Đọc tất cả
@@ -309,40 +310,40 @@ function PageHeader({ title, showSearch = true }) {
                             </div>
                             
                             {/* Notifications List */}
-                            <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                            <div className="max-h-[350px] overflow-y-auto custom-scrollbar bg-white dark:bg-[#22272b]">
                                 {notifications.length === 0 ? (
                                     <div className="p-8 text-center">
-                                        <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                                            <Bell className="w-6 h-6 text-gray-400" />
+                                        <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 dark:bg-[#1d2125] rounded-full flex items-center justify-center">
+                                            <Bell className="w-6 h-6 text-gray-400 dark:text-[#9fadbc]" />
                                         </div>
-                                        <p className="text-sm adaptive-text-muted">Chưa có thông báo nào</p>
+                                        <p className="text-sm text-gray-500 dark:text-[#9fadbc]">Chưa có thông báo nào</p>
                                     </div>
                                 ) : (
                                     notifications.map(noti => (
                                         <div 
                                             key={noti._id} 
                                             onClick={() => handleNotificationClick(noti)} 
-                                            className={`p-4 adaptive-hover cursor-pointer flex gap-3 adaptive-border border-b last:border-0 transition-colors touch-target ${
-                                                !noti.read ? 'bg-blue-50/40' : ''
+                                            className={`p-4 hover:bg-gray-50 dark:hover:bg-[#1d2125] cursor-pointer flex gap-3 border-b border-gray-100 dark:border-white/10 last:border-0 transition-colors touch-target ${
+                                                !noti.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                                             }`}
                                         >
                                             <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 ${
-                                                ['DELETED_FROM_BOARD', 'REMOVE_MEMBER_FROM_CARD'].includes(noti.type) ? 'bg-red-500' : 'bg-blue-500'
+                                                ['DELETED_FROM_BOARD', 'REMOVE_MEMBER_FROM_CARD'].includes(noti.type) ? 'bg-red-500 dark:bg-red-600' : 'bg-blue-500 dark:bg-blue-600'
                                             }`}>
                                                 {getNotificationIcon(noti.type)}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-sm break-words leading-relaxed ${
-                                                    !noti.read ? 'font-semibold adaptive-text' : 'adaptive-text-muted'
+                                                    !noti.read ? 'font-semibold text-gray-900 dark:text-[#b6c2cf]' : 'text-gray-600 dark:text-[#9fadbc]'
                                                 }`}>
                                                     {noti.message}
                                                 </p>
-                                                <p className="text-xs adaptive-text-muted mt-1">
+                                                <p className="text-xs text-gray-500 dark:text-[#9fadbc] mt-1">
                                                     {formatTime(noti.createdAt)}
                                                 </p>
                                             </div>
                                             {!noti.read && (
-                                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                                                <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full flex-shrink-0 mt-2"></div>
                                             )}
                                         </div>
                                     ))

@@ -21,3 +21,11 @@ export const getLogsByBoard = async (boardId, limit = 50) => {
     .sort({ createdAt: -1 }) 
     .limit(limit);
 };
+
+export const getLogsByUser = async (userId, limit = 50) => {
+  return await ActivityLog.find({ userId })
+    .populate('userId', 'fullName email') // Populate thông tin người dùng
+    .populate('boardId', 'title')         // Populate tên bảng để hiển thị
+    .sort({ createdAt: -1 })
+    .limit(limit);
+};

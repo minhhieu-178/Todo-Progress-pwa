@@ -37,14 +37,22 @@ registerRoute(
   ({ url }) => url.pathname.startsWith('/api/users'),
   new StaleWhileRevalidate({ cacheName: 'api-users-cache' })
 );
-
+registerRoute(
+  ({ url, request }) => url.pathname.startsWith('/api') && request.method === 'GET',
+  new NetworkFirst({
+    cacheName: 'api-general-cache', 
+    networkTimeoutSeconds: 3,
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 })
+    ]
+  })
+);
 const handler = createHandlerBoundToURL('/index.html');
 const navigationRoute = new NavigationRoute(handler, {
   denylist: [/^\/api/, /\.[a-z]+$/],
 });
 registerRoute(navigationRoute);
 
-// --- XỬ LÝ SYNC OFFLINE THỦ CÔNG ---
 const processOfflineQueue = async () => {
   const db = await openDB('offline-requests-db', 1);
   const requests = await db.getAll('requests');
@@ -54,7 +62,6 @@ const processOfflineQueue = async () => {
   console.log(`[SW] Đang xử lý ${requests.length} requests offline...`);
 
   for (const req of requests) {
-    // Check thời gian: Nếu request quá cũ (ví dụ > 24h) thì bỏ qua để tránh lỗi data cũ
     if (Date.now() - req.timestamp > 24 * 60 * 60 * 1000) {
         await db.delete('requests', req.id);
         continue;
@@ -64,15 +71,12 @@ const processOfflineQueue = async () => {
       let body = req.body;
       let headers = req.headers || {};
 
-      // Tái tạo FormData từ Object
       if (req.isFormData) {
         const formData = new FormData();
         for (const key in req.body) {
             formData.append(key, req.body[key]);
         }
         body = formData;
-        // Quan trọng: Khi gửi FormData, KHÔNG được set Content-Type thủ công
-        // Để trình duyệt tự set boundary (multipart/form-data; boundary=...)
         delete headers['Content-Type'];
       } else if (typeof body === 'object') {
         body = JSON.stringify(body);
@@ -95,8 +99,6 @@ const processOfflineQueue = async () => {
              });
         }
       } else {
-        // Nếu lỗi Client (400, 401, 403, 404, 500) -> Xóa để tránh lặp vô tận
-        // Chỉ giữ lại nếu lỗi mạng thật sự
         if (response.status >= 400) {
             console.error(`[SW] Server từ chối request ${req.id} (Status: ${response.status})`);
             await db.delete('requests', req.id);
