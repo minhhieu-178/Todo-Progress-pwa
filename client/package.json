@@ -19,6 +19,7 @@
     "firebase": "^12.7.0",
     "idb": "^8.0.3",
     "lucide-react": "^0.553.0",
+    "nx": "^22.3.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.9.5",

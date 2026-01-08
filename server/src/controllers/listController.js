@@ -5,8 +5,11 @@ import { createLog } from '../services/logService.js';
 export const createList = async (req, res) => {
   try {
     const { boardId } = req.params;
-    const { title, position } = req.body;
+    const { title, position,_id } = req.body;
     if (!title) return res.status(400).json({ message: 'Thiếu tiêu đề List' });
+    if (!_id) {
+     return res.status(400).json({ message: 'Thiếu ID list (Client generation required)' });
+    }
 
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
@@ -17,7 +20,7 @@ export const createList = async (req, res) => {
     }
 
     const newPosition = position ?? board.lists.length;
-    const newList = { title: title.trim(), position: newPosition, cards: [] };
+    const newList = { _id:_id,title: title.trim(), position: newPosition, cards: [] };
 
     board.lists.push(newList);
     await board.save();

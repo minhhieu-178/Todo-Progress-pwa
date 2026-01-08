@@ -56,7 +56,8 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {   
   cors: {
     origin: ['http://localhost:5173', 'http://localhost:4173'], 
-    methods: ["GET", "POST"]
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+    allowedHeaders: ['Content-Type', 'Authorization']
   }
 });
 
@@ -99,7 +100,7 @@ app.use('/api/analytics', analyticsRoutes);
 
 
 
-cron.schedule('*/50 * * * *', async () => {
+cron.schedule('*/100 * * * *', async () => {
   console.log('Running cron job: check deadlines');
   try {
     const notifications = await checkDeadlines(io); 

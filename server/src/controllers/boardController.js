@@ -2,17 +2,21 @@ import Board from '../models/Board.js';
 import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js'
 import { createLog } from '../services/logService.js';
-
+import { randomUUID } from 'crypto';
 export const createBoard = async (req, res) => {
-  const { title } = req.body;
+  const { title,_id } = req.body;
   if (!title) return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
+  if (!_id) {
+     return res.status(400).json({ message: 'Thiếu ID Bảng (Client generation required)' });
+  }
   try {
     const defaultLists = [
-      { title: 'Việc cần làm', position: 0, isDefault: true }, 
-      { title: 'Đang làm', position: 1, isDefault: true },     
-      { title: 'Đã xong', position: 2, isDefault: true },      
+      { _id: randomUUID(),title: 'Việc cần làm', position: 0, isDefault: true }, 
+      { _id: randomUUID(),title: 'Đang làm', position: 1, isDefault: true },     
+      {_id: randomUUID(), title: 'Đã xong', position: 2, isDefault: true },      
     ];
     const board = await Board.create({
+      id:_id,
       title,
       ownerId: req.user._id,
       members: [req.user._id],
