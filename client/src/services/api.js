@@ -102,7 +102,9 @@ api.interceptors.response.use(
                         mockData = {}; 
                     }
                 }
-
+                if (originalRequest.method === 'post' && originalRequest.url.includes('/lists') && !originalRequest.url.includes('/cards')) {
+                  mockData.cards = [];
+                }
                 return Promise.resolve({ 
                     data: { 
                         success: true, 

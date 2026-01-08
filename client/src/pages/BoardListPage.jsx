@@ -48,17 +48,35 @@ function BoardListPage() {
     }
   };
 
-  const handleCreateBoard = async (e) => {
+const handleCreateBoard = async (e) => {
       e.preventDefault();
       if (!newBoardTitle.trim()) return;
       
-      const tempId = Date.now(); 
       setIsCreating(true); 
       
       try {
         const newBoardId = uuidv7();
-        const newBoard = await createBoard(newBoardTitle, newBoardId);
-        setBoards([newBoard, ...boards]);
+        
+        // --- LOGIC MỚI: Tạo Default Lists tại Client ---
+        const defaultLists = [
+            { _id: uuidv7(), title: 'Việc cần làm', position: 0, cards: [] }, 
+            { _id: uuidv7(), title: 'Đang làm', position: 1, cards: [] },     
+            { _id: uuidv7(), title: 'Đã xong', position: 2, cards: [] },      
+        ];
+        
+        // Truyền defaultLists vào hàm createBoard
+        // Server sẽ lưu đúng các ID này. 
+        // Khi Offline, object 'newBoard' trả về sẽ có đủ lists này để cache.
+        const newBoardData = await createBoard(newBoardTitle, newBoardId, defaultLists);
+        
+        // Nếu API trả về (hoặc mock offline trả về), update state
+        // Lưu ý: createBoard từ API trả về data đã merge, nhưng để chắc chắn hiển thị ngay lập tức:
+        const boardToDisplay = {
+            ...newBoardData,
+            lists: defaultLists // Đảm bảo UI nhận được list ngay lập tức
+        };
+
+        setBoards([boardToDisplay, ...boards]);
         setNewBoardTitle('');
         setIsCreating(false); 
       } catch (err) {

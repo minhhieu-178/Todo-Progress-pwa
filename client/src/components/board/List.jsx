@@ -122,7 +122,7 @@ function List({ list, boardId, boardMembers, onCardCreated, onCardClick, index, 
                   }`}
                   style={{ maxHeight: 'calc(100vh - 230px)' }}
                 >
-                  {list.cards.map((card, index) => (
+                  {(list.cards || []).map((card, index) => (
                     <Card 
                         key={card._id} 
                         card={card} 
