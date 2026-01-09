@@ -1,7 +1,7 @@
 import api from './api'; 
 import axios from 'axios';
 import { mergeBoardDataWithOffline, mergeBoardsListWithOffline } from './offlineMerger'; 
-import { getAllOfflineRequests, deleteOfflineRequest, replaceTempIdInQueue } from './offlineStore';
+import { getAllOfflineRequests, deleteOfflineRequest } from './offlineStore';
 
 const getBaseUrl = () => {
     return api.defaults.baseURL || 'http://localhost:5001/api';
@@ -124,45 +124,12 @@ export const getBoardById = async (boardId) => {
                 try {
                   const { data: created } = await api.post('/boards', replayBody);
                   console.log('[offline-replay] Replay create-board succeeded for', boardId, created);
-                  // remove the queued create request
+                  // remove the queued request
                   try { await deleteOfflineRequest(createReq.id); } catch (e) { console.warn('[offline-replay] Could not delete queued request', e); }
 
-                  // If server created a different real _id, replace occurrences in remaining queued requests
-                  try {
-                    if (created && created._id && created._id !== boardId) {
-                      console.log('[offline-replay] Mapping tempId -> realId', boardId, '->', created._id);
-                      await replaceTempIdInQueue(boardId, created._id);
-
-                      // Update cache entries: write the created board under the real id and remove the temp cache
-                      if ('caches' in window) {
-                        try {
-                          const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
-                          const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-                          const newUrl = `${cleanBase}/boards/${created._id}`;
-                          const oldUrl = `${cleanBase}/boards/${boardId}`;
-                          const cache = await caches.open('api-boards-cache');
-                          const resp = new Response(JSON.stringify(created), { headers: { 'Content-Type': 'application/json' } });
-                          await cache.put(newUrl, resp);
-                          try { await cache.delete(oldUrl); } catch(e) {}
-                        } catch (e) {
-                          console.warn('[offline-replay] Cache update failed', e);
-                        }
-                      }
-
-                      // Return the created board merged with any offline changes
-                      return await mergeBoardDataWithOffline(created);
-                    }
-                  } catch (mapErr) {
-                    console.warn('[offline-replay] Error mapping tempId:', mapErr);
-                  }
-
-                  // If no id mismatch, simply fetch the board by the same id
-                  try {
-                    const { data: fresh } = await api.get(`/boards/${boardId}`);
-                    return await mergeBoardDataWithOffline(fresh);
-                  } catch (e) {
-                    // fall through to cache fallback
-                  }
+                  // After successful replay, retry fetching the board from server
+                  const { data: fresh } = await api.get(`/boards/${boardId}`);
+                  return await mergeBoardDataWithOffline(fresh);
                 } catch (replayErr) {
                   console.warn('[offline-replay] Replay failed:', replayErr?.response?.status || replayErr.message);
                   // fall-through to cache fallback below

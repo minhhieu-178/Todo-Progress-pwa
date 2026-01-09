@@ -22,35 +22,17 @@ const RegisterPage = () => {
 
     try { 
       setLoading(true); 
-      
       await register(formData.fullName, formData.email, formData.password, formData.age, formData.phone, formData.address); 
-      
-      setSuccess(true); 
-      
+      // After registering, navigate user to OTP verification page with email prefilled
+      navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+      return;
     } catch (err) { 
       setError(err.toString()); 
     } finally { 
       setLoading(false); 
     }
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-green-600 mb-4">Đăng ký thành công!</h2>
-          <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Chúng tôi đã gửi một email xác nhận đến <strong>{formData.email}</strong>.
-            <br/>
-            Vui lòng kiểm tra hộp thư (và cả mục spam) để kích hoạt tài khoản.
-          </p>
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Quay lại trang đăng nhập
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  
   
   return (
     // CONTAINER NGOÀI: 

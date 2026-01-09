@@ -35,14 +35,15 @@ export const saveOfflineRequest = async (url, method, data, token) => {
     url,
     method,
     body,
+    // Do not persist Authorization tokens in the offline queue to avoid replaying stale credentials.
+    // Instead store a flag so the SW/client can detect that auth is required for this request.
     headers: (() => {
       const h = {};
       // Nếu là JSON thì thêm Content-Type, FormData để trình duyệt tự xử lý boundary
       if (!isFormData) h['Content-Type'] = 'application/json';
-      // Lưu token vào DB nếu có, vì SW không đọc được localStorage
-      if (token) h['Authorization'] = `Bearer ${token}`;
       return h;
     })(),
+    authRequired: !!token,
     isFormData, 
     timestamp: Date.now(), // Tag thời gian như bạn yêu cầu
     retryCount: 0
