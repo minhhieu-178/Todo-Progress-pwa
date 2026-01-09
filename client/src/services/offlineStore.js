@@ -35,12 +35,14 @@ export const saveOfflineRequest = async (url, method, data, token) => {
     url,
     method,
     body,
-    headers: {
-        // Lưu token vào DB vì SW không đọc được localStorage
-        'Authorization': `Bearer ${token}`, 
-        // Nếu là JSON thì thêm Content-Type, FormData để trình duyệt tự xử lý boundary
-        ...(isFormData ? {} : { 'Content-Type': 'application/json' }) 
-    },
+    headers: (() => {
+      const h = {};
+      // Nếu là JSON thì thêm Content-Type, FormData để trình duyệt tự xử lý boundary
+      if (!isFormData) h['Content-Type'] = 'application/json';
+      // Lưu token vào DB nếu có, vì SW không đọc được localStorage
+      if (token) h['Authorization'] = `Bearer ${token}`;
+      return h;
+    })(),
     isFormData, 
     timestamp: Date.now(), // Tag thời gian như bạn yêu cầu
     retryCount: 0

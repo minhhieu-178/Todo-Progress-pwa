@@ -108,7 +108,7 @@ export const deleteList = async (req, res) => {
       boardId: boardId,
       entityId: listId,
       entityType: 'LIST',
-      action: 'DELETE_LIST',
+      action: 'DELETE',
       content: `đã xóa danh sách "${listTitle}"`
     });
     const io = req.app.get('socketio');

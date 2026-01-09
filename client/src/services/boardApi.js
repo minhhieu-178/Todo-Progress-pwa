@@ -36,17 +36,18 @@ export const createBoard = async (boardData) => {
   // 2. Inject trực tiếp vào Cache Storage của Service Worker (Hỗ trợ Offline-first)
   if ('caches' in window) {
       try {
-          const cache = await caches.open('api-boards-cache');
-          const baseUrl = getBaseUrl();
-          const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-          const url = `${cleanBaseUrl}/boards/${boardId}`;
-          
-          const response = new Response(JSON.stringify(optimisticBoard), {
-              headers: { 'Content-Type': 'application/json' }
-          });
-          
-          await cache.put(url, response);
-          console.log(`[Offline] Đã inject cache cho board: ${boardId}`);
+      const cache = await caches.open('api-boards-cache');
+      // Build the full URL using the axios instance baseURL to match what SW will request
+      const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+      const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+      const fullUrl = `${cleanBase}/boards/${boardId}`;
+
+      const response = new Response(JSON.stringify(optimisticBoard), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      await cache.put(fullUrl, response);
+      console.log(`[Offline] Đã inject cache cho board: ${boardId} -> ${fullUrl}`);
       } catch (err) {
           console.error("Lỗi cache thủ công:", err);
       }
@@ -68,12 +69,33 @@ export const getBoardById = async (boardId) => {
     return await mergeBoardDataWithOffline(data);
   } catch (error) {
     // Nếu gặp lỗi no-response (do cache injection thất bại hoặc bị xóa)
+    // If no-response (network failure / SW cache miss), try merging empty fallback
     if (error.message && error.message.includes('no-response')) {
         console.warn("Board không tìm thấy trong cache, thử tìm trong hàng đợi offline...");
-        // Fallback: Thử tạo một board rỗng và merge data từ queue (trường hợp hiếm)
         const fallbackBoard = { _id: boardId, title: 'Đang đồng bộ...', lists: [] };
         return await mergeBoardDataWithOffline(fallbackBoard);
     }
+
+    // If server returned 404 but we have an optimistic cached board (created while offline), return that
+    if (error.response && error.response.status === 404) {
+      if ('caches' in window) {
+        try {
+          const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+          const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+          const fullUrl = `${cleanBase}/boards/${boardId}`;
+          const cache = await caches.open('api-boards-cache');
+          const cachedResponse = await cache.match(fullUrl);
+          if (cachedResponse) {
+            const text = await cachedResponse.text();
+            const cachedData = JSON.parse(text);
+            return await mergeBoardDataWithOffline(cachedData);
+          }
+        } catch (e) {
+          console.warn('Lỗi khi đọc cache optimistic board:', e);
+        }
+      }
+    }
+
     throw error.response?.data?.message || error.message;
   }
 };
@@ -137,11 +159,27 @@ export const uploadBoardBackground = async (file) => {
 };
 
 export const getBoardTemplates = async () => {
+  const cacheKey = 'boardTemplates_v1';
+  try {
+    const response = await api.get('/boards/templates');
+    const templates = response.data;
     try {
-        const response = await api.get('/boards/templates');
-        return response.data; 
-    } catch (error) {
-        console.error("Lỗi API Templates:", error);
-        return []; 
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), templates }));
+    } catch (e) {
+      // ignore localStorage errors
     }
+    return templates;
+  } catch (error) {
+    console.warn("Lỗi API Templates, dùng cache nếu có:", error?.message || error);
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed.templates || [];
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+    return [];
+  }
 };

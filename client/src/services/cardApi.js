@@ -14,7 +14,8 @@ export const createCard = async (title, boardId, listId,cardId) => {
 // API cập nhật thẻ
 export const updateCard = async (boardId, listId, cardId, updateData) => {
   try {
-    const { data } = await api.put(`/boards/${boardId}/lists/${listId}/cards/${cardId}`, updateData);
+    const payload = { _id: cardId, ...updateData };
+    const { data } = await api.put(`/boards/${boardId}/lists/${listId}/cards/${cardId}`, payload);
     return data;
   } catch (error) {
     throw error.response?.data?.message || error.message;

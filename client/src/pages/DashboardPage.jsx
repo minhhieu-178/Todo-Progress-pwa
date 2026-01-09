@@ -86,7 +86,14 @@ function DashboardPage() {
     }
     setIsCreating(true);
     try {
-        const newBoard = await createBoard(newBoardTitle);
+    // Client-generated ID required by server for offline-first behavior
+    const newBoardId = uuidv7();
+    const defaultLists = [
+      { _id: uuidv7(), title: 'Việc cần làm', position: 0, cards: [] },
+      { _id: uuidv7(), title: 'Đang làm', position: 1, cards: [] },
+      { _id: uuidv7(), title: 'Đã xong', position: 2, cards: [] },
+    ];
+    const newBoard = await createBoard({ title: newBoardTitle, _id: newBoardId, lists: defaultLists });
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
         setError('');

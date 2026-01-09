@@ -86,12 +86,14 @@ const processOfflineQueue = async () => {
         method: req.method,
         headers: headers,
         body: body,
+        // ensure cookies are sent when server expects cookie-based auth
+        credentials: 'include',
       });
 
       if (response.ok) {
         await db.delete('requests', req.id);
         console.log(`[SW] Đồng bộ thành công: ${req.url}`);
-        
+
         if (req.url.includes('/upload')) {
              self.registration.showNotification('Tải lên hoàn tất', {
                 body: 'File của bạn đã được đồng bộ lên máy chủ.',
@@ -99,9 +101,23 @@ const processOfflineQueue = async () => {
              });
         }
       } else {
-        if (response.status >= 400) {
-            console.error(`[SW] Server từ chối request ${req.id} (Status: ${response.status})`);
-            await db.delete('requests', req.id);
+        // If auth error, don't delete the request — keep it for retry after user re-authenticates
+        if (response.status === 401 || response.status === 403) {
+            console.warn(`[SW] Đồng bộ thất bại do xác thực (status ${response.status}). Giữ lại request ${req.id} để thử lại sau khi đăng nhập.`);
+            // Notify client windows so they can prompt the user to re-authenticate
+            try {
+                const allClients = await clients.matchAll({ type: 'window' });
+                for (const client of allClients) {
+                    client.postMessage({ type: 'OFFLINE_SYNC_AUTH_REQUIRED', url: req.url, status: response.status });
+                }
+            } catch (e) {
+                console.error('[SW] Lỗi khi gửi message tới clients:', e);
+            }
+        } else {
+            if (response.status >= 400) {
+                console.error(`[SW] Server từ chối request ${req.id} (Status: ${response.status})`);
+                await db.delete('requests', req.id);
+            }
         }
       }
     } catch (error) {

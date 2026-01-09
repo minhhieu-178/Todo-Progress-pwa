@@ -26,10 +26,24 @@ try {
     if (templateKey && BOARD_TEMPLATES[templateKey]) {
       // Ưu tiên dùng template nếu có templateKey
       const template = BOARD_TEMPLATES[templateKey];
-      boardLists = template.lists.map(list => ({ ...list, isDefault: true }));
+      // Ensure each list from template has a string _id (required by ListSchema)
+      boardLists = template.lists.map((list, idx) => ({
+        _id: randomUUID(),
+        title: list.title,
+        position: typeof list.position === 'number' ? list.position : idx,
+        cards: [],
+        isDefault: true
+      }));
       background = template.background || background;
     } else if (lists && lists.length > 0) {
-      boardLists = lists;
+      // Ensure client-provided lists have _id and positions
+      boardLists = lists.map((l, idx) => ({
+        _id: l._id || randomUUID(),
+        title: l.title,
+        position: typeof l.position === 'number' ? l.position : idx,
+        cards: l.cards || [],
+        isDefault: l.isDefault || false
+      }));
     } else {
       boardLists = [
         { title: 'Việc cần làm', position: 0, isDefault: true },

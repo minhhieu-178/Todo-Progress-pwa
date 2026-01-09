@@ -72,19 +72,29 @@ const handleCreateBoard = async (e) => {
       // 1. Tạo ID ngay tại client (Hỗ trợ PWA/Offline cache injection)
       const newBoardId = uuidv7();
       
-      // 2. Tạo lists mặc định (Dùng làm fallback nếu không chọn template hoặc offline)
-      const defaultLists = [
+      // 2. Tạo lists theo template nếu có, ngược lại dùng default
+      let listsToUse = [
           { _id: uuidv7(), title: 'Việc cần làm', position: 0, cards: [] }, 
           { _id: uuidv7(), title: 'Đang làm', position: 1, cards: [] },     
           { _id: uuidv7(), title: 'Đã xong', position: 2, cards: [] },      
       ];
-      
-      // 3. Gọi API với Object tổng hợp (Khớp với boardApi.js đã sửa)
+      let boardBackground = '#f3f4f6';
+
+      if (selectedTemplate) {
+        const tpl = templates.find(t => t.key === selectedTemplate);
+        if (tpl && Array.isArray(tpl.lists) && tpl.lists.length > 0) {
+          listsToUse = tpl.lists.map((l, i) => ({ _id: uuidv7(), title: l.title, position: i, cards: [] }));
+        }
+        if (tpl && tpl.background) boardBackground = tpl.background;
+      }
+
+      // 3. Gọi API với Object tổng hợp (khớp với boardApi.js)
       const newBoardData = await createBoard({
           title: newBoardTitle,
           _id: newBoardId,
-          lists: defaultLists,
-          templateKey: selectedTemplate // Truyền templateKey nếu người dùng chọn
+          lists: listsToUse,
+          templateKey: selectedTemplate, // Truyền templateKey nếu người dùng chọn
+          background: boardBackground
       });
       
       // 4. Update state & Navigate
