@@ -62,3 +62,42 @@ export const deleteOfflineRequest = async (id) => {
   const db = await dbPromise;
   return db.delete(STORE_NAME, id);
 };
+
+// Replace occurrences of a temporary ID with the real ID across all queued requests.
+export const replaceTempIdInQueue = async (tempId, realId) => {
+  const db = await dbPromise;
+  const all = await db.getAll(STORE_NAME);
+  for (const r of all) {
+    let changed = false;
+    let newBody = r.body;
+    try {
+      if (typeof r.body === 'string') {
+        if (r.body.includes(tempId)) {
+          const replaced = r.body.split(tempId).join(realId);
+          try { newBody = JSON.parse(replaced); } catch (e) { newBody = replaced; }
+          changed = true;
+        }
+      } else if (r.body && typeof r.body === 'object') {
+        const s = JSON.stringify(r.body);
+        if (s.includes(tempId)) {
+          newBody = JSON.parse(s.split(tempId).join(realId));
+          changed = true;
+        }
+      }
+
+      let newUrl = r.url;
+      if (r.url && r.url.includes(tempId)) {
+        newUrl = r.url.split(tempId).join(realId);
+        changed = true;
+      }
+
+      if (changed) {
+        const newRecord = { ...r, body: newBody, url: newUrl };
+        // preserve same id by using put
+        await db.put(STORE_NAME, newRecord);
+      }
+    } catch (e) {
+      console.warn('[offlineStore] replaceTempIdInQueue failed for record', r.id, e);
+    }
+  }
+};

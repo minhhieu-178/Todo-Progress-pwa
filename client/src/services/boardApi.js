@@ -1,5 +1,7 @@
 import api from './api'; 
+import axios from 'axios';
 import { mergeBoardDataWithOffline, mergeBoardsListWithOffline } from './offlineMerger'; 
+import { getAllOfflineRequests, deleteOfflineRequest, replaceTempIdInQueue } from './offlineStore';
 
 const getBaseUrl = () => {
     return api.defaults.baseURL || 'http://localhost:5001/api';
@@ -78,22 +80,120 @@ export const getBoardById = async (boardId) => {
 
     // If server returned 404 but we have an optimistic cached board (created while offline), return that
     if (error.response && error.response.status === 404) {
-      if ('caches' in window) {
+        // First: try to see if there's a pending create-board in the offline queue for this id.
         try {
-          const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
-          const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-          const fullUrl = `${cleanBase}/boards/${boardId}`;
-          const cache = await caches.open('api-boards-cache');
-          const cachedResponse = await cache.match(fullUrl);
-          if (cachedResponse) {
-            const text = await cachedResponse.text();
-            const cachedData = JSON.parse(text);
-            return await mergeBoardDataWithOffline(cachedData);
+          const pending = await getAllOfflineRequests();
+          if (Array.isArray(pending)) {
+            const createReq = pending.find(r => {
+              try {
+                if (r.method && r.method.toLowerCase() === 'post') {
+                  const pth = new URL(r.url, window.location.origin).pathname.split('/').filter(Boolean);
+                  // expect path like: ['api', 'boards'] or ['api','boards','<id>']
+                  if (pth.length >= 2 && pth[0] === 'api' && pth[1] === 'boards') {
+                    const body = typeof r.body === 'string' ? JSON.parse(r.body) : r.body;
+                    return body && (body._id === boardId || body.id === boardId);
+                  }
+                }
+              } catch (e) {
+                return false;
+              }
+              return false;
+            });
+
+            if (createReq) {
+              console.log('[offline-replay] Found pending create-board for', boardId, ' — attempting silent refresh + replay');
+
+              // Attempt silent refresh using axios (so cookies are included)
+              try {
+                const refreshUrl = `${(api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl()}/auth/refresh-token`;
+                const refreshRes = await axios.post(refreshUrl, {}, { withCredentials: true });
+                if (refreshRes?.data?.accessToken) {
+                  localStorage.setItem('accessToken', refreshRes.data.accessToken);
+                  const userInfo = localStorage.getItem('userInfo');
+                  if (userInfo) {
+                    try {
+                      const parsed = JSON.parse(userInfo);
+                      parsed.accessToken = refreshRes.data.accessToken;
+                      localStorage.setItem('userInfo', JSON.stringify(parsed));
+                    } catch (e) { /* ignore parse errors */ }
+                  }
+                }
+
+                // Replay the create-board using the api axios instance so interceptors are used
+                const replayBody = typeof createReq.body === 'string' ? JSON.parse(createReq.body) : createReq.body;
+                try {
+                  const { data: created } = await api.post('/boards', replayBody);
+                  console.log('[offline-replay] Replay create-board succeeded for', boardId, created);
+                  // remove the queued create request
+                  try { await deleteOfflineRequest(createReq.id); } catch (e) { console.warn('[offline-replay] Could not delete queued request', e); }
+
+                  // If server created a different real _id, replace occurrences in remaining queued requests
+                  try {
+                    if (created && created._id && created._id !== boardId) {
+                      console.log('[offline-replay] Mapping tempId -> realId', boardId, '->', created._id);
+                      await replaceTempIdInQueue(boardId, created._id);
+
+                      // Update cache entries: write the created board under the real id and remove the temp cache
+                      if ('caches' in window) {
+                        try {
+                          const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+                          const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+                          const newUrl = `${cleanBase}/boards/${created._id}`;
+                          const oldUrl = `${cleanBase}/boards/${boardId}`;
+                          const cache = await caches.open('api-boards-cache');
+                          const resp = new Response(JSON.stringify(created), { headers: { 'Content-Type': 'application/json' } });
+                          await cache.put(newUrl, resp);
+                          try { await cache.delete(oldUrl); } catch(e) {}
+                        } catch (e) {
+                          console.warn('[offline-replay] Cache update failed', e);
+                        }
+                      }
+
+                      // Return the created board merged with any offline changes
+                      return await mergeBoardDataWithOffline(created);
+                    }
+                  } catch (mapErr) {
+                    console.warn('[offline-replay] Error mapping tempId:', mapErr);
+                  }
+
+                  // If no id mismatch, simply fetch the board by the same id
+                  try {
+                    const { data: fresh } = await api.get(`/boards/${boardId}`);
+                    return await mergeBoardDataWithOffline(fresh);
+                  } catch (e) {
+                    // fall through to cache fallback
+                  }
+                } catch (replayErr) {
+                  console.warn('[offline-replay] Replay failed:', replayErr?.response?.status || replayErr.message);
+                  // fall-through to cache fallback below
+                }
+              } catch (refreshErr) {
+                console.warn('[offline-replay] Silent refresh failed:', refreshErr?.response?.status || refreshErr.message);
+                // fall-through to cache fallback below
+              }
+            }
           }
         } catch (e) {
-          console.warn('Lỗi khi đọc cache optimistic board:', e);
+          console.warn('[offline-replay] Error while checking offline queue:', e);
         }
-      }
+
+        // If we didn't replay or replay failed, fallback to optimistic cache if present
+        if ('caches' in window) {
+          try {
+            const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+            const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+            const fullUrl = `${cleanBase}/boards/${boardId}`;
+            const cache = await caches.open('api-boards-cache');
+            const cachedResponse = await cache.match(fullUrl);
+            if (cachedResponse) {
+              const text = await cachedResponse.text();
+              const cachedData = JSON.parse(text);
+              return await mergeBoardDataWithOffline(cachedData);
+            }
+          } catch (e) {
+            console.warn('Lỗi khi đọc cache optimistic board:', e);
+          }
+        }
     }
 
     throw error.response?.data?.message || error.message;
