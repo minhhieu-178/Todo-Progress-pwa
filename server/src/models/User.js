@@ -21,6 +21,8 @@ const UserSchema = new mongoose.Schema(
     address: {type: String, trim: true},
     otpCode: {type: String},
     otpExpires: {type: Date},
+    isVerified: { type: Boolean, default: false }, 
+    emailToken: { type: String },
   },
   { timestamps: true }
 );

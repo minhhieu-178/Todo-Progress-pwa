@@ -3,30 +3,50 @@ import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js'
 import { createLog } from '../services/logService.js';
 import { randomUUID } from 'crypto';
+import { BOARD_TEMPLATES } from '../config/templates.js';
+
+export const getBoardTemplates = async (req, res) => {
+  res.json(Object.values(BOARD_TEMPLATES));
+};
+
 export const createBoard = async (req, res) => {
   // Nhận thêm 'lists' từ body
-  const { title, _id, lists } = req.body;
+  const { title, _id, lists, templateKey } = req.body;
 
   if (!title) return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
   if (!_id) {
      return res.status(400).json({ message: 'Thiếu ID Bảng (Client generation required)' });
   }
 
-  try {
-    let initialLists = lists;
-    
-    if (!initialLists || initialLists.length === 0) {
-        initialLists = []; 
+try {
+    // Logic gộp danh sách (Lists)
+    let boardLists = [];
+    let background = null;
+
+    if (templateKey && BOARD_TEMPLATES[templateKey]) {
+      // Ưu tiên dùng template nếu có templateKey
+      const template = BOARD_TEMPLATES[templateKey];
+      boardLists = template.lists.map(list => ({ ...list, isDefault: true }));
+      background = template.background || background;
+    } else if (lists && lists.length > 0) {
+      boardLists = lists;
+    } else {
+      boardLists = [
+        { title: 'Việc cần làm', position: 0, isDefault: true },
+        { title: 'Đang làm', position: 1, isDefault: true },
+        { title: 'Đã xong', position: 2, isDefault: true },
+      ];
     }
 
     const board = await Board.create({
-      _id: _id, 
+      _id: _id,
       title,
       ownerId: req.user._id,
       members: [req.user._id],
-      lists: initialLists,
+      lists: boardLists,
+      background: background 
     });
-    
+
     await createLog({
       userId: req.user._id,
       boardId: board._id,
@@ -75,13 +95,25 @@ export const getBoardById = async (req, res) => {
 export const updateBoard = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title } = req.body;
+    const { title, background } = req.body;
     const board = await Board.findById(id);
 
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
-    if (board.ownerId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Không có quyền' });
+    
+    const isMember = board.members.some(m => m.toString() === req.user._id.toString());
+    if (!isMember) {
+      return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa bảng này' });
+    }
 
-    if (title) board.title = title.trim();
+    if (background) board.background = background;
+    
+    if (title) {
+      if (board.ownerId.toString() === req.user._id.toString()) {
+        board.title = title.trim();
+      } else if (title.trim() !== board.title) {
+        return res.status(403).json({ message: 'Chỉ chủ sở hữu mới có thể đổi tên bảng' });
+      }
+    }
     await board.save();
     res.json(board);
   } catch (error) {

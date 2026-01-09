@@ -11,9 +11,19 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setError(''); setLoading(true);
-    try { const success = await login(email, password); if (success) navigate('/'); else setError('Sai tài khoản hoặc mật khẩu'); } 
-    catch (err) { setError('Lỗi hệ thống'); } finally { setLoading(false); }
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      
+      navigate('/');
+    } catch (err) {
+      setError(err.toString());
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

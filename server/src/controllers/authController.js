@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -49,23 +50,74 @@ export const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'Email đã tồn tại' });
 
-    const user = await User.create({ fullName, email, password, age, phone, address });
+    const emailToken = crypto.randomBytes(32).toString('hex');
 
-    if (user) {
-      sendTokenResponse(user, 201, res);
-    } else {
-      res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
-    }
+    const user = await User.create({ 
+      fullName, email, password, age, phone, address, 
+      emailToken, 
+      isVerified: false 
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${emailToken}`;
+    
+    await transporter.sendMail({
+      from: `"Task Management" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Xác nhận tài khoản của bạn',
+      html: `<h3>Chào ${fullName},</h3>
+             <p>Vui lòng click vào link dưới đây để xác thực tài khoản:</p>
+             <a href="${verifyUrl}">${verifyUrl}</a>`
+    });
+
+    res.status(201).json({ 
+      message: 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.' 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;; // Nhận token từ client gửi lên
+    
+    if (!token) return res.status(400).json({ message: "Thiếu token xác thực" });
+
+    const user = await User.findOne({ emailToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Token không hợp lệ hoặc tài khoản đã được xác thực.' });
+    }
+
+    user.emailToken = undefined; // Xóa token
+    user.isVerified = true;      // Kích hoạt
+    await user.save();
+
+    res.status(200).json({ message: 'Xác thực email thành công! Bạn có thể đăng nhập ngay.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+    
     if (user && (await user.matchPassword(password))) {
+      if (!user.isVerified) {
+        return res.status(401).json({ 
+          message: 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email của bạn.' 
+        });
+      }
+
       sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Email hoặc mật khẩu sai' });

@@ -13,6 +13,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SettingPage from './pages/SettingPage';
 import BoardListPage from './pages/BoardListPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 function App() {
   const { user } = useAuth(); 
@@ -26,6 +27,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       <Route path="/" element={<MainLayout><DashboardPage /></MainLayout>} />

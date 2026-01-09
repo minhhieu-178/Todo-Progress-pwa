@@ -72,3 +72,12 @@ export const confirmChangePassword = async (otp, newPassword) => {
     throw error.response?.data?.message || error.message;
   }
 };
+
+export const verifyEmail = async (token) => {
+  try {
+    const response = await api.get(`/auth/verify-email?token=${token}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
