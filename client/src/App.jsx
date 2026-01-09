@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react'; // 1. Import useEffect
 import { Routes, Route } from 'react-router-dom';
+import { useAuth } from './context/AuthContext'; // 2. Import useAuth
+import { registerPushNotification } from './services/pwaService'; // 3. Import service
 
 import MainLayout from './components/layout/MainLayout';
 import LoginPage from './pages/LoginPage';
@@ -13,6 +15,13 @@ import BoardListPage from './pages/BoardListPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 
 function App() {
+  const { user } = useAuth(); 
+  useEffect(() => {
+    if (user) {
+      registerPushNotification().catch(console.error);
+    }
+  }, [user]); 
+
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

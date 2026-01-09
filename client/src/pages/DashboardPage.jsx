@@ -4,6 +4,7 @@ import { getMyBoards, createBoard, getDashboardStats, getBoardById } from '../se
 import { Link } from 'react-router-dom'; 
 import PageHeader from '../components/layout/PageHeader';
 import ScheduleModal from '../components/board/ScheduleModal';
+import { registerPushNotification } from '../services/pwaService';
 import { 
     Layout, CheckCircle, Clock, AlertCircle, 
     ArrowRight, Calendar, Activity,
@@ -64,7 +65,17 @@ function DashboardPage() {
     };
     fetchData();
   }, []);
-
+  const setupPushNotification = async () => {
+      if (user) {
+        try {
+           console.log('Kích hoạt đăng ký Web Push...');
+           await registerPushNotification();
+        } catch (error) {
+           console.error('Lỗi kích hoạt Push:', error);
+        }
+      }
+    };
+  setupPushNotification();
   const handleCreateBoard = async (e) => {
     e.preventDefault();
     if (!newBoardTitle.trim()) {
