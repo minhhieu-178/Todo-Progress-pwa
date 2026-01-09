@@ -79,25 +79,30 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+
+// Hàm đã sửa lỗi lặp code
 export const subscribePush = async (req, res) => {
   const subscription = req.body;
   try {
+    // Chỉ thêm nếu chưa tồn tại endpoint này
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { pushSubscriptions: subscription },
-      $addToSet: { pushSubscriptions: subscription }
+      $addToSet: { pushSubscriptions: subscription } 
     });
-    res.status(201).json({});
+    res.status(201).json({ message: 'Push subscription added' });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error('Subscribe error:', error);
+    res.status(500).json({ message: 'Lỗi server khi đăng ký Push' });
   }
 };
 
 export const unsubscribePush = async (req, res) => {
   const subscription = req.body;
-
-  await User.findByIdAndUpdate(req.user._id, {
-    $pull: { pushSubscriptions: { endpoint: subscription.endpoint } }
-  });
-
-  res.sendStatus(200);
+  try {
+      await User.findByIdAndUpdate(req.user._id, {
+        $pull: { pushSubscriptions: { endpoint: subscription.endpoint } }
+      });
+      res.sendStatus(200);
+  } catch (error) {
+      res.status(500).json({ message: 'Lỗi server khi hủy Push' });
+  }
 };

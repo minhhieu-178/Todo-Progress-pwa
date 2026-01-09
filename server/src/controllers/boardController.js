@@ -4,23 +4,27 @@ import NotificationService from '../services/notificationService.js'
 import { createLog } from '../services/logService.js';
 import { randomUUID } from 'crypto';
 export const createBoard = async (req, res) => {
-  const { title,_id } = req.body;
+  // Nhận thêm 'lists' từ body
+  const { title, _id, lists } = req.body;
+
   if (!title) return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
   if (!_id) {
      return res.status(400).json({ message: 'Thiếu ID Bảng (Client generation required)' });
   }
+
   try {
-    const defaultLists = [
-      { _id: randomUUID(),title: 'Việc cần làm', position: 0, isDefault: true }, 
-      { _id: randomUUID(),title: 'Đang làm', position: 1, isDefault: true },     
-      {_id: randomUUID(), title: 'Đã xong', position: 2, isDefault: true },      
-    ];
+    let initialLists = lists;
+    
+    if (!initialLists || initialLists.length === 0) {
+        initialLists = []; 
+    }
+
     const board = await Board.create({
-      id:_id,
+      _id: _id, 
       title,
       ownerId: req.user._id,
       members: [req.user._id],
-      lists: defaultLists,
+      lists: initialLists,
     });
     
     await createLog({
@@ -34,6 +38,7 @@ export const createBoard = async (req, res) => {
 
     res.status(201).json(board);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };

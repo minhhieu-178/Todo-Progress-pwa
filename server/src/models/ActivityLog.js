@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 const ActivityLogSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  boardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Board', required: false },
-  entityId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  boardId: { type: String, ref: 'Board', required: false },
+  entityId: { type: String, required: true },
   entityType: { 
     type: String, 
     enum: ['BOARD', 'LIST', 'CARD', 'USER', 'COMMENT', 'MEMBER'], 
