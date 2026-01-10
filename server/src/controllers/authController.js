@@ -1,10 +1,11 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import crypto from 'crypto';
 
 dotenv.config();
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const generateAccessToken = (id) => {
   return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
@@ -65,21 +66,16 @@ export const registerUser = async (req, res) => {
       emailOtpExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-
-    await transporter.sendMail({
-      from: `"Task Management" <${process.env.EMAIL_USER}>`,
+    const msg = {
       to: email,
+      from: process.env.SENDGRID_VERIFIED_SENDER, // Must be verified in SendGrid
       subject: 'Mã OTP xác thực email của bạn',
       html: `<h3>Chào ${fullName},</h3>
              <p>Mã xác thực của bạn là: <b style="font-size:20px">${otp}</b></p>
              <p>Mã có hiệu lực trong 10 phút.</p>`
-    });
+    };
+
+    await sgMail.send(msg);
 
     res.status(201).json({ 
       message: 'Đăng ký thành công! Mã OTP đã được gửi tới email của bạn.' 
@@ -159,19 +155,14 @@ export const forgotPassword = async (req, res) => {
     user.password = tempPassword;
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-
-    await transporter.sendMail({
-      from: `"Task Management" <${process.env.EMAIL_USER}>`,
+    const msg = {
       to: email,
+      from: process.env.SENDGRID_VERIFIED_SENDER,
       subject: 'Mật khẩu mới của bạn',
       html: `<h3>Xin chào ${user.fullName},</h3><p>Mật khẩu mới của bạn là: <b>${tempPassword}</b></p>`,
-    });
+    };
+
+    await sgMail.send(msg);
 
     res.json({ message: 'Đã gửi mật khẩu mới về email.' });
   } catch (error) {
@@ -192,19 +183,14 @@ export const requestChangePassword = async (req, res) => {
     user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-
-    await transporter.sendMail({
-      from: `"Task Management" <${process.env.EMAIL_USER}>`,
+    const msg = {
       to: user.email,
+      from: process.env.SENDGRID_VERIFIED_SENDER,
       subject: 'Mã OTP đổi mật khẩu',
       html: `<h3>Mã OTP của bạn là: <b style="color:blue">${otp}</b></h3>`,
-    });
+    };
+
+    await sgMail.send(msg);
 
     res.json({ message: 'OTP đã gửi về email.' });
   } catch (error) {
