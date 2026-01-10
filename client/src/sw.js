@@ -87,6 +87,18 @@ registerRoute(
     ]
   })
 );
+registerRoute(
+  ({ url }) => url.pathname.includes('/images/background/'),
+  new StaleWhileRevalidate({
+    cacheName: 'background-images-cache',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+      }),
+    ],
+  })
+);
 const handler = createHandlerBoundToURL('/index.html');
 const navigationRoute = new NavigationRoute(handler, {
   denylist: [/^\/api/, /\.[a-z]+$/],
