@@ -29,6 +29,9 @@ connectDB();
 
 const app = express();
 
+// Render (và các nền tảng deploy khác) dùng load balancer/reverse proxy
+// Cần thiết lập 'trust proxy' để express-rate-limit nhận đúng IP thật của user thay vì IP của proxy
+app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({
