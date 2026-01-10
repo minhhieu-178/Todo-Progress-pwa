@@ -5,12 +5,20 @@ const getPendingRequests = async () => {
   return await db.getAll('requests');
 };
 
+const getCurrentUser = () => {
+    try {
+        const u = localStorage.getItem('userInfo');
+        return u ? JSON.parse(u) : null;
+    } catch { return null; }
+};
+
 export const mergeBoardDataWithOffline = async (boardData) => {
   if (!boardData) return boardData;
   
   // Clone deep để không ảnh hưởng object gốc
   let mergedBoard = JSON.parse(JSON.stringify(boardData));
   const pendingRequests = await getPendingRequests();
+  const currentUser = getCurrentUser();
 
   if (pendingRequests.length === 0) return mergedBoard;
 
@@ -41,8 +49,20 @@ export const mergeBoardDataWithOffline = async (boardData) => {
         data._id === mergedBoard._id
     ) {
         mergedBoard.title = data.title;
+        mergedBoard.background = data.background || '#f9fafb';
         if (data.lists && Array.isArray(data.lists)) {
             mergedBoard.lists = data.lists;
+        }
+        // Khi tạo board offline, current user là owner và member
+        if (currentUser) {
+            mergedBoard.ownerId = currentUser._id;
+            if (!mergedBoard.members) mergedBoard.members = [];
+            // Kiểm tra xem đã có trong members chưa để tránh trùng
+            if (!mergedBoard.members.some(m => m._id === currentUser._id)) {
+                mergedBoard.members.push(currentUser);
+            }
+        } else {
+             mergedBoard.ownerId = 'me';
         }
     }
 
@@ -358,6 +378,61 @@ export const mergeBoardDataWithOffline = async (boardData) => {
             }
         }
     }
+
+    // --- LOGIC 9: Merge Add/Remove Member from Card ---
+    // POST /api/boards/:b/lists/:l/cards/:c/members => body: { userId }
+    // DELETE /api/boards/:b/lists/:l/cards/:c/members/:userId
+    if (pathname.includes('/members')) {
+        const parts = pathname.split('/').filter(Boolean);
+        const cardsIdx = parts.findIndex(p => p === 'cards');
+        
+        if (cardsIdx !== -1 && parts.length > cardsIdx + 1) {
+            const cardId = parts[cardsIdx + 1];
+            // Find card first
+            let targetCard = null;
+            if (mergedBoard.lists) {
+                for (const list of mergedBoard.lists) {
+                    if (list.cards) {
+                        targetCard = list.cards.find(c => c._id === cardId);
+                        if (targetCard) break;
+                    }
+                }
+            }
+
+            if (targetCard) {
+                // ADD MEMBER
+                if (method === 'post' && parts[parts.length - 1] === 'members') {
+                    const userId = data && data.userId;
+                    // Find full user info from board members if possible
+                    const userDetails = mergedBoard.members?.find(m => m._id === userId || m.user?._id === userId);
+                    // Usually board members are objects like { _id, name, ... } or { user: {...}, role: ... }
+                    // We need to match the structure of card.members
+                    // Assuming card.members is array of User objects.
+                    
+                    const memberObj = userDetails ? (userDetails.user || userDetails) : { _id: userId, username: 'Unknown' };
+                    
+                    if (userId) {
+                        if (!targetCard.members) targetCard.members = [];
+                        if (!targetCard.members.some(m => m._id === userId)) {
+                            targetCard.members.push(memberObj);
+                        }
+                    }
+                }
+
+                // REMOVE MEMBER
+                // Path ends with /members/:userId
+                if (method === 'delete' && parts[parts.length - 2] === 'members') {
+                    const userIdToRemove = parts[parts.length - 1];
+                    if (targetCard.members) {
+                        const mIdx = targetCard.members.findIndex(m => m._id === userIdToRemove);
+                        if (mIdx !== -1) {
+                            targetCard.members.splice(mIdx, 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
   }
 
   return mergedBoard;
@@ -366,6 +441,7 @@ export const mergeBoardDataWithOffline = async (boardData) => {
 export const mergeBoardsListWithOffline = async (boardsList) => {
     let mergedList = Array.isArray(boardsList) ? [...boardsList] : [];
     const pendingRequests = await getPendingRequests();
+    const currentUser = getCurrentUser();
 
     for (const req of pendingRequests) {
         const method = req.method.toLowerCase();
@@ -386,8 +462,8 @@ export const mergeBoardsListWithOffline = async (boardsList) => {
                  _id: data._id,
                  title: data.title,
                  lists: data.lists || [], 
-                 members: [], 
-                 ownerId: 'me',
+                 members: currentUser ? [currentUser] : [], 
+                 ownerId: currentUser ? currentUser._id : 'me',
                  isOffline: true 
              };
              
