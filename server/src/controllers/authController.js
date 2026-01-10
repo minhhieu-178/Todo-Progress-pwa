@@ -18,11 +18,16 @@ const sendTokenResponse = (user, statusCode, res) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
+  // Determine environment
+  const isProduction = process.env.NODE_ENV === 'production';
+
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    // Production (Render): Secure=true + SameSite=None (Cross-site)
+    // Development (Local): Secure=false + SameSite=Lax (Same-site/Localhost)
+    secure: isProduction, 
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/'
   };
 
@@ -78,6 +83,7 @@ export const registerUser = async (req, res) => {
       message: 'Đăng ký thành công! Mã OTP đã được gửi tới email của bạn.' 
     });
   } catch (error) {
+    console.error('Register User Error (Email send failed?):', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -108,9 +114,14 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    expires: new Date(0)
+    expires: new Date(0),
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/'
   });
   res.status(200).json({ message: 'Đăng xuất thành công' });
 };
@@ -160,6 +171,7 @@ export const forgotPassword = async (req, res) => {
 
     res.json({ message: 'Đã gửi mật khẩu mới về email.' });
   } catch (error) {
+    console.error('Forgot Password Error:', error);
     res.status(500).json({ message: 'Không thể gửi email.' });
   }
 };
@@ -190,6 +202,7 @@ export const requestChangePassword = async (req, res) => {
 
     res.json({ message: 'OTP đã gửi về email.' });
   } catch (error) {
+    console.error('Request Change Password Error:', error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
