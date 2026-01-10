@@ -168,10 +168,42 @@ export const getBoardById = async (boardId) => {
 };
 
 export const updateBoard = async (boardId, updateData) => {
+    // Update cache optimistically when changing background or other board properties
+    if ('caches' in window) {
+        try {
+            const cache = await caches.open('api-boards-cache');
+            const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+            const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+            const fullUrl = `${cleanBase}/boards/${boardId}`;
+            
+            // Try to get existing cached board
+            const cachedResponse = await cache.match(fullUrl);
+            if (cachedResponse) {
+                const cachedBoard = await cachedResponse.json();
+                // Merge updateData into cached board
+                const updatedBoard = { ...cachedBoard, ...updateData };
+                
+                const response = new Response(JSON.stringify(updatedBoard), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                await cache.put(fullUrl, response);
+                console.log(`[Offline] Đã cập nhật cache cho board: ${boardId}`);
+            }
+        } catch (err) {
+            console.warn("Lỗi khi cập nhật cache:", err);
+        }
+    }
+
     try {
         const { data } = await api.put(`/boards/${boardId}`, updateData);
         return data;
     } catch (error) {
+        // If offline, return optimistic update
+        if (!navigator.onLine || error.message?.includes('no-response')) {
+            console.warn("[Offline] Đang offline, trả về optimistic update.");
+            return { ...updateData, _id: boardId };
+        }
         throw error.response?.data?.message || error.message;
     }
 };

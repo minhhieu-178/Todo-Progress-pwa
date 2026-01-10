@@ -41,6 +41,8 @@ export const saveOfflineRequest = async (url, method, data, token) => {
       const h = {};
       // Nếu là JSON thì thêm Content-Type, FormData để trình duyệt tự xử lý boundary
       if (!isFormData) h['Content-Type'] = 'application/json';
+      // Mark as offline replay so server knows to ghi log
+      h['X-Offline-Replay'] = 'true';
       return h;
     })(),
     authRequired: !!token,

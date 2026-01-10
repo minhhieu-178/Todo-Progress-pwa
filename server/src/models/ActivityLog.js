@@ -23,6 +23,7 @@ const ActivityLogSchema = new mongoose.Schema({
     required: true 
   },
   content: { type: String, required: true },
+  isOfflineSync: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model('ActivityLog', ActivityLogSchema);

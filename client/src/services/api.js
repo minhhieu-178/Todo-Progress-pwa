@@ -97,10 +97,22 @@ api.interceptors.response.use(
         // build mockData from request body (string or object)
         let mockData = {};
         if (originalRequest.data) {
-          try {
-            mockData = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data;
-          } catch (e) {
-            mockData = originalRequest.data || {};
+          if (originalRequest.data instanceof FormData) {
+            const fileEntry = originalRequest.data.get('file'); // Check Key 'file' used in cardApi
+            if (fileEntry instanceof File || fileEntry instanceof Blob) {
+                mockData = {
+                  name: fileEntry.name || 'document',
+                  type: fileEntry.type,
+                  url: URL.createObjectURL(fileEntry),
+                  uploadedAt: new Date().toISOString()
+                };
+            }
+          } else {
+            try {
+              mockData = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data;
+            } catch (e) {
+              mockData = originalRequest.data || {};
+            }
           }
         }
 

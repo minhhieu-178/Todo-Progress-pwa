@@ -29,6 +29,19 @@ window.addEventListener('online', () => {
 if (navigator.serviceWorker) {
   navigator.serviceWorker.addEventListener('message', (evt) => {
     const data = evt.data;
+    
+    // Handle token request from Service Worker
+    if (data && data.type === 'GET_TOKEN') {
+      const token = localStorage.getItem('accessToken');
+      if (evt.source) {
+        evt.source.postMessage({
+          type: 'TOKEN_RESPONSE',
+          token: token
+        });
+      }
+      return;
+    }
+    
     if (data && data.type === 'OFFLINE_SYNC_AUTH_REQUIRED') {
         // Try a silent token refresh (server should set refresh-cookie and return new access token)
         (async () => {

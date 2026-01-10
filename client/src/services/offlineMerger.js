@@ -86,6 +86,21 @@ export const mergeBoardDataWithOffline = async (boardData) => {
         }
 
         const _parts = _pathname.split('/').filter(Boolean);
+        
+        // --- LOGIC 2.5a: Update Board (title, background, etc.) ---
+        // Pattern: PUT /api/boards/:boardId
+        const isUpdateBoard = _parts.length === 3 && 
+            _parts[0] === 'api' && 
+            _parts[1] === 'boards' && 
+            _parts[2] === mergedBoard._id;
+            
+        if (isUpdateBoard && data) {
+            // Update board properties
+            if (data.title) mergedBoard.title = data.title;
+            if (data.background !== undefined) mergedBoard.background = data.background;
+            // Add other board properties if needed
+        }
+        
         // Expect pattern: /api/boards/:boardId/lists/:listId/move
         const isListMove = _parts.length === 6 && _parts[0] === 'api' && _parts[1] === 'boards' && _parts[2] === mergedBoard._id && _parts[3] === 'lists' && _parts[5] === 'move';
 
@@ -274,6 +289,75 @@ export const mergeBoardDataWithOffline = async (boardData) => {
             }
         }
     }
+
+    // --- LOGIC 7: Merge Upload Attachment ---
+    // Detect POST /api/boards/:boardId/lists/:listId/cards/:cardId/attachments
+    if (method === 'post' && pathname.includes('/attachments')) {
+        const parts = pathname.split('/').filter(Boolean);
+        const cardsIdx = parts.findIndex(p => p === 'cards');
+        const isAttachment = parts[parts.length - 1] === 'attachments';
+
+        if (cardsIdx !== -1 && isAttachment) {
+            const cardId = parts[cardsIdx + 1];
+            // In IDB, Form Data is stored as Object { key: value }
+            const fileObj = body && body.file;
+
+            if (fileObj) {
+                const isFile = fileObj instanceof Blob || (fileObj.name && fileObj.size);
+
+                if (isFile) {
+                    const newAttachment = {
+                        _id: `offline-att-${req.id || Date.now()}`,
+                        name: fileObj.name || 'Unknown',
+                        type: fileObj.type || '',
+                        url: (fileObj instanceof Blob) ? URL.createObjectURL(fileObj) : '#',
+                        uploadedAt: new Date(req.timestamp).toISOString(),
+                        isOffline: true
+                    };
+
+                    if (mergedBoard.lists) {
+                        for (const list of mergedBoard.lists) {
+                            if (!list.cards) continue;
+                            const card = list.cards.find(c => c._id === cardId);
+                            if (card) {
+                                if (!card.attachments) card.attachments = [];
+                                // Avoid dups
+                                if (!card.attachments.some(a => a._id === newAttachment._id)) {
+                                    card.attachments.push(newAttachment);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // --- LOGIC 8: Merge Delete Attachment ---
+    // DELETE /api/boards/:b/lists/:l/cards/:c/attachments/:attId
+    if (method === 'delete' && pathname.includes('/attachments/')) {
+        const parts = pathname.split('/').filter(Boolean);
+        const attIdx = parts.findIndex(p => p === 'attachments');
+        if (attIdx !== -1 && parts.length > attIdx + 1) {
+            const attachmentId = parts[attIdx + 1];
+            
+            if (mergedBoard.lists) {
+                for (const list of mergedBoard.lists) {
+                    if (!list.cards) continue;
+                    for (const card of list.cards) {
+                        if (card.attachments) {
+                            const idx = card.attachments.findIndex(a => a._id === attachmentId);
+                            if (idx !== -1) {
+                                card.attachments.splice(idx, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
   }
 
   return mergedBoard;
@@ -310,6 +394,23 @@ export const mergeBoardsListWithOffline = async (boardsList) => {
              if (!mergedList.find(b => b._id === newBoard._id)) {
                  mergedList.unshift(newBoard);
              }
+        }
+        
+        // Merge update Board (title, background, etc.)
+        if (method === 'put' && pathname.startsWith('/api/boards/')) {
+            const parts = pathname.split('/').filter(Boolean);
+            // Pattern: /api/boards/:boardId (length 3)
+            if (parts.length === 3 && parts[0] === 'api' && parts[1] === 'boards') {
+                const boardId = parts[2];
+                let data = req.body;
+                if (typeof data === 'string') try { data = JSON.parse(data) } catch(e){}
+                
+                const board = mergedList.find(b => b._id === boardId);
+                if (board && data) {
+                    if (data.title) board.title = data.title;
+                    if (data.background !== undefined) board.background = data.background;
+                }
+            }
         }
         
         // Merge delete Board - cũng nên dùng pathname cho an toàn

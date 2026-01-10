@@ -1,6 +1,6 @@
 import ActivityLog from '../models/ActivityLog.js';
 
-export const createLog = async ({ userId, boardId, entityId, entityType, action, content }) => {
+export const createLog = async ({ userId, boardId, entityId, entityType, action, content, isOfflineSync }) => {
   try {
     await ActivityLog.create({
       userId,
@@ -8,7 +8,8 @@ export const createLog = async ({ userId, boardId, entityId, entityType, action,
       entityId,
       entityType,
       action,
-      content
+      content,
+      isOfflineSync: isOfflineSync || false
     });
   } catch (error) {
     console.error("Lỗi ghi log:", error);

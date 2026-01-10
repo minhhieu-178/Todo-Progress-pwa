@@ -35,7 +35,7 @@ app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:4173'], 
   credentials: true, // Cho phép nhận cookie/token
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Offline-Replay']
 }));
 
 const limiter = rateLimit({
@@ -57,7 +57,7 @@ const io = new Server(httpServer, {
   cors: {
     origin: ['http://localhost:5173', 'http://localhost:4173'], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Offline-Replay']
   }
 });
 
