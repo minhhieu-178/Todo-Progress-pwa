@@ -49,7 +49,8 @@ export const createCard = async (req, res) => {
       entityId: newCard._id,
       entityType: 'CARD',
       action: 'CREATE_CARD',
-      content: `đã tạo thẻ công việc "${title}" trong danh sách "${list.title}"`
+      content: `đã tạo thẻ công việc "${title}" trong danh sách "${list.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     const io = req.app.get('socketio');
@@ -111,7 +112,8 @@ export const removeMemberFromCard = async (req, res) => {
       entityId: card._id,
       entityType: 'CARD',
       action: 'REMOVE_MEMBER_FROM_CARD',
-      content: `xóa thành viên ${removedUser?.fullName || removedUser?.email} khỏi thẻ "${card.title}"`
+      content: `xóa thành viên ${removedUser?.fullName || removedUser?.email} khỏi thẻ "${card.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     const io = req.app.get('socketio');
@@ -204,7 +206,8 @@ export const addMemberToCard = async (req, res) => {
         entityId: targetCard._id,
         entityType: 'CARD',
         action: 'ADD_MEMBER_TO_CARD',
-        content: `thêm thành viên ${targetUser?.fullName || targetUser?.email} vào thẻ "${targetCard.title}"`
+        content: `thêm thành viên ${targetUser?.fullName || targetUser?.email} vào thẻ "${targetCard.title}"`,
+        isOfflineSync: req.isOfflineReplay
       });
 
       const io = req.app.get('socketio');
@@ -335,7 +338,8 @@ export const deleteCard = async (req, res) => {
       entityId: cardId,
       entityType: 'CARD',
       action: 'DELETE_CARD',
-      content: `đã xóa thẻ công việc "${card.title}" trong danh sách "${list.title}"`
+      content: `đã xóa thẻ công việc "${card.title}" trong danh sách "${list.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
     // Xóa card khỏi mảng cards
     card.deleteOne();
@@ -423,7 +427,8 @@ export const moveCard = async (req, res) => {
             entityId: cardId,
             entityType: 'CARD',
             action: 'MOVE',     
-            content: logContent 
+            content: logContent,
+            isOfflineSync: req.isOfflineReplay
         });
     } catch (logErr) {
         console.warn("Lỗi ghi log (không ảnh hưởng thao tác chính):", logErr.message);
@@ -475,7 +480,8 @@ export const uploadAttachment = async (req, res) => {
       entityId: cardId,
       entityType: 'CARD',
       action: 'UPLOAD_ATTACHMENT',
-      content: `đã đính kèm tệp "${fixedName}" vào thẻ "${card.title}"`
+      content: `đã đính kèm tệp "${fixedName}" vào thẻ "${card.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     const savedAttachment = card.attachments[card.attachments.length - 1];
@@ -561,7 +567,8 @@ export const deleteAttachment = async (req, res) => {
       entityId: cardId,
       entityType: 'CARD',
       action: 'DELETE_ATTACHMENT', 
-      content: `đã xóa tệp "${fileName}" khỏi thẻ "${card.title}"` 
+      content: `đã xóa tệp "${fileName}" khỏi thẻ "${card.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     await createLog({
@@ -570,7 +577,8 @@ export const deleteAttachment = async (req, res) => {
       entityId: cardId,
       entityType: 'CARD',
       action: 'UPLOAD_ATTACHMENT',
-      content: `đã xóa tệp "${fixedName}" khỏi thẻ "${card.title}"`
+      content: `đã xóa tệp "${fixedName}" khỏi thẻ "${card.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     const io = req.app.get('socketio');

@@ -33,17 +33,19 @@ function DashboardPage() {
   });
   
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [boardsData, statsData] = await Promise.all([
-          getMyBoards(),
-          getDashboardStats()
-        ]);
-        
-        setBoards(boardsData);
-        setStats(statsData); 
-        setError('');
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [boardsData, statsData] = await Promise.all([
+        getMyBoards(),
+        getDashboardStats()
+      ]);
+      
+      // Đảm bảo boardsData là mảng và lọc các phần tử hợp lệ
+      const validBoards = Array.isArray(boardsData) ? boardsData : [];
+      setBoards(validBoards);
+      setStats(statsData); 
+      setError('');
 
         if (navigator.onLine && boardsData.length > 0) {
             setSyncing(true);
@@ -84,7 +86,14 @@ function DashboardPage() {
     }
     setIsCreating(true);
     try {
-        const newBoard = await createBoard(newBoardTitle);
+    // Client-generated ID required by server for offline-first behavior
+    const newBoardId = uuidv7();
+    const defaultLists = [
+      { _id: uuidv7(), title: 'Việc cần làm', position: 0, cards: [] },
+      { _id: uuidv7(), title: 'Đang làm', position: 1, cards: [] },
+      { _id: uuidv7(), title: 'Đã xong', position: 2, cards: [] },
+    ];
+    const newBoard = await createBoard({ title: newBoardTitle, _id: newBoardId, lists: defaultLists });
         setBoards([newBoard, ...boards]);
         setNewBoardTitle('');
         setError('');
@@ -291,7 +300,9 @@ function DashboardPage() {
                       </div>
                   ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {boards.map((board) => {
+                          {boards
+                          .filter(board => board && board._id)
+                          .map((board) => {
                               const progress = calculateProgress(board);
                               const totalTasks = board.lists?.reduce((acc, l) => acc + (l.cards?.length || 0), 0) || 0;
                               

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { saveOfflineRequest } from './offlineStore';
+import { saveOfflineRequest, getAllOfflineRequests } from './offlineStore';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, 
@@ -73,55 +73,197 @@ api.interceptors.response.use(
       }
     }
 
-    if (!error.response && !navigator.onLine) {
-        if (['post', 'put', 'delete', 'patch'].includes(originalRequest.method)) {
-            try {
-                const token = localStorage.getItem('accessToken');
-        
-                const fullUrl = originalRequest.url.startsWith('http') 
-                    ? originalRequest.url 
-                    : (api.defaults.baseURL + originalRequest.url);
+  if (!error.response && !navigator.onLine) {
+    if (['post', 'put', 'delete', 'patch'].includes(originalRequest.method)) {
+      try {
+        const token = localStorage.getItem('accessToken');
 
-                await saveOfflineRequest(
-                    fullUrl, 
-                    originalRequest.method,
-                    originalRequest.data,
-                    token
-                );
+        const fullUrl = originalRequest.url.startsWith('http') 
+          ? originalRequest.url 
+          : (api.defaults.baseURL + originalRequest.url);
 
-                if ('serviceWorker' in navigator && 'SyncManager' in window) {
-                    const registration = await navigator.serviceWorker.ready;
-                    await registration.sync.register('sync-offline-requests');
-                }
+        await saveOfflineRequest(
+          fullUrl, 
+          originalRequest.method,
+          originalRequest.data,
+          token
+        );
 
-                let mockData = {};
-                if (originalRequest.data) {
-                    try {
-                        mockData = JSON.parse(originalRequest.data);
-                    } catch (e) {
-                        mockData = {}; 
-                    }
-                }
-                if (originalRequest.method === 'post' && originalRequest.url.includes('/lists') && !originalRequest.url.includes('/cards')) {
-                  mockData.cards = [];
-                }
-                return Promise.resolve({ 
-                    data: { 
-                        success: true, 
-                        message: 'Đang offline: Dữ liệu đã được lưu.',
-                        ...mockData, 
-                        _id: mockData._id || `offline-temp-${Date.now()}`
-                    } 
-                });
-
-
-                
-            } catch (saveError) {
-                console.error("Lỗi lưu offline request:", saveError);
-            }
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.sync.register('sync-offline-requests');
         }
-    }
 
+        // build mockData from request body (string or object)
+        let mockData = {};
+        if (originalRequest.data) {
+          if (originalRequest.data instanceof FormData) {
+            const fileEntry = originalRequest.data.get('file'); // Check Key 'file' used in cardApi
+            if (fileEntry instanceof File || fileEntry instanceof Blob) {
+                mockData = {
+                  name: fileEntry.name || 'document',
+                  type: fileEntry.type,
+                  url: URL.createObjectURL(fileEntry),
+                  uploadedAt: new Date().toISOString()
+                };
+            }
+          } else {
+            try {
+              mockData = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data;
+            } catch (e) {
+              mockData = originalRequest.data || {};
+            }
+          }
+        }
+
+        // If body lacks _id, try to infer from the URL (e.g. /boards/:b/lists/:l/cards/:cardId or /boards/:boardId/cards/:cardId/move)
+        let inferredId = mockData._id;
+        try {
+          const pathname = new URL(fullUrl).pathname;
+          const parts = pathname.split('/').filter(Boolean);
+          const cardsIdx = parts.findIndex(p => p === 'cards');
+          if (!inferredId && cardsIdx !== -1 && parts.length > cardsIdx + 1) {
+            inferredId = parts[cardsIdx + 1];
+          } else if (!inferredId) {
+            // try boards or lists
+            const last = parts[parts.length - 1];
+            const secondLast = parts[parts.length - 2];
+            if (['boards', 'lists'].includes(secondLast)) inferredId = last;
+          }
+        } catch (e) {
+          // ignore, will fallback to generated id
+        }
+
+        if (!inferredId) inferredId = `offline-temp-${Date.now()}`;
+
+        if (originalRequest.method === 'post' && originalRequest.url.includes('/lists') && !originalRequest.url.includes('/cards')) {
+          mockData.cards = [];
+        }
+
+        return Promise.resolve({ 
+          data: { 
+            success: true, 
+            message: 'Đang offline: Dữ liệu đã được lưu.',
+            ...mockData, 
+            _id: inferredId
+          } 
+        });
+      } catch (saveError) {
+        console.error("Lỗi lưu offline request:", saveError);
+      }
+    }
+  }
+
+    // If server returned 404 for a mutation, it may be because the target board was created offline
+    // and hasn't been replayed to the server yet. In that case queue this mutation and return a mocked
+    // optimistic response so the UI doesn't show an immediate error.
+    if (error.response && error.response.status === 404 && !originalRequest._retry) {
+      const method = originalRequest.method && originalRequest.method.toLowerCase();
+      if (['post', 'put', 'delete', 'patch'].includes(method)) {
+        try {
+          const token = localStorage.getItem('accessToken');
+          const fullUrl = originalRequest.url && originalRequest.url.startsWith('http')
+            ? originalRequest.url
+            : (api.defaults.baseURL + originalRequest.url);
+
+          // Try to infer boardId from URL
+          let boardId = null;
+          try {
+            const p = new URL(fullUrl).pathname.split('/').filter(Boolean);
+            const boardsIdx = p.findIndex(seg => seg === 'boards');
+            if (boardsIdx !== -1 && p.length > boardsIdx + 1) boardId = p[boardsIdx + 1];
+          } catch (e) {}
+
+          let optimisticExists = false;
+
+          // 1) Check Cache Storage for optimistic board entry
+          if ('caches' in window && boardId) {
+            try {
+              const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : fullUrl;
+              const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+              const boardUrl = `${cleanBase}/boards/${boardId}`;
+              const cache = await caches.open('api-boards-cache');
+              const cached = await cache.match(boardUrl);
+              if (cached) optimisticExists = true;
+            } catch (e) {
+              // ignore
+            }
+          }
+
+          // 2) Or check if there is a pending create-board request in the offline queue
+          if (!optimisticExists) {
+            try {
+              const pending = await getAllOfflineRequests();
+              if (Array.isArray(pending)) {
+                optimisticExists = pending.some(r => {
+                  try {
+                    if (r.method.toLowerCase() === 'post') {
+                      const pth = new URL(r.url, window.location.origin).pathname.split('/').filter(Boolean);
+                      return pth.length >= 3 && pth[0] === 'api' && pth[1] === 'boards' && r.body && ((typeof r.body === 'object' && r.body._id === boardId) || (typeof r.body === 'string' && JSON.parse(r.body)._id === boardId));
+                    }
+                  } catch (e) { }
+                  return false;
+                });
+              }
+            } catch (e) {}
+          }
+
+          if (optimisticExists) {
+            // Save current mutation into offline queue and register sync
+            await saveOfflineRequest(
+              fullUrl,
+              originalRequest.method,
+              originalRequest.data,
+              token
+            );
+
+            if ('serviceWorker' in navigator && 'SyncManager' in window) {
+              try {
+                const registration = await navigator.serviceWorker.ready;
+                await registration.sync.register('sync-offline-requests');
+              } catch (e) {
+                // ignore registration failures
+              }
+            }
+
+            // Build a mocked response similar to offline branch
+            let mockData = {};
+            if (originalRequest.data) {
+              try {
+                mockData = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data;
+              } catch (e) {
+                mockData = originalRequest.data || {};
+              }
+            }
+
+            let inferredId = mockData._id;
+            try {
+              const pathname = new URL(fullUrl).pathname;
+              const parts = pathname.split('/').filter(Boolean);
+              const cardsIdx = parts.findIndex(p => p === 'cards');
+              if (!inferredId && cardsIdx !== -1 && parts.length > cardsIdx + 1) inferredId = parts[cardsIdx + 1];
+              else if (!inferredId) {
+                const last = parts[parts.length - 1];
+                const secondLast = parts[parts.length - 2];
+                if (['boards', 'lists'].includes(secondLast)) inferredId = last;
+              }
+            } catch (e) {}
+            if (!inferredId) inferredId = `offline-temp-${Date.now()}`;
+
+            return Promise.resolve({
+              data: {
+                success: true,
+                message: 'Đang offline: Dữ liệu đã được lưu và sẽ được đồng bộ.',
+                ...mockData,
+                _id: inferredId
+              }
+            });
+          }
+        } catch (e) {
+          // fall through to original reject
+        }
+      }
+    }
     return Promise.reject(error);
   }
 );

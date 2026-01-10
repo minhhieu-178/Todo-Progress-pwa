@@ -1,9 +1,9 @@
 import api from './api'; 
+import axios from 'axios';
 import { mergeBoardDataWithOffline, mergeBoardsListWithOffline } from './offlineMerger'; 
+import { getAllOfflineRequests, deleteOfflineRequest } from './offlineStore';
 
-// Hàm tiện ích để lấy base URL (chắc chắn khớp với axios config)
 const getBaseUrl = () => {
-    // Nếu api.defaults.baseURL có giá trị, dùng nó. Nếu không, giả định là relative path hoặc localhost
     return api.defaults.baseURL || 'http://localhost:5001/api';
 };
 
@@ -12,7 +12,6 @@ export const getMyBoards = async () => {
     const { data } = await api.get('/boards');
     return await mergeBoardsListWithOffline(data);
   } catch (error) {
-    // Nếu lỗi mạng hoàn toàn và cache rỗng, trả về mảng rỗng rồi merge với offline
     if(error.message && error.message.includes('no-response')) {
         return await mergeBoardsListWithOffline([]);
     }
@@ -20,37 +19,37 @@ export const getMyBoards = async () => {
   }
 };
 
-export const createBoard = async (title, boardId, defaultLists = []) => {
-  // 1. Tạo object dữ liệu giả lập (Optimistic UI)
+export const createBoard = async (boardData) => {
+  const { title, _id: boardId, lists = [], background = '#f3f4f6' } = boardData;
+
+  // 1. Tạo object dữ liệu giả lập (Optimistic UI) 
+  // Thêm trường background để UI hiển thị đúng màu ngay cả khi offline
   const optimisticBoard = {
       _id: boardId,
       title: title,
-      lists: defaultLists, // 3 list mặc định client tạo
+      lists: lists, 
+      background: background,
       members: [], 
-      ownerId: 'me', // Placeholder
+      ownerId: 'me', 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
   };
 
-  // 2. THỦ THUẬT: Inject trực tiếp vào Cache Storage của Service Worker
-  // Bước này giúp khi redirect sang trang Detail, SW sẽ tìm thấy dữ liệu này
+  // 2. Inject trực tiếp vào Cache Storage của Service Worker (Hỗ trợ Offline-first)
   if ('caches' in window) {
       try {
-          // Tên cache phải KHỚP CHÍNH XÁC với trong sw.js
-          const cache = await caches.open('api-boards-cache');
-          
-          // Tạo URL key chính xác mà getBoardById sẽ gọi
-          // Lưu ý: Nếu axios baseURL không có trailing slash, cẩn thận nối chuỗi
-          const baseUrl = getBaseUrl();
-          const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-          const url = `${cleanBaseUrl}/boards/${boardId}`;
-          
-          const response = new Response(JSON.stringify(optimisticBoard), {
-              headers: { 'Content-Type': 'application/json' }
-          });
-          
-          await cache.put(url, response);
-          console.log(`[Offline] Đã inject cache cho board: ${boardId}`);
+      const cache = await caches.open('api-boards-cache');
+      // Build the full URL using the axios instance baseURL to match what SW will request
+      const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+      const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+      const fullUrl = `${cleanBase}/boards/${boardId}`;
+
+      const response = new Response(JSON.stringify(optimisticBoard), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      await cache.put(fullUrl, response);
+      console.log(`[Offline] Đã inject cache cho board: ${boardId} -> ${fullUrl}`);
       } catch (err) {
           console.error("Lỗi cache thủ công:", err);
       }
@@ -58,15 +57,10 @@ export const createBoard = async (title, boardId, defaultLists = []) => {
 
   // 3. Gửi request thực tế (Background Sync sẽ bắt nếu offline)
   try {
-    const { data } = await api.post('/boards', { 
-        title, 
-        _id: boardId,
-        lists: defaultLists 
-    });
+    const { data } = await api.post('/boards', boardData);
     return data;
   } catch (error) {
-    // Nếu offline, trả về dữ liệu giả lập để UI không bị crash
-    console.warn("Đang offline, trả về optimistic data.");
+    console.warn("[Offline] Đang offline, trả về optimistic data.");
     return optimisticBoard;
   }
 };
@@ -77,22 +71,139 @@ export const getBoardById = async (boardId) => {
     return await mergeBoardDataWithOffline(data);
   } catch (error) {
     // Nếu gặp lỗi no-response (do cache injection thất bại hoặc bị xóa)
+    // If no-response (network failure / SW cache miss), try merging empty fallback
     if (error.message && error.message.includes('no-response')) {
         console.warn("Board không tìm thấy trong cache, thử tìm trong hàng đợi offline...");
-        // Fallback: Thử tạo một board rỗng và merge data từ queue (trường hợp hiếm)
         const fallbackBoard = { _id: boardId, title: 'Đang đồng bộ...', lists: [] };
         return await mergeBoardDataWithOffline(fallbackBoard);
     }
+
+    // If server returned 404 but we have an optimistic cached board (created while offline), return that
+    if (error.response && error.response.status === 404) {
+        // First: try to see if there's a pending create-board in the offline queue for this id.
+        try {
+          const pending = await getAllOfflineRequests();
+          if (Array.isArray(pending)) {
+            const createReq = pending.find(r => {
+              try {
+                if (r.method && r.method.toLowerCase() === 'post') {
+                  const pth = new URL(r.url, window.location.origin).pathname.split('/').filter(Boolean);
+                  // expect path like: ['api', 'boards'] or ['api','boards','<id>']
+                  if (pth.length >= 2 && pth[0] === 'api' && pth[1] === 'boards') {
+                    const body = typeof r.body === 'string' ? JSON.parse(r.body) : r.body;
+                    return body && (body._id === boardId || body.id === boardId);
+                  }
+                }
+              } catch (e) {
+                return false;
+              }
+              return false;
+            });
+
+            if (createReq) {
+              console.log('[offline-replay] Found pending create-board for', boardId, ' — attempting silent refresh + replay');
+
+              // Attempt silent refresh using axios (so cookies are included)
+              try {
+                const refreshUrl = `${(api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl()}/auth/refresh-token`;
+                const refreshRes = await axios.post(refreshUrl, {}, { withCredentials: true });
+                if (refreshRes?.data?.accessToken) {
+                  localStorage.setItem('accessToken', refreshRes.data.accessToken);
+                  const userInfo = localStorage.getItem('userInfo');
+                  if (userInfo) {
+                    try {
+                      const parsed = JSON.parse(userInfo);
+                      parsed.accessToken = refreshRes.data.accessToken;
+                      localStorage.setItem('userInfo', JSON.stringify(parsed));
+                    } catch (e) { /* ignore parse errors */ }
+                  }
+                }
+
+                // Replay the create-board using the api axios instance so interceptors are used
+                const replayBody = typeof createReq.body === 'string' ? JSON.parse(createReq.body) : createReq.body;
+                try {
+                  const { data: created } = await api.post('/boards', replayBody);
+                  console.log('[offline-replay] Replay create-board succeeded for', boardId, created);
+                  // remove the queued request
+                  try { await deleteOfflineRequest(createReq.id); } catch (e) { console.warn('[offline-replay] Could not delete queued request', e); }
+
+                  // After successful replay, retry fetching the board from server
+                  const { data: fresh } = await api.get(`/boards/${boardId}`);
+                  return await mergeBoardDataWithOffline(fresh);
+                } catch (replayErr) {
+                  console.warn('[offline-replay] Replay failed:', replayErr?.response?.status || replayErr.message);
+                  // fall-through to cache fallback below
+                }
+              } catch (refreshErr) {
+                console.warn('[offline-replay] Silent refresh failed:', refreshErr?.response?.status || refreshErr.message);
+                // fall-through to cache fallback below
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[offline-replay] Error while checking offline queue:', e);
+        }
+
+        // If we didn't replay or replay failed, fallback to optimistic cache if present
+        if ('caches' in window) {
+          try {
+            const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+            const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+            const fullUrl = `${cleanBase}/boards/${boardId}`;
+            const cache = await caches.open('api-boards-cache');
+            const cachedResponse = await cache.match(fullUrl);
+            if (cachedResponse) {
+              const text = await cachedResponse.text();
+              const cachedData = JSON.parse(text);
+              return await mergeBoardDataWithOffline(cachedData);
+            }
+          } catch (e) {
+            console.warn('Lỗi khi đọc cache optimistic board:', e);
+          }
+        }
+    }
+
     throw error.response?.data?.message || error.message;
   }
 };
 
-// ... Các hàm khác (updateBoard, deleteBoard...) giữ nguyên code cũ
 export const updateBoard = async (boardId, updateData) => {
+    // Update cache optimistically when changing background or other board properties
+    if ('caches' in window) {
+        try {
+            const cache = await caches.open('api-boards-cache');
+            const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+            const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+            const fullUrl = `${cleanBase}/boards/${boardId}`;
+            
+            // Try to get existing cached board
+            const cachedResponse = await cache.match(fullUrl);
+            if (cachedResponse) {
+                const cachedBoard = await cachedResponse.json();
+                // Merge updateData into cached board
+                const updatedBoard = { ...cachedBoard, ...updateData };
+                
+                const response = new Response(JSON.stringify(updatedBoard), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                await cache.put(fullUrl, response);
+                console.log(`[Offline] Đã cập nhật cache cho board: ${boardId}`);
+            }
+        } catch (err) {
+            console.warn("Lỗi khi cập nhật cache:", err);
+        }
+    }
+
     try {
         const { data } = await api.put(`/boards/${boardId}`, updateData);
         return data;
     } catch (error) {
+        // If offline, return optimistic update
+        if (!navigator.onLine || error.message?.includes('no-response')) {
+            console.warn("[Offline] Đang offline, trả về optimistic update.");
+            return { ...updateData, _id: boardId };
+        }
         throw error.response?.data?.message || error.message;
     }
 };
@@ -128,4 +239,46 @@ export const getDashboardStats = async () => {
   // Stats thường không cache hoặc cache ngắn, tùy bạn
   const { data } = await api.get('/boards/stats');
   return data;
+};
+
+export const uploadBoardBackground = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  try {
+    const { data } = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data.url; // Server trả về { url: ... }
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};
+
+export const getBoardTemplates = async () => {
+  const cacheKey = 'boardTemplates_v1';
+  try {
+    const response = await api.get('/boards/templates');
+    const templates = response.data;
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), templates }));
+    } catch (e) {
+      // ignore localStorage errors
+    }
+    return templates;
+  } catch (error) {
+    console.warn("Lỗi API Templates, dùng cache nếu có:", error?.message || error);
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed.templates || [];
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+    return [];
+  }
 };
