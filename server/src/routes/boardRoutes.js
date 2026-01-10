@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getBoardTemplates,
   createBoard,
   getMyBoards,
   getBoardById,
@@ -21,6 +22,7 @@ router.route('/')
   .post(protect, createBoard)
   .get(protect, getMyBoards);
 
+router.get('/templates', protect, getBoardTemplates);
 router.get('/deadlines/all', protect, getAllUpcomingTasks);
 router.get('/stats', protect, getDashboardStats);
 

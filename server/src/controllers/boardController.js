@@ -3,37 +3,84 @@ import User from '../models/User.js';
 import NotificationService from '../services/notificationService.js'
 import { createLog } from '../services/logService.js';
 import { randomUUID } from 'crypto';
+import { BOARD_TEMPLATES } from '../config/templates.js';
+
+export const getBoardTemplates = async (req, res) => {
+  res.json(Object.values(BOARD_TEMPLATES));
+};
+
 export const createBoard = async (req, res) => {
   // Nhận thêm 'lists' từ body
-  const { title, _id, lists } = req.body;
+  const { title, _id, lists, templateKey, background: bodyBackground } = req.body;
 
   if (!title) return res.status(400).json({ message: 'Tiêu đề Bảng là bắt buộc' });
   if (!_id) {
      return res.status(400).json({ message: 'Thiếu ID Bảng (Client generation required)' });
   }
 
-  try {
-    let initialLists = lists;
+try {
+    // Logic gộp danh sách (Lists)
+    let boardLists = [];
+    let background = bodyBackground || null;
+
+    // 1. Nếu Client đã gửi lists (có kèm _id), ưu tiên sử dụng để đảm bảo đồng bộ Offline
+    if (lists && lists.length > 0) {
+      boardLists = lists.map((l, idx) => ({
+        _id: l._id || randomUUID(),
+        title: l.title,
+        position: typeof l.position === 'number' ? l.position : idx,
+        cards: l.cards || [],
+        isDefault: l.isDefault || false
+      }));
+    }
+
+    // 2. Nếu có templateKey (và chưa có lists hoặc muốn lấy background từ template nếu thiếu)
+    if (templateKey && BOARD_TEMPLATES[templateKey]) {
+      const template = BOARD_TEMPLATES[templateKey];
+      
+      // Chỉ tạo lists từ template nếu client KHÔNG gửi lists (hoặc gửi rỗng)
+      if (boardLists.length === 0) {
+        boardLists = template.lists.map((list, idx) => ({
+          _id: randomUUID(),
+          title: list.title,
+          position: typeof list.position === 'number' ? list.position : idx,
+          cards: [],
+          isDefault: true
+        }));
+      }
+
+      // Nếu client chưa gửi background, lấy từ template
+      if (!background) {
+        background = template.background;
+      }
+    } 
     
-    if (!initialLists || initialLists.length === 0) {
-        initialLists = []; 
+    // 3. Fallback: Nếu vẫn chưa có lists nào, dùng cấu trúc mặc định
+    if (boardLists.length === 0) {
+      boardLists = [
+        { title: 'Việc cần làm', position: 0, isDefault: true },
+        { title: 'Đang làm', position: 1, isDefault: true },
+        { title: 'Đã xong', position: 2, isDefault: true },
+      ];
     }
 
     const board = await Board.create({
-      _id: _id, 
+      _id: _id,
       title,
       ownerId: req.user._id,
       members: [req.user._id],
-      lists: initialLists,
+      lists: boardLists,
+      background: background 
     });
-    
+
     await createLog({
       userId: req.user._id,
       boardId: board._id,
       entityId: board._id,
       entityType: 'BOARD',
       action: 'CREATE_BOARD',
-      content: `đã tạo bảng dự án "${board.title}"`
+      content: `đã tạo bảng dự án "${board.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     res.status(201).json(board);
@@ -75,13 +122,25 @@ export const getBoardById = async (req, res) => {
 export const updateBoard = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title } = req.body;
+    const { title, background } = req.body;
     const board = await Board.findById(id);
 
     if (!board) return res.status(404).json({ message: 'Không tìm thấy Board' });
-    if (board.ownerId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Không có quyền' });
+    
+    const isMember = board.members.some(m => m.toString() === req.user._id.toString());
+    if (!isMember) {
+      return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa bảng này' });
+    }
 
-    if (title) board.title = title.trim();
+    if (background) board.background = background;
+    
+    if (title) {
+      if (board.ownerId.toString() === req.user._id.toString()) {
+        board.title = title.trim();
+      } else if (title.trim() !== board.title) {
+        return res.status(403).json({ message: 'Chỉ chủ sở hữu mới có thể đổi tên bảng' });
+      }
+    }
     await board.save();
     res.json(board);
   } catch (error) {
@@ -133,7 +192,8 @@ export const deleteBoard = async (req, res) => {
       entityId: board._id,
       entityType: 'BOARD',
       action: 'DELETE_BOARD',
-      content: `đã xóa bảng dự án "${board.title}"`
+      content: `đã xóa bảng dự án "${board.title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     await board.deleteOne();
@@ -199,7 +259,8 @@ export const addMember = async (req, res) => {
       entityId: userYz._id, 
       entityType: 'BOARD',
       action: 'ADD_MEMBER',
-      content: `đã thêm thành viên "${userYz.fullName}" vào bảng`
+      content: `đã thêm thành viên "${userYz.fullName}" vào bảng`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     res.json(updatedBoard);
@@ -241,7 +302,8 @@ export const removeMember = async (req, res) => {
     entityId: userId,             
     entityType: 'USER',
     action: 'REMOVE_MEMBER',
-    content: `xóa thành viên ${removedUser?.fullName || removedUser?.email || 'không xác định'} khỏi bảng "${board.title}"`
+    content: `xóa thành viên ${removedUser?.fullName || removedUser?.email || 'không xác định'} khỏi bảng "${board.title}"`,
+    isOfflineSync: req.isOfflineReplay
   });
 
     const io = req.app.get('socketio');

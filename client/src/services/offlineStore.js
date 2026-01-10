@@ -35,12 +35,17 @@ export const saveOfflineRequest = async (url, method, data, token) => {
     url,
     method,
     body,
-    headers: {
-        // Lưu token vào DB vì SW không đọc được localStorage
-        'Authorization': `Bearer ${token}`, 
-        // Nếu là JSON thì thêm Content-Type, FormData để trình duyệt tự xử lý boundary
-        ...(isFormData ? {} : { 'Content-Type': 'application/json' }) 
-    },
+    // Do not persist Authorization tokens in the offline queue to avoid replaying stale credentials.
+    // Instead store a flag so the SW/client can detect that auth is required for this request.
+    headers: (() => {
+      const h = {};
+      // Nếu là JSON thì thêm Content-Type, FormData để trình duyệt tự xử lý boundary
+      if (!isFormData) h['Content-Type'] = 'application/json';
+      // Mark as offline replay so server knows to ghi log
+      h['X-Offline-Replay'] = 'true';
+      return h;
+    })(),
+    authRequired: !!token,
     isFormData, 
     timestamp: Date.now(), // Tag thời gian như bạn yêu cầu
     retryCount: 0
@@ -59,4 +64,43 @@ export const getAllOfflineRequests = async () => {
 export const deleteOfflineRequest = async (id) => {
   const db = await dbPromise;
   return db.delete(STORE_NAME, id);
+};
+
+// Replace occurrences of a temporary ID with the real ID across all queued requests.
+export const replaceTempIdInQueue = async (tempId, realId) => {
+  const db = await dbPromise;
+  const all = await db.getAll(STORE_NAME);
+  for (const r of all) {
+    let changed = false;
+    let newBody = r.body;
+    try {
+      if (typeof r.body === 'string') {
+        if (r.body.includes(tempId)) {
+          const replaced = r.body.split(tempId).join(realId);
+          try { newBody = JSON.parse(replaced); } catch (e) { newBody = replaced; }
+          changed = true;
+        }
+      } else if (r.body && typeof r.body === 'object') {
+        const s = JSON.stringify(r.body);
+        if (s.includes(tempId)) {
+          newBody = JSON.parse(s.split(tempId).join(realId));
+          changed = true;
+        }
+      }
+
+      let newUrl = r.url;
+      if (r.url && r.url.includes(tempId)) {
+        newUrl = r.url.split(tempId).join(realId);
+        changed = true;
+      }
+
+      if (changed) {
+        const newRecord = { ...r, body: newBody, url: newUrl };
+        // preserve same id by using put
+        await db.put(STORE_NAME, newRecord);
+      }
+    } catch (e) {
+      console.warn('[offlineStore] replaceTempIdInQueue failed for record', r.id, e);
+    }
+  }
 };

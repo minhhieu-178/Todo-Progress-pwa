@@ -33,7 +33,8 @@ export const createList = async (req, res) => {
       entityId: createdList._id,
       entityType: 'LIST',
       action: 'CREATE',
-      content: `đã thêm danh sách mới: "${title}"`
+      content: `đã thêm danh sách mới: "${title}"`,
+      isOfflineSync: req.isOfflineReplay
     });
     
     const io = req.app.get('socketio');
@@ -108,8 +109,9 @@ export const deleteList = async (req, res) => {
       boardId: boardId,
       entityId: listId,
       entityType: 'LIST',
-      action: 'DELETE_LIST',
-      content: `đã xóa danh sách "${listTitle}"`
+      action: 'DELETE',
+      content: `đã xóa danh sách "${listTitle}"`,
+      isOfflineSync: req.isOfflineReplay
     });
     const io = req.app.get('socketio');
     if (io) {
@@ -158,7 +160,8 @@ export const moveList = async (req, res) => {
       entityId: listId,
       entityType: 'LIST',
       action: 'MOVE_LIST',
-      content: `đã thay đổi vị trí danh sách "${listTitle}"`
+      content: `đã thay đổi vị trí danh sách "${listTitle}"`,
+      isOfflineSync: req.isOfflineReplay
     });
 
     const io = req.app.get('socketio');

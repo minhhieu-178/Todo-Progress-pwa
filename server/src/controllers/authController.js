@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -49,23 +50,54 @@ export const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'Email đã tồn tại' });
 
-    const user = await User.create({ fullName, email, password, age, phone, address });
+    // Generate a short OTP for email verification instead of a link
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    if (user) {
-      sendTokenResponse(user, 201, res);
-    } else {
-      res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
-    }
+    const user = await User.create({ 
+      fullName, email, password, age, phone, address, 
+      isVerified: false,
+      emailOtp: otp,
+      emailOtpExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    await transporter.sendMail({
+      from: `"Task Management" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Mã OTP xác thực email của bạn',
+      html: `<h3>Chào ${fullName},</h3>
+             <p>Mã xác thực của bạn là: <b style="font-size:20px">${otp}</b></p>
+             <p>Mã có hiệu lực trong 10 phút.</p>`
+    });
+
+    res.status(201).json({ 
+      message: 'Đăng ký thành công! Mã OTP đã được gửi tới email của bạn.' 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
+
+
+
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+    
     if (user && (await user.matchPassword(password))) {
+      if (!user.isVerified) {
+        return res.status(401).json({ 
+          message: 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email của bạn.' 
+        });
+      }
+
       sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Email hoặc mật khẩu sai' });
@@ -176,5 +208,30 @@ export const confirmChangePassword = async (req, res) => {
     res.json({ message: 'Đổi mật khẩu thành công' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+export const verifyEmailOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Thiếu email hoặc OTP' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'Người dùng không tồn tại' });
+
+    if (user.isVerified) return res.status(400).json({ message: 'Tài khoản đã được xác thực' });
+
+    if (!user.emailOtp || user.emailOtp !== otp || (user.emailOtpExpires && user.emailOtpExpires < Date.now())) {
+      return res.status(400).json({ message: 'OTP sai hoặc đã hết hạn' });
+    }
+
+    user.emailOtp = undefined;
+    user.emailOtpExpires = undefined;
+    user.isVerified = true;
+    await user.save();
+
+    res.status(200).json({ message: 'Xác thực email thành công! Bạn có thể đăng nhập.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

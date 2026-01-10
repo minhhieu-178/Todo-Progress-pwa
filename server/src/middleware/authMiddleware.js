@@ -23,6 +23,9 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'User không còn tồn tại' });
     }
 
+    // Đánh dấu nếu request này là replay từ offline
+    req.isOfflineReplay = req.headers['x-offline-replay'] === 'true';
+
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

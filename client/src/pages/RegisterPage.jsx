@@ -9,14 +9,31 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [success, setSuccess] = useState(false);
+  
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSubmit = async (e) => {
-    e.preventDefault(); setError(""); 
-    if (formData.password !== formData.confirmPassword) return setError("Mật khẩu không khớp!");
-    try { setLoading(true); await register(formData.fullName, formData.email, formData.password, formData.age, formData.phone, formData.address); navigate("/login"); } 
-    catch (err) { setError(err.toString()); } finally { setLoading(false); }
-  };
+    e.preventDefault(); 
+    setError(""); 
+    
+    if (formData.password !== formData.confirmPassword) {
+      return setError("Mật khẩu không khớp!");
+    }
 
+    try { 
+      setLoading(true); 
+      await register(formData.fullName, formData.email, formData.password, formData.age, formData.phone, formData.address); 
+      // After registering, navigate user to OTP verification page with email prefilled
+      navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+      return;
+    } catch (err) { 
+      setError(err.toString()); 
+    } finally { 
+      setLoading(false); 
+    }
+  };
+  
+  
   return (
     // CONTAINER NGOÀI: 
     // - Mobile: Full màn hình, nền trắng/đen trùng card (p-0)

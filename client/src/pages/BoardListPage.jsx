@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { v7 as uuidv7 } from 'uuid';
-import { Link } from 'react-router-dom';
-import { getMyBoards, createBoard, deleteBoard, updateBoard } from '../services/boardApi';
+import { v7 as uuidv7 } from 'uuid'; 
+import { Link, useNavigate } from 'react-router-dom'; 
+import { getMyBoards, createBoard, deleteBoard, updateBoard, getBoardTemplates } from '../services/boardApi';
 import PageHeader from '../components/layout/PageHeader';
+
 import { 
     Plus, Loader, Trash2, Edit2, X, Check, Search, 
-    MoreVertical, Layout, CalendarClock 
+    MoreVertical, Layout, CalendarClock, ChevronDown
 } from 'lucide-react'; 
 
 function BoardListPage() {
   const [boards, setBoards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
+  //state để lưu danh sách template và template đang chọn
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(''); // Lưu templateKey
+
+  // State tìm kiếm
   const [searchTerm, setSearchTerm] = useState('');
 
   const [newBoardTitle, setNewBoardTitle] = useState('');
@@ -24,8 +30,10 @@ function BoardListPage() {
 
   const menuRef = useRef(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    fetchBoards();
+    fetchInitialData();
     
     const handleClickOutside = (event) => {
         if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -36,53 +44,73 @@ function BoardListPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fetchBoards = async () => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const data = await getMyBoards();
-      setBoards(data);
+      const [boardsData, templatesData] = await Promise.all([
+        getMyBoards(),
+        getBoardTemplates()
+      ]);
+      setBoards(boardsData);
+      setTemplates(templatesData);
     } catch (err) {
-      setError('Không thể tải danh sách bảng.');
+      setError('Không thể tải dữ liệu.');
     } finally {
       setLoading(false);
     }
   };
 
-const handleCreateBoard = async (e) => {
-      e.preventDefault();
-      if (!newBoardTitle.trim()) return;
-      
-      setIsCreating(true); 
-      
-      try {
-        const newBoardId = uuidv7();
-        
-        // --- LOGIC MỚI: Tạo Default Lists tại Client ---
-        const defaultLists = [
-            { _id: uuidv7(), title: 'Việc cần làm', position: 0, cards: [] }, 
-            { _id: uuidv7(), title: 'Đang làm', position: 1, cards: [] },     
-            { _id: uuidv7(), title: 'Đã xong', position: 2, cards: [] },      
-        ];
-        
-        // Truyền defaultLists vào hàm createBoard
-        // Server sẽ lưu đúng các ID này. 
-        // Khi Offline, object 'newBoard' trả về sẽ có đủ lists này để cache.
-        const newBoardData = await createBoard(newBoardTitle, newBoardId, defaultLists);
-        
-        // Nếu API trả về (hoặc mock offline trả về), update state
-        // Lưu ý: createBoard từ API trả về data đã merge, nhưng để chắc chắn hiển thị ngay lập tức:
-        const boardToDisplay = {
-            ...newBoardData,
-            lists: defaultLists // Đảm bảo UI nhận được list ngay lập tức
-        };
 
-        setBoards([boardToDisplay, ...boards]);
-        setNewBoardTitle('');
-        setIsCreating(false); 
-      } catch (err) {
-        alert(err.toString());
-        setIsCreating(false);
+
+const handleCreateBoard = async (e) => {
+    e.preventDefault();
+    if (!newBoardTitle.trim()) return;
+    
+    setIsCreating(true); 
+    
+    try {
+      // 1. Tạo ID ngay tại client (Hỗ trợ PWA/Offline cache injection)
+      const newBoardId = uuidv7();
+      
+      // 2. Tạo lists theo template nếu có, ngược lại dùng default
+      let listsToUse = [
+          { _id: uuidv7(), title: 'Việc cần làm', position: 0, cards: [] }, 
+          { _id: uuidv7(), title: 'Đang làm', position: 1, cards: [] },     
+          { _id: uuidv7(), title: 'Đã xong', position: 2, cards: [] },      
+      ];
+      let boardBackground = '#f3f4f6';
+
+      if (selectedTemplate) {
+        const tpl = templates.find(t => t.key === selectedTemplate);
+        if (tpl && Array.isArray(tpl.lists) && tpl.lists.length > 0) {
+          listsToUse = tpl.lists.map((l, i) => ({ _id: uuidv7(), title: l.title, position: i, cards: [] }));
+        }
+        if (tpl && tpl.background) boardBackground = tpl.background;
       }
+
+      // 3. Gọi API với Object tổng hợp (khớp với boardApi.js)
+      const newBoardData = await createBoard({
+          title: newBoardTitle,
+          _id: newBoardId,
+          lists: listsToUse,
+          templateKey: selectedTemplate, // Truyền templateKey nếu người dùng chọn
+          background: boardBackground
+      });
+      
+      // 4. Update state & Navigate
+      setBoards([newBoardData, ...boards]);
+      setNewBoardTitle('');
+      setSelectedTemplate(''); 
+      setIsCreating(false);
+
+      if (newBoardData && newBoardData._id) {
+         navigate(`/board/${newBoardData._id}`);
+      }
+
+    } catch (err) {
+      alert(err.toString());
+      setIsCreating(false);
+    }
   };
 
   const handleDeleteBoard = async (e, boardId) => {
@@ -166,6 +194,21 @@ const handleCreateBoard = async (e) => {
                             autoFocus
                             className="w-full px-3 py-2 mb-2 text-sm border-b-2 border-indigo-500 bg-transparent text-gray-900 dark:text-white focus:outline-none placeholder-gray-400 text-center"
                           />
+                          <div className="relative mb-4">
+                            <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 ml-1">Chọn mẫu</label>
+                            <select
+                              value={selectedTemplate}
+                              onChange={(e) => setSelectedTemplate(e.target.value)}
+                              className="w-full pl-2 pr-8 py-1.5 text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded appearance-none focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-700 dark:text-gray-200"
+                            >
+                              <option value="">Mẫu mặc định</option>
+                              {templates.map(tpl => (
+                                <option key={tpl.key} value={tpl.key}>{tpl.title}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-2 bottom-2 w-3 h-3 text-gray-400 pointer-events-none" />
+                          </div>
+
                           <div className="flex justify-center gap-2 mt-1">
                               <button type="button" onClick={() => setIsCreating(false)} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400">
                                 <X className="w-4 h-4" />
@@ -186,7 +229,9 @@ const handleCreateBoard = async (e) => {
               </div>
 
               {/* --- 2. DANH SÁCH BẢNG --- */}
-              {filteredBoards.map((board) => (
+              {filteredBoards
+              .filter(board => board && board._id)
+              .map((board) => (
                   <div key={board._id} className="relative group h-32 md:h-40">
                     {editingId === board._id ? (
                         // Form Sửa Nhanh
@@ -207,6 +252,7 @@ const handleCreateBoard = async (e) => {
                         // Card Hiển Thị
                         <Link 
                             to={`/board/${board._id}`} 
+                            key={board._id}
                             className="block h-full bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-700 transition-all duration-200 overflow-hidden relative"
                         >
                             {/* Dải màu trang trí ngẫu nhiên hoặc cố định */}
