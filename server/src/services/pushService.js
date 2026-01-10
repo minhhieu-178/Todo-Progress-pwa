@@ -17,7 +17,18 @@ export const sendPushToUser = async (userId, payload) => {
         return;
     }
 
-    const notifications = user.pushSubscriptions.map(sub => {
+    // Lọc các subscription trùng endpoint để tránh spam
+    const uniqueSubscriptions = [];
+    const endpoints = new Set();
+    
+    for (const sub of user.pushSubscriptions) {
+      if (!endpoints.has(sub.endpoint)) {
+        endpoints.add(sub.endpoint);
+        uniqueSubscriptions.push(sub);
+      }
+    }
+
+    const notifications = uniqueSubscriptions.map(sub => {
       return webPush.sendNotification(sub, JSON.stringify(payload))
         .catch(async (err) => {
           // Nếu subscription không còn hiệu lực (người dùng đã clear cache hoặc gỡ browser)
