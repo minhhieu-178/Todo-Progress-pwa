@@ -1,15 +1,13 @@
 import React, { useState, Fragment } from 'react';
 import PageHeader from '../components/layout/PageHeader';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { deleteAccount, requestChangePassword, confirmChangePassword } from '../services/authApi';
-import { Moon, Sun, Trash2, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { Trash2, Lock, AlertTriangle } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 
 function SettingPage() {
   // (Logic giữ nguyên)
   const { logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [step, setStep] = useState(1);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -48,19 +46,6 @@ function SettingPage() {
       <div className="flex-1 overflow-auto p-4 md:p-8 bg-gray-50 dark:bg-gray-900 transition-all duration-150">
         <div className="max-w-2xl mx-auto space-y-4 md:space-y-6">
           
-          {/* Theme */}
-          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">Giao diện</h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Chuyển đổi Sáng / Tối.</p>
-              </div>
-              <button onClick={toggleTheme} className="p-3 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                {theme === 'light' ? <Moon className="w-5 h-5 text-gray-700" /> : <Sun className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />}
-              </button>
-            </div>
-          </div>
-
           {/* Password */}
           <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-start gap-3 mb-4">

@@ -123,7 +123,7 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                                 logout();
                                 onClose();
                             }}
-                            className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors font-medium"
                         >
                             <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
                             <span>Đăng xuất</span>
@@ -192,7 +192,7 @@ function Sidebar({ isOpen, onClose, isMobile = false }) {
                 {/* Logout Button */}
                 <button
                     onClick={logout}
-                    className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors group"
+                    className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-500 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group font-medium"
                 >
                     <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
                     <span className="text-base">Đăng xuất</span>
