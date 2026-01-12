@@ -35,11 +35,13 @@ app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:4173'], 
+  origin: ['http://localhost:5173', 'http://localhost:4173', 'https://todo-progress-pwa-frontend.vercel.app'], 
   credentials: true, // Cho phép nhận cookie/token
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Offline-Replay']
 }));
+
+app.options('*', cors()); // Enable preflight requests for all routes
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -58,7 +60,7 @@ app.use(hpp());
 const httpServer = createServer(app); 
 const io = new Server(httpServer, {   
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:4173'], 
+    origin: ['http://localhost:5173', 'http://localhost:4173', 'https://todo-progress-pwa-frontend.vercel.app'], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Offline-Replay']
   }
@@ -103,7 +105,7 @@ app.use('/api/analytics', analyticsRoutes);
 
 
 
-cron.schedule('*/100 * * * *', async () => {
+cron.schedule('0 * * * *', async () => {
   console.log('Running cron job: check deadlines');
   try {
     const notifications = await checkDeadlines(io); 
