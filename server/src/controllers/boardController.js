@@ -366,11 +366,12 @@ export const getDashboardStats = async (req, res) => {
               if (card.isCompleted) {
                 completedTasks++;
               } else {
-                inProgressTasks++;
-
+                // Kiểm tra xem có quá hạn không
+                let isOverdue = false;
                 if (card.dueDate) {
                     const deadline = new Date(card.dueDate);
                     if (deadline < now) {
+                        isOverdue = true;
                         overdueTasks++;
                     } else {
                         upcomingDeadlines.push({
@@ -381,6 +382,11 @@ export const getDashboardStats = async (req, res) => {
                             projectName: board.title
                         });
                     }
+                }
+                
+                // Chỉ tính vào "Đang làm" nếu KHÔNG quá hạn
+                if (!isOverdue) {
+                    inProgressTasks++;
                 }
               }
             });
