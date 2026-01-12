@@ -182,7 +182,7 @@ function DashboardPage() {
           <div className="mb-6 md:mb-10 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 md:gap-6">
               <div className="min-w-0 flex-1">
                   <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold adaptive-text mb-2 md:mb-3">
-                      Chào, {user?.fullName?.split(' ').pop() || 'bạn'}! 👋
+                      Chào, {user?.fullName?.split(' ').pop() || 'bạn'}! 
                   </h2>
                   <p className="text-base md:text-lg adaptive-text-muted">
                       Hôm nay bạn thế nào?
@@ -368,8 +368,8 @@ function DashboardPage() {
                   
                   {stats.upcomingDeadlines.length === 0 ? (
                       <div className="text-center py-8">
-                          <div className="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-green-600" />
+                          <div className="w-12 h-12 mx-auto mb-3 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" strokeWidth={2.5} />
                           </div>
                           <p className="text-sm font-medium adaptive-text mb-1">
                             Tuyệt vời!
