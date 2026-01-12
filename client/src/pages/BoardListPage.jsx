@@ -152,7 +152,7 @@ const handleCreateBoard = async (e) => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 transition-all duration-150">
-      <PageHeader title="Không gian làm việc" showSearch={false} />
+      <PageHeader title="Danh sách bảng" showSearch={false} />
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
