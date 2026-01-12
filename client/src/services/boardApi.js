@@ -58,6 +58,33 @@ export const createBoard = async (boardData) => {
   // 3. Gửi request thực tế (Background Sync sẽ bắt nếu offline)
   try {
     const { data } = await api.post('/boards', boardData);
+    
+    // 4. Update cache danh sách boards sau khi online success
+    if ('caches' in window) {
+      try {
+        const cache = await caches.open('api-boards-cache');
+        const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
+        const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+        const boardsListUrl = `${cleanBase}/boards`;
+        
+        const cachedResponse = await cache.match(boardsListUrl);
+        if (cachedResponse) {
+          const cachedBoards = await cachedResponse.json();
+          // Avoid duplicate
+          const exists = cachedBoards.find(b => b._id === data._id);
+          if (!exists) {
+            const updatedBoards = [data, ...cachedBoards];
+            await cache.put(boardsListUrl, new Response(JSON.stringify(updatedBoards), {
+              headers: { 'Content-Type': 'application/json' }
+            }));
+            console.log(`[Offline] Updated boards list cache with new board: ${data._id}`);
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi cập nhật cache danh sách boards:", err);
+      }
+    }
+
     return data;
   } catch (error) {
     console.warn("[Offline] Đang offline, trả về optimistic data.");
@@ -167,33 +194,25 @@ export const getBoardById = async (boardId) => {
   }
 };
 
+import { updateBoardInCache, updateBoardsListCache } from './cacheService';
+
 export const updateBoard = async (boardId, updateData) => {
-    // Update cache optimistically when changing background or other board properties
-    if ('caches' in window) {
-        try {
-            const cache = await caches.open('api-boards-cache');
-            const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL : getBaseUrl();
-            const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-            const fullUrl = `${cleanBase}/boards/${boardId}`;
-            
-            // Try to get existing cached board
-            const cachedResponse = await cache.match(fullUrl);
-            if (cachedResponse) {
-                const cachedBoard = await cachedResponse.json();
-                // Merge updateData into cached board
-                const updatedBoard = { ...cachedBoard, ...updateData };
-                
-                const response = new Response(JSON.stringify(updatedBoard), {
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                await cache.put(fullUrl, response);
-                console.log(`[Offline] Đã cập nhật cache cho board: ${boardId}`);
-            }
-        } catch (err) {
-            console.warn("Lỗi khi cập nhật cache:", err);
-        }
-    }
+    // Optimistically update cache
+    const updateCache = async () => {
+         // 1. Update Detail
+         await updateBoardInCache(boardId, (board) => ({ ...board, ...updateData }));
+         
+         // 2. Update List (if title/bg changed)
+         await updateBoardsListCache((list) => {
+             const index = list.findIndex(b => b._id === boardId);
+             if (index !== -1) {
+                 list[index] = { ...list[index], ...updateData };
+             }
+             return list;
+         });
+    };
+    
+    updateCache();
 
     try {
         const { data } = await api.put(`/boards/${boardId}`, updateData);
@@ -209,10 +228,31 @@ export const updateBoard = async (boardId, updateData) => {
 };
 
 export const deleteBoard = async (boardId) => {
+    // Optimistic cache deletion
+    const deleteCache = async () => {
+        // 1. Delete Detail - actually we can't delete using updateBoardInCache easily, so we might keep the manual delete logic or add deleteBoardCache to service.
+        // But for now, let's just stick to the manual implementation for deleteDetail in the service or just inline it? 
+        // Inline is fine for delete as it's unique.
+        // Wait, I can't delete a file using the helper I made.
+        if ('caches' in window) {
+             const cache = await caches.open('api-boards-cache');
+             const cleanBase = (api.defaults.baseURL || '').replace(/\/$/, "");
+             await cache.delete(`${cleanBase}/boards/${boardId}`);
+        }
+
+        // 2. Remove from List
+        await updateBoardsListCache((list) => list.filter(b => b._id !== boardId));
+    };
+
+    deleteCache();
+
     try {
         const { data } = await api.delete(`/boards/${boardId}`);
         return data;
     } catch (error) {
+        if (!navigator.onLine || error.message?.includes('no-response')) {
+            return { message: 'Deleted offline' };
+        }
         throw error.response?.data?.message || error.message;
     }
 };

@@ -6,7 +6,7 @@ dotenv.config();
 
 // SỬA: Đổi JWT_SECRET thành ACCESS_TOKEN_SECRET
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
 };
 
 // @desc    Lấy thông tin cá nhân
