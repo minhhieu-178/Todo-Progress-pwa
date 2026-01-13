@@ -106,6 +106,15 @@ const navigationRoute = new NavigationRoute(handler, {
 registerRoute(navigationRoute);
 
 const processOfflineQueue = async () => {
+  // Kiểm tra xem có thực sự online không trước khi xử lý
+  // Service Worker không có navigator.onLine, nên thử fetch nhỏ để kiểm tra
+  try {
+    const testResponse = await fetch(self.location.origin, { method: 'HEAD', mode: 'no-cors' });
+  } catch (e) {
+    console.log('[SW] Không thể kết nối mạng, bỏ qua xử lý offline queue.');
+    return;
+  }
+
   const db = await openDB('offline-requests-db', 1);
   const requests = await db.getAll('requests');
 

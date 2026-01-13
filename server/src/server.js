@@ -35,7 +35,11 @@ app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({
+<<<<<<< HEAD
   origin: ['http://localhost:5173', 'http://localhost:4173', 'https://todo-progress-pwa.vercel.app'], 
+=======
+  origin: ['http://localhost:5173', 'http://localhost:4173', 'https://todo-progress-pwa-frontend.vercel.app', 'https://todo-progress-pwa.vercel.app'], 
+>>>>>>> duchieu4
   credentials: true, // Cho phép nhận cookie/token
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Offline-Replay']
@@ -60,7 +64,11 @@ app.use(hpp());
 const httpServer = createServer(app); 
 const io = new Server(httpServer, {   
   cors: {
+<<<<<<< HEAD
     origin: ['http://localhost:5173', 'http://localhost:4173', 'https://todo-progress-pwa.vercel.app'], 
+=======
+    origin: ['http://localhost:5173', 'http://localhost:4173', 'https://todo-progress-pwa-frontend.vercel.app', 'https://todo-progress-pwa.vercel.app'], 
+>>>>>>> duchieu4
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Offline-Replay']
   }

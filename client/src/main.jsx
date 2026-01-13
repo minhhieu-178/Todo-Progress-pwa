@@ -45,6 +45,12 @@ if (navigator.serviceWorker) {
     if (data && data.type === 'OFFLINE_SYNC_AUTH_REQUIRED') {
         // Try a silent token refresh (server should set refresh-cookie and return new access token)
         (async () => {
+          // Kiểm tra nếu đang offline thì không cần làm gì - đợi đến khi online
+          if (!navigator.onLine) {
+            console.log('[Client] Still offline, skipping auth refresh. Will retry when online.');
+            return;
+          }
+          
           try {
             const refreshUrl = `${import.meta.env.VITE_API_BASE_URL}/auth/refresh-token`;
             const resp = await fetch(refreshUrl, { method: 'POST', credentials: 'include' });
@@ -67,15 +73,22 @@ if (navigator.serviceWorker) {
               }
             }
           } catch (e) {
+            // Nếu lỗi mạng (offline), không hiển thị alert
+            if (!navigator.onLine || e.message?.includes('network') || e.message?.includes('fetch')) {
+              console.log('[Client] Network error during refresh, will retry when online.');
+              return;
+            }
             console.warn('[Client] Silent refresh failed', e);
           }
 
-          // If refresh fails, fall back to prompting the user to re-login
-          try {
-            // eslint-disable-next-line no-alert
-            alert('Phiên đăng nhập cần làm mới để đồng bộ các thay đổi offline. Vui lòng đăng nhập lại.');
-          } catch (e) {
-            console.warn('[Client] SW requested auth refresh');
+          // Chỉ hiển thị alert khi thực sự online và refresh token thất bại
+          if (navigator.onLine) {
+            try {
+              // eslint-disable-next-line no-alert
+              alert('Phiên đăng nhập cần làm mới để đồng bộ các thay đổi offline. Vui lòng đăng nhập lại.');
+            } catch (e) {
+              console.warn('[Client] SW requested auth refresh');
+            }
           }
         })();
     }
