@@ -11,13 +11,52 @@ const RegisterPage = () => {
 
   const [success, setSuccess] = useState(false);
   
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError("");
+  };
+
+  const validate = (name, value) => {
+    if (name === "fullName" && value.trim().length < 2) return "Họ và tên phải có ít nhất 2 ký tự";
+    
+    if (name === "age" && value) {
+      const ageNum = parseInt(value);
+      if (isNaN(ageNum) || ageNum < 10 || ageNum > 100) return "Tuổi phải từ 10 đến 100";
+    }
+
+    if (name === "phone" && value) {
+      const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+      if (!phoneRegex.test(value)) return "Số điện thoại không đúng định dạng VN";
+    }
+
+    if (name === "email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) return "Email không hợp lệ";
+    }
+
+    if (name === "password" && value.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự";
+    
+    if (name === "confirmPassword" && value !== formData.password) return "Mật khẩu không khớp!";
+    
+    return "";
+  };
+
+  const handleBlur = (e) => {
+    const err = validate(e.target.name, e.target.value);
+    if (err) setError(err);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault(); 
     setError(""); 
-    
-    if (formData.password !== formData.confirmPassword) {
-      return setError("Mật khẩu không khớp!");
+
+    const fields = ["fullName", "age", "phone", "email", "password", "confirmPassword"];
+    for (const field of fields) {
+        const err = validate(field, formData[field]);
+        if (err) {
+            setError(err);
+            return;
+        }
     }
 
     try { 
@@ -60,20 +99,20 @@ const RegisterPage = () => {
         </div>}
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="fullName" placeholder="Họ và tên" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
+          <input type="text" name="fullName" placeholder="Họ và tên" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
           
           <div className="grid grid-cols-2 gap-3">
-             <input type="text" name="age" placeholder="Tuổi" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-             <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+             <input type="text" name="age" placeholder="Tuổi" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+             <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
           </div>
           
-          <input type="text" name="address" placeholder="Địa chỉ" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+          <input type="text" name="address" placeholder="Địa chỉ" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
           
-          <input type="email" name="email" placeholder="Email" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
+          <input type="email" name="email" placeholder="Email" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
           
-          <input type="password" name="password" placeholder="Mật khẩu" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
+          <input type="password" name="password" placeholder="Mật khẩu" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
           
-          <input type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu" onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
+          <input type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu" onChange={handleChange} onBlur={handleBlur} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
           
           <button type="submit" disabled={loading} className="w-full py-3.5 text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed mt-6">
             {loading ? (
