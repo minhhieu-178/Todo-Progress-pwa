@@ -22,7 +22,7 @@ function LoginPage() {
     } catch (err) {
       // Kiểm tra lỗi đăng nhập
       const errorMessage = err.toString();
-      if (errorMessage.includes('401') || errorMessage.includes('Invalid') || errorMessage.includes('không đúng') || errorMessage.includes('Unauthorized')) {
+      if (errorMessage.includes('401') || errorMessage.includes('Invalid') || errorMessage.includes('không đúng') || errorMessage.includes('Unauthorized') || errorMessage.includes('sai')) {
         setError('Tài khoản hoặc mật khẩu của bạn chưa đúng');
       } else {
         setError(errorMessage);
