@@ -62,6 +62,12 @@ api.interceptors.response.use(
             return api(originalRequest);
         }
       } catch (refreshError) {
+        // Nếu lỗi do mạng (offline), không hiển thị alert và không redirect
+        if (!navigator.onLine || !refreshError.response) {
+          console.warn("Không thể refresh token do offline, sẽ thử lại khi có mạng:", refreshError.message);
+          return Promise.reject(refreshError);
+        }
+        
         console.error("Phiên đăng nhập hết hạn:", refreshError);
         localStorage.removeItem('userInfo');
         localStorage.removeItem('accessToken');
