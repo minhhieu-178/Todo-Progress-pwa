@@ -80,3 +80,11 @@ export const verifyEmailOtp = async (email, otp) => {
     throw error.response?.data?.message || error.message;
   }
 };
+export const resendEmailOtp = async (email) => {
+  try {
+    const { data } = await api.post('/auth/resend-email-otp', { email });
+    return data;
+  } catch (error) {
+    throw error.response?.data?.message || error.message;
+  }
+};

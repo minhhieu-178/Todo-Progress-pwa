@@ -240,3 +240,34 @@ export const verifyEmailOtp = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const resendEmailOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Thiếu email' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'Người dùng không tồn tại' });
+    if (user.isVerified) return res.status(400).json({ message: 'Tài khoản đã được xác thực' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.emailOtp = otp;
+    user.emailOtpExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    const msg = {
+      to: email,
+      from: process.env.SENDGRID_VERIFIED_SENDER,
+      subject: 'Mã OTP xác thực email của bạn (Gửi lại)',
+      html: `<h3>Chào ${user.fullName},</h3>
+             <p>Mã xác thực mới của bạn là: <b style="font-size:20px">${otp}</b></p>
+             <p>Mã có hiệu lực trong 10 phút.</p>`
+    };
+
+    await sgMail.send(msg);
+    res.status(200).json({ message: 'Đã gửi lại mã OTP vào email của bạn!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
