@@ -1,6 +1,6 @@
 # Task Manager PWA
 
-Ứng dụng quản lý công việc kiểu Trello với PWA, hỗ trợ offline và realtime.
+Ứng dụng quản lý công việc với PWA, hỗ trợ offline và realtime.
 
 ## Tính năng chính
 
@@ -67,8 +67,6 @@ npm run dev
 cd client
 npm run dev
 ```
-
-Truy cập: http://localhost:5173
 
 ## Cấu trúc
 
